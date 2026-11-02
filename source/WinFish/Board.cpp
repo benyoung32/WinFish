@@ -1276,7 +1276,7 @@ void Board::Draw(Graphics* g)
 				}
 			}
 		}
-		else if (mIsBonusRound)
+		if (mIsBonusRound)
 			DrawBonusRound(g);
 	} // 276
 
@@ -4155,7 +4155,7 @@ void Sexy::Board::HandleBuySlotPressed(int theSlotId)
 		SpawnOscarBought();
 		if (mTank != 4)
 			MakeAndUnlockMenuButton(SLOT_WEAPON, true);
-		if (mTank == 1 && mLevel > 1)
+		if (mTank == 4 && mLevel > 1)
 		{
 			MakeAndUnlockMenuButton(SLOT_ULTRA, true);
 			MakeAndUnlockMenuButton(SLOT_WEAPON, true);
@@ -5450,7 +5450,7 @@ void Sexy::Board::SpawnAlien(int theType, int theX, int theY, bool unk)
 		else if(theType == ALIEN_CYRAX)
 			mApp->PlaySample(SOUND_EVILLAFF);
 		else if(theType == ALIEN_WEAK_SYLV || theType == ALIEN_STRONG_SYLV || theType == ALIEN_BALROG)
-			mApp->PlaySample(SOUND_ROAR3);
+			mApp->PlaySample(SOUND_ROAR);
 	}
 	return;
 }

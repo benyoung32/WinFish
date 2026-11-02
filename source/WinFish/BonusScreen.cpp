@@ -177,7 +177,7 @@ void Sexy::BonusScreen::Update()
 				aDisplayVal = mBonusReward - m0xc0;
 			m0xc4 += aDisplayVal;
 			m0xc0 += aDisplayVal;
-			if (mApp->mCurrentProfile->mShells > m0xc4)
+			if (m0xc4 > mApp->mCurrentProfile->mShells)
 				m0xc4 = mApp->mCurrentProfile->mShells;
 		}
 	}
@@ -609,7 +609,7 @@ void Sexy::BonusScreen::Init()
 	else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 	{
 		mBonusReward = mApp->mBoard->mMoney * 5 / 100;
-		mRewardString = StrFormat("%d%% Bonus Award", mBonusReward);
+		mRewardString = StrFormat("%d%% Bonus Award", 5);
 		mCurScore1 = "Your Score";
 		mBestScore1 = "Your Best Score";
 		mCurScore2 = CommaSeperate(mApp->mBoard->mMoney);
@@ -619,16 +619,16 @@ void Sexy::BonusScreen::Init()
 	{
 		switch (mApp->mBoard->mTank)
 		{
-		case 0:
+		case 1:
 			mBonusReward = 2000;
 			break;
-		case 1:
+		case 2:
 			mBonusReward = 5000;
 			break;
-		case 2:
+		case 3:
 			mBonusReward = 10000;
 			break;
-		case 3:
+		case 4:
 			mBonusReward = 20000;
 			break;
 		}

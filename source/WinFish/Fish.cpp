@@ -633,13 +633,13 @@ int Sexy::Fish::SpecialReturnValue()
 
 int Sexy::Fish::GetShellPrice()
 {
-    int aVal = GetShellPrice();
+    int aVal = GameObject::GetShellPrice();
     if (mVirtualFish)
     {
         if (aVal < 0)
             aVal = mShellPrice / 2;
 
-        if (aVal > 0)
+        if (mIsGuppy && aVal > 0)
         {
             if (mSize == TYPE_MEDIUM_GUPPY)
                 aVal *= 2;
@@ -765,7 +765,7 @@ void Sexy::Fish::OnFoodAte(GameObject* obj)
             else // 156
             {
                 mHunger += 1100;
-                if (aFood->mFoodType == 2)
+                if (mSize == SIZE_LARGE)
                 {
                     if (mHunger > 1400)
                         mHunger = 1400;
@@ -963,7 +963,7 @@ bool Fish::Hungry()
         }
         if (mHunger < -499 && mBeginner)
         {
-            Die();
+            Die(true);
             return false;
         }
         if (mHunger < 500)
@@ -977,7 +977,7 @@ bool Fish::Hungry()
         }
     }
     else
-        Die();
+        Die(true);
     return false;
 }
 

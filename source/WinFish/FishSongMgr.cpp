@@ -53,19 +53,22 @@ void FishSongMgr::Update()
 
     if (aFinishedSongSoundID != -1)
     {
-        FishSong aSong;
+        FishSong* aSong = new FishSong();
+        aSong->mTone = aFinishedSongSoundID;
+
         NoteData aNote;
         aNote.mPitch = -10000;
         aNote.mVolume = 1.0;
         aNote.mDuration = 400;
-        aSong.mNoteDataVector.push_back(aNote);
+        aSong->mNoteDataVector.push_back(aNote);
 
         aNote = NoteData();
         aNote.mPitch = 0;
         aNote.mVolume = 1.0;
         aNote.mDuration = 100;
-        aSong.mNoteDataVector.push_back(aNote);
-        AddSong(&aSong);
+        aSong->mNoteDataVector.push_back(aNote);
+
+        AddSong(aSong);
     }
 }
 
@@ -90,7 +93,7 @@ void Sexy::FishSongMgr::StopFishSong(int theSongId)
         FishSong* aCurSong = *it;
 
         if (aCurSong->mSongId == theSongId)
-            mSongList.erase(it);
+            it = mSongList.erase(it);
         else
             ++it;
     }

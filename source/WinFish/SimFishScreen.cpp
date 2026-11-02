@@ -793,7 +793,7 @@ Sexy::SimFishScreen::SimFishScreen(WinFishApp* theApp)
 	mBubbleMgr->SetBubbleConfig(10, 3);
 	mBubbleMgr->UpdateALot();
 
-	memset(mObjectButtons, 0, 20);
+	memset(mObjectButtons, 0, sizeof(mObjectButtons));
 
 	std::multimap<time_t, GameObject*> aFishMap;
 
@@ -975,7 +975,7 @@ void Sexy::SimFishScreen::DrawOverlay(Graphics* g)
 			{
 				SexyString aBaseName = anObj->mName.substr(0, anObj->mName.length() - 4);
 				WriteCenteredLine(g, 80, anObj->mName);
-				WriteCenteredLine(g, 80, "JR.");
+				WriteCenteredLine(g, 100, "JR.");
 			}
 		}
 

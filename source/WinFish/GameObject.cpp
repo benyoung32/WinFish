@@ -102,7 +102,7 @@ int Sexy::GameObject::GetShellPrice()
 
 		const __time64_t LIFESPAN_SECONDS = 86400;
 
-		if (currentTime >= mTimeBought + LIFESPAN_SECONDS)
+		if (currentTime - mTimeBought <= LIFESPAN_SECONDS)
 			return -1;
 	}
 
@@ -490,7 +490,7 @@ void Sexy::GameObject::Unk03(long long theTodayInSec, __time64_t theCurTime)
 	if (mTodayBought)
 	{
 		const time_t ONE_DAY_IN_SECONDS = 86400;
-		if (mTimeBought + ONE_DAY_IN_SECONDS <= theCurTime)
+		if (theCurTime < mTimeBought || theCurTime - mTimeBought >= ONE_DAY_IN_SECONDS)
 			mTodayBought = false;
 	}
 
@@ -572,17 +572,21 @@ bool Sexy::GameObject::IsHungryVisible()
 
 GameObject* Sexy::GameObject::FindNearestExoticFood(int theX, int theY)
 {
-	if (mExoticDietFoodType > 999)
-		return FindNearestExoticFoodOther(theX, theY, mExoticDietFoodType - EXO_FOOD_OBJECTS_START);
+	int aFoodTypeToEat = mExoticDietFoodType;
+	if (aFoodTypeToEat > 999)
+		return FindNearestExoticFoodOther(theX, theY, aFoodTypeToEat - EXO_FOOD_OBJECTS_START);
 
 	int aDist = 100000000;
 	Food* aRet = nullptr;
+
+	if (aFoodTypeToEat == 6)
+		aFoodTypeToEat = 0;
 
 	for (int i = 0; i < mApp->mBoard->mFoodList->size(); i++)
 	{
 		Food* aFood = mApp->mBoard->mFoodList->at(i);
 
-		if (aFood->mExoticFoodType == mExoticDietFoodType && !aFood->mPickedUp && aFood->mCantEatTimer == 0)
+		if (aFood->mExoticFoodType == aFoodTypeToEat && !aFood->mPickedUp && aFood->mCantEatTimer == 0)
 		{
 			int ax = aFood->mX - theX + 20;
 			int ay = aFood->mY - theY + 20;
@@ -693,7 +697,7 @@ void Sexy::GameObject::UpdateHungerStateIfWasHungry(bool wasHungry)
 
 bool Sexy::GameObject::DrawInvisibleEffect(Graphics* g, Image* theImage, Rect& theSrcRect, bool mirror)
 {
-	if (mApp->mBoard->mCurrentBackgroundId - 1 < 6)
+	if ((unsigned)(mApp->mBoard->mCurrentBackgroundId - 1) < 6)
 	{
 		Image* anImg = GetImageById(mApp->mBoard->mCurrentBackgroundId + IMAGE_MISSILE_ID);
 		DrawInvisibleEffectHelper(g, (MemoryImage*) anImg, mX - 2, mY - 2, (MemoryImage*) theImage, theSrcRect, mirror);
@@ -738,12 +742,12 @@ void Sexy::GameObject::DrawInvisibleEffectHelper(Graphics* g, MemoryImage* theBG
 			{
 				if (aCnt2 >= 0 && aCnt2 < theBGImage->mWidth)
 				{
-					ulong anBitAlpha = *anObjBitForEffect & 0xFF000000;
+					ulong aBitAlpha = *anObjBitForEffect & 0xFF000000;
 					anObjBitForEffect++;
-					if (anBitAlpha != 0)
+					if (aBitAlpha != 0)
 					{
-						anBitAlpha = *aBGBitForEffect;
-						*anInvisBitForEffect = anBitAlpha;
+						aBitAlpha = *aBGBitForEffect;
+						*anInvisBitForEffect = aBitAlpha;
 					}
 					anInvisBitForEffect++;
 					aBGBitForEffect++;
@@ -753,18 +757,18 @@ void Sexy::GameObject::DrawInvisibleEffectHelper(Graphics* g, MemoryImage* theBG
 		}
 		else // 77
 		{
-			ulong* anObjBitForEffect = anObjBits - 4 + anObjBitPos + theSrcRect.mWidth;
+			ulong* anObjBitForEffect = anObjBits + anObjBitPos + theSrcRect.mWidth - 1;
 			int aCnt2 = theX;
 			for (int x = 0; x < anInvisImg.mWidth; ++x)
 			{
 				if (aCnt2 >= 0 && aCnt2 < theBGImage->mWidth)
 				{
-					ulong anBitAlpha = *anObjBitForEffect & 0xFF000000;
+					ulong aBitAlpha = *anObjBitForEffect & 0xFF000000;
 					anObjBitForEffect--;
-					if (anBitAlpha != 0)
+					if (aBitAlpha != 0)
 					{
-						anBitAlpha = *aBGBitForEffect;
-						*anInvisBitForEffect = anBitAlpha;
+						aBitAlpha = *aBGBitForEffect;
+						*anInvisBitForEffect = aBitAlpha;
 					}
 					anInvisBitForEffect++;
 					aBGBitForEffect++;
