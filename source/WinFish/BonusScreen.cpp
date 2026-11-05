@@ -10,6 +10,7 @@
 #include "Board.h"
 #include "ProfileMgr.h"
 #include "Res.h"
+#include "APGameController.h"
 
 Sexy::BonusScreen::BonusScreen(WinFishApp* theApp)
 {
@@ -667,6 +668,8 @@ void Sexy::BonusScreen::ConfirmPurchase()
 	}
 	if (aCurUser->mBonusItemId >= 0 && aCurUser->mBonusItemId < 4)
 	{
+		if (mApp->mAPController != nullptr)
+			mApp->mAPController->ReportBonusPet(aCurUser->mBonusItemId);
 		mShellImage = new MemoryImage(mApp);
 		mShellImage->Create(IMAGE_EGGSHARDS->mWidth, IMAGE_EGGSHARDS->mHeight);
 		mShellImage->SetImageMode(true, true);

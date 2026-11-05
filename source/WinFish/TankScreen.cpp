@@ -6,6 +6,7 @@
 #include "WinFishCommon.h"
 #include "ProfileMgr.h"
 #include "Res.h"
+#include "APGameController.h"
 
 Sexy::TankScreen::TankScreen(WinFishApp* theApp)
 {
@@ -60,7 +61,20 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 	theWidgetManager->AddWidget(mMenuButton);
 	for (int i = 0; i < 4; i++)
 	{
-		if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
+		bool anAPActive = (mApp->mAPController != NULL && mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->HasAPConnection());
+		if (anAPActive)
+		{
+			if (mApp->mAPController->IsTankUnlocked(i + 1))
+				mTankButtons[i]->SetDisabled(false);
+			else
+			{
+				mTankButtons[i]->SetDisabled(true);
+				mTankButtons[i]->mComponentImage = nullptr;
+				mTankButtons[i]->mFrameNoDraw = true;
+				mTankButtons[i]->SetColor(0, Color::White);
+			}
+		}
+		else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 		{
 			if (mApp->mCurrentProfile->mTank >= i + 2 || mApp->mCurrentProfile->mFinishedGame)
 				mTankButtons[i]->SetDisabled(false);
@@ -158,7 +172,10 @@ void Sexy::TankScreen::Draw(Graphics* g)
 			Rect aDrawStrRect = Rect(m0xa8[i * 2] + 25, m0xa8[i * 2 + 1] + 43, 170, 200);
 			g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
 			g->SetColor(Color::White);
-			if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
+			bool anAPActive = (mApp->mAPController != NULL && mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->HasAPConnection());
+			if (anAPActive)
+				WriteWordWrapped(g, aDrawStrRect, StrFormat("Unlock Tank %d\nin Archipelago\nto Play", i + 1), -1, 0);
+			else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 				WriteWordWrapped(g, aDrawStrRect, StrFormat("Complete Tank %d\nin Adventure Mode\nto Unlock this Tank", i + 1), -1, 0);
 			else if(mApp->mGameMode == GAMEMODE_CHALLENGE)
 				WriteWordWrapped(g, aDrawStrRect, StrFormat("Complete Tank %d\nin Challenge Mode\nto Unlock this Tank", i), -1, 0);

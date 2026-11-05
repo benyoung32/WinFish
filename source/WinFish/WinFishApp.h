@@ -25,6 +25,7 @@ namespace Sexy
 
 	class WorkerThread;
 	class APBridge;
+	class APGameController;
 	struct APReceivedItem;
 	class HighScoreMgr;
 	class ProfileMgr;
@@ -254,6 +255,7 @@ namespace Sexy
 		OtherTypePet*					mPrestoPtr;
 		UserProfile*					mCurrentProfile;
 		APBridge*						mAPBridge;
+		APGameController*				mAPController;
 		UserProfile*					mAPProfile;		// profile mAPBridge was last set up for
 		std::string						mAPServer;		// its settings at that time
 		std::string						mAPSlot;

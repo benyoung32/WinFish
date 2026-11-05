@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -95,11 +95,11 @@
       <ConformanceMode>false</ConformanceMode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\source;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Ben\Documents\Code\WinFish\WinFish\source;..\source;</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <AdditionalOptions>/wd4996 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>Default</LanguageStandard>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -127,7 +127,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Administrator\OneDrive\Desktop\osframework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Ben\Documents\Code\WinFish\WinFish\source;C:\Users\Administrator\OneDrive\Desktop\osframework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,6 +142,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\Ben\Documents\Code\WinFish\WinFish\source;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,6 +159,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\Ben\Documents\Code\WinFish\WinFish\source;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -175,6 +177,8 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
       <AdditionalOptions>/Zc:__cplusplus /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="ArchipelagoDialog.cpp" />
+    <ClCompile Include="APGameController.cpp" />
+    <ClCompile Include="LevelSettings.cpp" />
     <ClCompile Include="BallFish.cpp" />
     <ClCompile Include="BetaSupport.cpp" />
     <ClCompile Include="BiFish.cpp" />
@@ -207,6 +211,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
     <ClCompile Include="InterludeScreen.cpp" />
     <ClCompile Include="InternetManager.cpp" />
     <ClCompile Include="Larva.cpp" />
+    <ClCompile Include="linker_fix.cpp" />
     <ClCompile Include="MenuButtonWidget.cpp" />
     <ClCompile Include="MessageWidget.cpp" />
     <ClCompile Include="Missle.cpp" />
@@ -251,6 +256,9 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
   <ItemGroup>
     <ClInclude Include="Alien.h" />
     <ClInclude Include="APBridge.h" />
+    <ClInclude Include="APDefinitions.h" />
+    <ClInclude Include="APGameController.h" />
+    <ClInclude Include="LevelSettings.h" />
     <ClInclude Include="ArchipelagoDialog.h" />
     <ClInclude Include="BallFish.h" />
     <ClInclude Include="BetaSupport.h" />

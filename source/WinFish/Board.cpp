@@ -48,6 +48,8 @@
 #include "SylvesterFish.h"
 #include "BallFish.h"
 #include "BiFish.h"
+#include "APGameController.h"
+#include "LevelSettings.h"
 
 #include <chrono>
 #include <ctime>
@@ -615,6 +617,8 @@ void Board::Update()
 		return;
 
 	mFishSongMgr->Update();
+	if (mApp->mAPController != NULL)
+		mApp->mAPController->UpdateBoard(this);
 
 	if (((mApp->mCurrentProfile->mCheatCodeFlags >> 3) & 1))
 		mStarField->Update();
@@ -705,6 +709,8 @@ void Board::Update()
 			mShouldSave = false;
 			Unk04();
 			mApp->mHighScoreMgr->RecordTimeTrialHighScore(mTank, mApp->mCurrentProfile, mMoney);
+			if (mApp->mAPController != NULL && mTank >= 1 && mTank <= 4)
+				mApp->mAPController->ReportTimeTrialComplete(mTank);
 			mApp->DoTimesUpDialog();
 			return;
 		}
@@ -2759,6 +2765,8 @@ void Sexy::Board::InitLevel()
 
 	if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
 		MakeVirtualTankButtons();
+	if (mApp->mAPController != NULL)
+		mApp->mAPController->ApplyLevelStart(this);
 	mWidgetManager->MarkAllDirty();
 }
 
@@ -3271,6 +3279,25 @@ void Sexy::Board::HandleBuyEgg()
 		ShowText("Collect 2 more egg pieces to finish level!", true, 10);
 
 	m0x43c++;
+	int aPieceBought = m0x43c - 1;
+	if (mApp->mAPController != NULL && aPieceBought >= 1 && aPieceBought <= 3)
+	{
+		mApp->mAPController->ReportEggPiece(mTank, mLevel, aPieceBought);
+	}
+
+	if (m0x43c >= 4 && mApp->mAPController != NULL)
+	{
+		if (mTank == 5)
+		{
+			mApp->mAPController->ReportCyrax();
+			if (mApp->mAPBridge != NULL)
+				mApp->mAPBridge->SendGoal();
+		}
+		else if (mLevel == 5)
+		{
+			mApp->mAPController->ReportTankComplete(mTank);
+		}
+	}
 
 	if (mApp->mGameMode == GAMEMODE_CHALLENGE)
 	{
@@ -3842,6 +3869,18 @@ void Sexy::Board::ResetLevel(WidgetManager* theWidgetManager)
 
 void Sexy::Board::DeterminePricesAndSlots()
 {
+	if (LevelSettingsManager::Get()->HasOverride(mTank, mLevel))
+	{
+		const LevelConfig* aCfg = LevelSettingsManager::Get()->GetOverride(mTank, mLevel);
+		for (int i = 0; i < SLOT_END; i++)
+		{
+			mSlotNumber[i] = aCfg->mSlotNumber[i];
+			mSlotPrices[i] = aCfg->mSlotPrices[i];
+		}
+		mAlienExpect = aCfg->mAlienExpect;
+		mAlienTimer = aCfg->mAlienTimer;
+		return;
+	}
 	if (!mApp->mRelaxMode)
 	{
 		if (mTank == 1)

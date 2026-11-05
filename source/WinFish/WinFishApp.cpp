@@ -37,6 +37,7 @@
 
 #include "WorkerThread.h"
 #include "APBridge.h"
+#include "APGameController.h"
 #include "ArchipelagoDialog.h"
 #include "HighScoreMgr.h"
 #include "ProfileMgr.h"
@@ -242,6 +243,7 @@ WinFishApp::WinFishApp()
 	mYieldMainThread = false;
 	mCurrentProfile = NULL;
 	mAPBridge = NULL;
+	mAPController = NULL;
 	mAPProfile = NULL;
 	mAPSeedPromptOpen = false;
 
@@ -373,6 +375,8 @@ Sexy::WinFishApp::~WinFishApp()
 
 	delete mAPBridge;
 	mAPBridge = NULL;
+	delete mAPController;
+	mAPController = NULL;
 
 	if(mProfileMgr)
 		delete mProfileMgr;
@@ -401,6 +405,7 @@ void Sexy::WinFishApp::Init()
 		char aModuleFileName[260];
 		GetModuleFileNameA(NULL, aModuleFileName, sizeof(aModuleFileName));
 		mAPBridge = new APBridge(GetAppDataFolder() + "userdata\\", GetFileDir(aModuleFileName, true) + "cacert.pem");
+		mAPController = new APGameController(this, mAPBridge);
 		SexyString aModulePath = aModuleFileName;
 
 		if (CheckForVista())
@@ -2278,9 +2283,18 @@ void Sexy::WinFishApp::UpdateArchipelago()
 			mAPBridge->Disconnect();
 		else
 			mAPBridge->Connect(aServer, aSlot, aPassword);
+
+		if (mAPController != NULL)
+		{
+			mAPController->ResetSession();
+			if (mCurrentProfile != NULL)
+				mAPController->LoadFromProfile(mCurrentProfile);
+		}
 	}
 
 	mAPBridge->Update();
+	if (mAPController != NULL)
+		mAPController->Update();
 
 	if (!mLoaded || mTitleScreen != NULL)
 		return;
@@ -2310,6 +2324,8 @@ void Sexy::WinFishApp::UpdateArchipelago()
 		{
 			// Checks made while disconnected (saved in the outbox) go out now.
 			mAPBridge->SendChecks(aProf->mAPPendingChecks);
+			if (mAPController != NULL)
+				mAPController->OnConnected(aProf->mAPSlot, aSeed);
 		}
 	}
 
@@ -2378,9 +2394,11 @@ void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
 
 void Sexy::WinFishApp::ApplyArchipelagoItem(const APReceivedItem& theItem)
 {
+	if (mAPController != NULL)
+		mAPController->OnItemReceived(theItem);
 	// No item has an effect yet; real effects will be dispatched from here.
-	OutputDebugStringA(StrFormat("Fishapelago: received item %lld (index %d, from player %d, location %lld)\n",
-		theItem.mItem, theItem.mIndex, theItem.mPlayer, theItem.mLocation).c_str());
+	OutputDebugStringA(StrFormat("Fishapelago: received item '%s' [%lld] (index %d, from player %d, location %lld)\n",
+		APItemName(theItem.mItem), theItem.mItem, theItem.mIndex, theItem.mPlayer, theItem.mLocation).c_str());
 }
 
 void Sexy::WinFishApp::TitleScreenIsFinished()

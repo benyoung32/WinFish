@@ -12,6 +12,7 @@ static const char* const AP_GAME_NAME = "Insaniquarium Deluxe";
 // Remote items from other worlds, our own world, and starting inventory.
 static const int AP_ITEMS_HANDLING = 0b111;
 
+
 static std::string MakeServerUri(const std::string& theServer)
 {
 	if (theServer.find("://") != std::string::npos)
@@ -53,6 +54,7 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 	mJustConnected = false;
 	mReceivedItems.clear();
 	mConfirmedChecks.clear();
+	mSentItems.clear();
 
 	std::string aUuid = ap_get_uuid(mDataFolder + "ap_uuid.txt", theServer);
 	std::string aUri = MakeServerUri(theServer);
@@ -100,6 +102,39 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 			mConfirmedChecks.push_back((int)aLocation);
 	});
 
+	mClient->set_print_json_handler([this](const APClient::PrintJSONArgs& theArgs)
+	{
+		if (theArgs.type != "ItemSend" || theArgs.item == NULL || theArgs.receiving == NULL)
+			return;
+
+		if (theArgs.item->player != mClient->get_player_number())
+			return;
+
+		int aReceiverSlot = *theArgs.receiving;
+		std::string aRecipientSlot = mClient->get_player_alias(aReceiverSlot);
+		if (aRecipientSlot.empty() || aRecipientSlot == "Unknown")
+		{
+			if (aReceiverSlot == mClient->get_player_number())
+				aRecipientSlot = mSlot;
+			else
+				aRecipientSlot = "Player " + std::to_string(aReceiverSlot);
+		}
+
+		int64_t aItemId = theArgs.item->item;
+		std::string aReceiverGame = mClient->get_player_game(aReceiverSlot);
+		std::string anItemName = mClient->get_item_name(aItemId, aReceiverGame);
+		if (anItemName.empty() || anItemName == "Unknown")
+		{
+			const char* aLocalName = APItemName(aItemId);
+			if (strcmp(aLocalName, "Unknown Item") != 0)
+				anItemName = aLocalName;
+			else
+				anItemName = "Item " + std::to_string(aItemId);
+		}
+
+		mSentItems.push_back({ anItemName, aRecipientSlot });
+	});
+
 	mClient->set_slot_refused_handler([this](const std::list<std::string>& theErrors)
 	{
 		mState = AP_SLOT_REFUSED;
@@ -118,6 +153,7 @@ void APBridge::Disconnect()
 	delete mClient;
 	mClient = NULL;
 	mState = AP_DISCONNECTED;
+	mSentItems.clear();
 }
 
 void APBridge::StopForWrongSeed()
@@ -149,6 +185,12 @@ void APBridge::PopConfirmedChecks(std::vector<int>& theLocations)
 {
 	theLocations.swap(mConfirmedChecks);
 	mConfirmedChecks.clear();
+}
+
+void APBridge::PopSentItems(std::vector<APSentItem>& theSentItems)
+{
+	theSentItems.swap(mSentItems);
+	mSentItems.clear();
 }
 
 bool APBridge::IsLocationChecked(int theLocationId) const

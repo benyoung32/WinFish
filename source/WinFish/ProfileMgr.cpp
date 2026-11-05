@@ -457,6 +457,14 @@ void Sexy::UserProfile::Init()
     mAPSeed.clear();
     mAPItemIndex = 0;
     mAPPendingChecks.clear();
+    mAPSlotData.clear();
+    mAPFoodQuality = 0;
+    mAPFoodQuantity = 0;
+    mAPPetSlots = 0;
+    mAPWeaponLevel = 0;
+    mAPStartingMoneyBonus = 0;
+    for (int i = 0; i < 4; i++)
+        mAPUnlockedTanks[i] = false;
 }
 
 void Sexy::UserProfile::SetCheatFlag(char thePos, bool theFlag)
@@ -504,7 +512,8 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
 
     // 0x80000000 is the original game's format; 0x80000001 is Fishapelago's first release, which appends
     // the Archipelago fields below.
-    uint aVer = 0x80000001;
+    // 0x80000000 is original; 0x80000001 is Fishapelago v1; 0x80000002 adds embedded slot data & AP state (Option C)
+    uint aVer = 0x80000002;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -594,6 +603,18 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
             for (int aLocationId : mAPPendingChecks)
                 theDataSync.SyncLong(aLocationId);
         }
+    }
+
+    if (aVer >= 0x80000002)
+    {
+        theDataSync.SyncString(mAPSlotData);
+        theDataSync.SyncLong(mAPFoodQuality);
+        theDataSync.SyncLong(mAPFoodQuantity);
+        theDataSync.SyncLong(mAPPetSlots);
+        theDataSync.SyncLong(mAPWeaponLevel);
+        theDataSync.SyncLong(mAPStartingMoneyBonus);
+        for (int i = 0; i < 4; i++)
+            theDataSync.SyncBool(mAPUnlockedTanks[i]);
     }
 
     if (theReader)

@@ -453,6 +453,9 @@ sounds/
 *.dat
 **/[Uu]serdata/
 UnusedStuff/
+world/**
+world
+GEMINI.md
 # Vendored websocketpp has a source folder named debug/
 !source/apclientpp/websocketpp/websocketpp/transport/debug/
 # Visual Studio backups made when saving files it had open

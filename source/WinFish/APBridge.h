@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "APDefinitions.h"
+
 // Thin wrapper around apclientpp. Only APBridge.cpp includes apclient.hpp, so asio/websocketpp
 // never reach the SexyAppFramework headers (Common.h pins _WIN32_WINNT to 0x0500, asio needs 0x0600+).
 
@@ -20,6 +22,12 @@ namespace Sexy
 		int64_t		mLocation;
 		int			mPlayer;
 		int			mIndex;
+	};
+
+	struct APSentItem
+	{
+		std::string	mItemName;
+		std::string	mRecipientSlot;
 	};
 
 	class APBridge
@@ -58,6 +66,7 @@ namespace Sexy
 		bool ConsumeJustConnected();									// true once per successful slot login
 		void PopReceivedItems(std::vector<APReceivedItem>& theItems);
 		void PopConfirmedChecks(std::vector<int>& theLocations);	// locations the server reports as checked
+		void PopSentItems(std::vector<APSentItem>& theSentItems);
 		bool IsLocationChecked(int theLocationId) const;
 		std::string GetSeed() const;									// empty until room info arrives
 
@@ -81,6 +90,7 @@ namespace Sexy
 		bool mJustConnected;
 		std::vector<APReceivedItem> mReceivedItems;
 		std::vector<int> mConfirmedChecks;
+		std::vector<APSentItem> mSentItems;
 	};
 };
 

@@ -56,6 +56,15 @@ namespace Sexy
 		// which can't be replayed). Resent on connect; entries leave once the server reports them checked.
 		std::set<int> mAPPendingChecks;
 
+		// Embedded Slot Data and AP Game Controller State (Option C)
+		std::string mAPSlotData;
+		int mAPFoodQuality;
+		int mAPFoodQuantity;
+		int mAPPetSlots;
+		int mAPWeaponLevel;
+		int mAPStartingMoneyBonus;
+		bool mAPUnlockedTanks[4];
+
 	public:
 		UserProfile();
 
