@@ -23,7 +23,6 @@ namespace Sexy
 		Checkbox* m3DCB;
 		DialogButton* mRegisterButton;
 		DialogButton* mHelpButton;
-		DialogButton* mCheckUpdatesButton;
 		DialogButton* mWebLinkButton;
 		DialogButton* mBackButton;
 		bool mFlag;

@@ -1,4 +1,6 @@
-# Insaniquarium APClient written by dmwever
+### Insaniquarium APClient written by dmwever
+
+### Archipelago assets created by bootsowen
 
 This is an implementation of the Archipelago client for Insaniquarium Deluxe built on the WinFish decompilation project.
 

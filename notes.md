@@ -32,13 +32,19 @@ create a AP status screen that lists the total received items (pets 10/20, etc. 
     bonus money
     tanks unlocked
 
-should items received be instant when starting a level, or should they just make the upgrades free. 
+Should received food/weapon upgrades:
+1. be received instantly
+2. become free in the shop, but they still have to be reached in each level
+3. unlocked in the shop but still cost coins
 
 Are there other upgrades that could be added out of sequence to the game? Fish in levels they dont belong in?
 
 how should pets be weighted (progression, useful, filler). Should they all be equal or should the be some bias put in to the "best" pets?
 
 virtual tank: I have no ideas/plans for this, I never really play virtual tank but it could be reworked to be a place to make progress while BK'd on tanks. 
+
+high score page: 
+could be reworked to include scores from community? or other information from the archipelago 
 
 # ideas from discord: 
 

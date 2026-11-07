@@ -17,12 +17,10 @@ Sexy::OptionsDialog::OptionsDialog(WinFishApp* theApp, bool theFlag)
 	mApp2 = theApp;
 	SetColor(3, Color(0xff, 0xff, 100));
 	mFlag = theFlag;
-	mRegisterButton = MakeDialogButton(0, this, "Register", NULL);
 	mHelpButton = MakeDialogButton(1, this, "Help", NULL);
 	SexyString aWebLinkStr = mApp->GetString("weblinktext", "");
 	mWebLinkButton = MakeDialogButton(2, this, aWebLinkStr, NULL);
 
-	mCheckUpdatesButton = MakeDialogButton(4, this, "Check Updates", NULL);
 	mBackButton = MakeDialogButton(3, this, "Back to Main Menu", NULL);
 
 	mMusicSlider = new Slider(IMAGE_SLIDERTRACK, IMAGE_SLIDERTHUMB, 5, this);
@@ -41,19 +39,11 @@ Sexy::OptionsDialog::OptionsDialog(WinFishApp* theApp, bool theFlag)
 
 	if (theFlag)
 		mBackButton->SetVisible(false);
-	if (mApp->mDontUpdate)
-		mCheckUpdatesButton->SetVisible(false);
-	if(mApp->mBuildUnlocked)
-		mRegisterButton->SetVisible(false);
 	mWebLinkButton->SetVisible(mWebLinkButton->mLabel.size() != 0);
 }
 
 Sexy::OptionsDialog::~OptionsDialog()
 {
-	if (mRegisterButton)
-		delete mRegisterButton;
-	if (mCheckUpdatesButton)
-		delete mCheckUpdatesButton;
 	if (mWebLinkButton)
 		delete mWebLinkButton;
 	if (mMusicSlider)
@@ -75,8 +65,6 @@ Sexy::OptionsDialog::~OptionsDialog()
 void Sexy::OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 {
 	MoneyDialog::AddedToManager(theWidgetManager);
-	theWidgetManager->AddWidget(mRegisterButton);
-	theWidgetManager->AddWidget(mCheckUpdatesButton);
 	theWidgetManager->AddWidget(mHelpButton);
 	theWidgetManager->AddWidget(mMusicSlider);
 	theWidgetManager->AddWidget(mSFXSlider);
@@ -90,8 +78,6 @@ void Sexy::OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 void Sexy::OptionsDialog::RemovedFromManager(WidgetManager* theWidgetManager)
 {
 	MoneyDialog::RemovedFromManager(theWidgetManager);
-	theWidgetManager->RemoveWidget(mRegisterButton);
-	theWidgetManager->RemoveWidget(mCheckUpdatesButton);
 	theWidgetManager->RemoveWidget(mHelpButton);
 	theWidgetManager->RemoveWidget(mMusicSlider);
 	theWidgetManager->RemoveWidget(mSFXSlider);
@@ -141,8 +127,6 @@ void Sexy::OptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight
 
 	std::vector<ButtonWidget*> aBottomButtons;
 	if (mHelpButton->mVisible) aBottomButtons.push_back(mHelpButton);
-	if (mRegisterButton->mVisible) aBottomButtons.push_back(mRegisterButton);
-	if (mCheckUpdatesButton->mVisible) aBottomButtons.push_back(mCheckUpdatesButton);
 
 	if (aBottomButtons.size() == 1 || aBottomButtons.size() == 3)
 	{
@@ -178,8 +162,6 @@ int Sexy::OptionsDialog::GetPreferredHeight(int theWidth)
 	int aPrefHght = 362;
 	if (!mBackButton->mVisible)
 		aPrefHght = 328;
-	if (mRegisterButton->mVisible && mCheckUpdatesButton->mVisible)
-		aPrefHght += 34;
 	if (mWebLinkButton->mVisible)
 		aPrefHght += 34;
 	return aPrefHght;
@@ -249,9 +231,6 @@ void Sexy::OptionsDialog::ButtonDepress(int theId)
 		return;
 	case 3:
 		break;
-	case 4:
-		mApp->DoUpdateCheckDialog();
-		return;
 	default:
 		return;
 	}

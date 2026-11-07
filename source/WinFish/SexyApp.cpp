@@ -295,21 +295,7 @@ bool SexyApp::OpenRegisterPage(DefinesMap theStatsMap)
 
 bool SexyApp::ShouldCheckForUpdate()
 {
-	if (mDontUpdate)
-		return false;
-
-#ifdef ZYLOM
-	return ZylomUpdateCheckNeeded();
-#else
-	time_t aTimeNow;
-	time(&aTimeNow);
-
-	// It is set to 0 if we crash, otherwise ask every week
-	return ((mLastVerCheckQueryTime == 0) ||
-		(!mLastShutdownWasGraceful) ||
-		((mLastVerCheckQueryTime != 0) &&
-			(aTimeNow - mLastVerCheckQueryTime > 7 * 24 * 60 * 60)));
-#endif
+	return false;
 }
 
 void SexyApp::UpdateCheckQueried()

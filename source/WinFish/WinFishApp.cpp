@@ -658,9 +658,6 @@ void Sexy::WinFishApp::LoadingThreadCompleted()
 {
 	if (IsScreenSaver())
 		return;
-
-	if (ShouldCheckForUpdate())
-		DoUpdateDialog();
 }
 
 MusicInterface* Sexy::WinFishApp::CreateMusicInterface(HWND theHWnd)
