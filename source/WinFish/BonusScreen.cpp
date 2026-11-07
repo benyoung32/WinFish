@@ -653,20 +653,23 @@ void Sexy::BonusScreen::ConfirmPurchase()
 	mShellImage = nullptr;
 
 	UserProfile* aCurUser = mApp->mCurrentProfile;
-	switch (aCurUser->mBonusItemId)
+	if (!aCurUser->HasAPConnection())
 	{
-	case 0:
-		aCurUser->UnlockPet(PET_BRINKLEY, true);
-		break;
-	case 1:
-		aCurUser->UnlockPet(PET_NOSTRADAMUS, true);
-		break;
-	case 2:
-		aCurUser->UnlockPet(PET_STANLEY, true);
-		break;
-	case 3:
-		aCurUser->UnlockPet(PET_WALTER, true);
-		break;
+		switch (aCurUser->mBonusItemId)
+		{
+		case 0:
+			aCurUser->UnlockPet(PET_BRINKLEY, true);
+			break;
+		case 1:
+			aCurUser->UnlockPet(PET_NOSTRADAMUS, true);
+			break;
+		case 2:
+			aCurUser->UnlockPet(PET_STANLEY, true);
+			break;
+		case 3:
+			aCurUser->UnlockPet(PET_WALTER, true);
+			break;
+		}
 	}
 	if (aCurUser->mBonusItemId >= 0 && aCurUser->mBonusItemId < 4)
 	{

@@ -20,6 +20,7 @@ namespace Sexy
 		ScrollbarWidget*		mScrollbarWidget;
 		DialogButton*			mRenameButton;
 		DialogButton*			mDeleteButton;
+		DialogButton*			mImportButton;
 		bool					mTransferShells;
 
 	public:
@@ -39,6 +40,7 @@ namespace Sexy
 		virtual void			ButtonDepress(int theId);
 		virtual void			ListClicked(int theId, int theIdx, int theClickCount);
 
+		void					PopulateList();
 		SexyString				GetSelectedUserName();
 		int						GetShellsValue();
 

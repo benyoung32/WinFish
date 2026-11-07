@@ -93,7 +93,7 @@ namespace Sexy
 		int							GetTimeTrialScore(int theTank);
 		int							GetChallengeScore(int theTank);
 
-		bool						HasAPConnection() const { return !mAPServer.empty() && !mAPSlot.empty(); }
+		bool						HasAPConnection() const { return !mAPSlot.empty(); }
 
 		static SexyString			MakeAPProfileKey(const std::string& theSlot, const std::string& theServer);
 		SexyString					GetDisplayName() const;

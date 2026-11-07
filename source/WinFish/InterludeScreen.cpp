@@ -433,7 +433,7 @@ void Sexy::InterludeScreen::Draw(Graphics* g)
 	}
 
 	m0xac += m0xb0 * 6;
-	if (!mApp->mCurrentProfile->IsPetUnlocked(PET_BRINKLEY))
+	if (!mApp->mCurrentProfile->IsPetUnlocked(PET_STANLEY))
 	{
 		DrawStringHelper(g, "?", 0, 0, 1);
 		g->DrawImage(IMAGE_EGGSTANLEY, 150, m0xac - 150);

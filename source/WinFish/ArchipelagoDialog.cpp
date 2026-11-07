@@ -1,5 +1,6 @@
 #include <SexyAppFramework/WidgetManager.h>
 #include <SexyAppFramework/EditWidget.h>
+#include <SexyAppFramework/DialogButton.h>
 
 #include "ArchipelagoDialog.h"
 #include "WinFishApp.h"
@@ -105,12 +106,22 @@ void Sexy::ArchipelagoDialog::Resize(int theX, int theY, int theWidth, int theHe
 
 int Sexy::ArchipelagoDialog::GetPreferredHeight(int theWidth)
 {
-	return MoneyDialog::GetPreferredHeight(theWidth) + NUM_EDITS * (24 + 34);
+	return MoneyDialog::GetPreferredHeight(theWidth) + NUM_EDITS * (24 + 34) + 36;
 }
 
 void Sexy::ArchipelagoDialog::ButtonPress(int theId)
 {
 	mApp->PlaySample(SOUND_BUTTONCLICK);
+}
+
+void Sexy::ArchipelagoDialog::ButtonDepress(int theId)
+{
+	if (theId == 100)
+	{
+		mApp->PromptImportAPSave();
+		return;
+	}
+	MoneyDialog::ButtonDepress(theId);
 }
 
 void Sexy::ArchipelagoDialog::EditWidgetText(int theId, const SexyString& theString)

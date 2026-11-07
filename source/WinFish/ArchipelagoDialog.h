@@ -9,6 +9,7 @@ namespace Sexy
 	class WinFishApp;
 	class EditWidget;
 	class UserProfile;
+	class DialogButton;
 
 	// Creates a profile from a new Archipelago connection, or edits an existing profile's connection.
 	class ArchipelagoDialog : public MoneyDialog, public ButtonListener, public EditListener
@@ -24,6 +25,7 @@ namespace Sexy
 
 		SexyString				mUserName;		// profile being edited; empty for a new connection
 		EditWidget*				mEditWidgets[NUM_EDITS];
+		DialogButton*			mImportButton;
 
 	public:
 		// theProfile == NULL opens a new connection with theDefaultServer prefilled.
@@ -37,6 +39,7 @@ namespace Sexy
 		virtual int				GetPreferredHeight(int theWidth);
 
 		virtual void			ButtonPress(int theId);
+		virtual void			ButtonDepress(int theId);
 
 		virtual void			EditWidgetText(int theId, const SexyString& theString);
 

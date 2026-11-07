@@ -1,6 +1,8 @@
 #include "APGameController.h"
 #include "WinFishApp.h"
 #include "Board.h"
+#include "Fish.h"
+#include "Breeder.h"
 #include "ProfileMgr.h"
 #include "Res.h"
 #include <SexyAppFramework/Debug.h>
@@ -137,13 +139,14 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		mPetSlots++;
 		break;
 
+	// TODO: allow this check to be affected by settings (should weapon upgrades give 2 lvls each or just 1)
 	case APItem::WEAPON_UPGRADE:
 		mWeaponLevel++;
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
-			int aLaser = 2 + mWeaponLevel;
-			if (aLaser > 12)
-				aLaser = 12;
+			int aLaser = 1 + mWeaponLevel;
+			if (aLaser > 10)
+				aLaser = 10;
 			mApp->mBoard->m0x3e4 = aLaser;
 		}
 		break;
@@ -285,6 +288,8 @@ void APGameController::UpdateBoard(Board* theBoard)
 		mNotificationQueue.pop_front();
 
 		// Show non-blocking green notification on board
+		// TODO: allow multiple notifications to play at once (3)
+		// would require reworking the show text function
 		theBoard->ShowText(aMsg, false, -1);
 		mNotificationCooldown = 180; // ~3 seconds at 60fps
 	}
@@ -303,8 +308,28 @@ void APGameController::UpdateBoard(Board* theBoard)
 		}
 		else if (aTrap == APItem::TRAP_FAMINE)
 		{
-			//TODO: Set guppies hunger high
+			// TODO: check that -100 is the correct value. fish die at -500
+			int newHunger = -1;
 			theBoard->ShowText("FAMINE TRAP ACTIVATED!", true, -1);
+			if (theBoard->mFishList != NULL)
+			{
+				for (size_t i = 0; i < theBoard->mFishList->size(); i++)
+				{
+					Fish* aFish = (*theBoard->mFishList)[i];
+					if (aFish != NULL)
+						aFish->mHunger = newHunger;
+				}
+			}
+			if (theBoard->mBreederList != NULL)
+			{
+				for (size_t i = 0; i < theBoard->mBreederList->size(); i++)
+				{
+					Breeder* aBreeder = (*theBoard->mBreederList)[i];
+					if (aBreeder != NULL)
+						aBreeder->mHunger = newHunger;
+				}
+			}
+
 		}
 	}
 }
@@ -348,4 +373,12 @@ void APGameController::SaveToProfile(UserProfile* theProfile)
 
 	for (int i = 0; i < 4; i++)
 		theProfile->mAPUnlockedTanks[i] = mUnlockedTanks[i + 1];
+
+	theProfile->mNumOfUnlockedPets = 0;
+	for (int i = 0; i < 24; i++)
+	{
+		theProfile->mUnlockedPets[i] = mUnlockedPets[i];
+		if (mUnlockedPets[i])
+			theProfile->mNumOfUnlockedPets++;
+	}
 }

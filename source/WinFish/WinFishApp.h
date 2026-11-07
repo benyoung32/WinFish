@@ -347,6 +347,8 @@ namespace Sexy
 		void						DoDeleteWarningDialog(SexyString& theName);
 		void						DoArchipelagoDialog(const SexyString& theUserName);
 		void						ApplyArchipelagoDialog(bool doApply);
+		bool						PromptImportAPSave();
+		bool						ImportAPSaveFile(const std::string& theFilePath);
 		void						DoUpdateCheckDialog();
 		void						DoLeaveGameDialog();
 		void						DoLostFocusDialog();

@@ -629,13 +629,16 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
 
     if (theReader)
     {
-        int anArrLvl = mTank * 5 - 6 + mLevel;
-        if (mTank > 4)
-            anArrLvl--;
-        if (mFinishedGame)
-            anArrLvl = 20;
-        for (int i = 0; i < anArrLvl; i++)
-            UnlockPet(i, true);
+        if (!HasAPConnection())
+        {
+            int anArrLvl = mTank * 5 - 6 + mLevel;
+            if (mTank > 4)
+                anArrLvl--;
+            if (mFinishedGame)
+                anArrLvl = 20;
+            for (int i = 0; i < anArrLvl; i++)
+                UnlockPet(i, true);
+        }
 
         mNumOfUnlockedPets = 0;
         for (int i = 0; i < PET_END; i++)
@@ -667,6 +670,8 @@ void Sexy::UserProfile::AddShells(int theValue)
 
 bool Sexy::UserProfile::IsPetUnlocked(int idx)
 {
+    if (idx < 0 || idx >= 24)
+        return false;
     return mUnlockedPets[idx];
 }
 

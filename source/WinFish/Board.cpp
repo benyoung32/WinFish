@@ -2182,9 +2182,9 @@ void Sexy::Board::StartGame()
 	}
 	UserProfile* aCurProf = mApp->mCurrentProfile;
 	if ((!aCurProf->mFinishedGame || (mApp->mGameMode != GAMEMODE_TIME_TRIAL &&
-		mApp->mGameMode != GAMEMODE_CHALLENGE)) && aCurProf->mNumOfUnlockedPets < 4)
+		mApp->mGameMode != GAMEMODE_CHALLENGE)) && aCurProf->mNumOfUnlockedPets <= 3)
 	{
-		for (int i = PET_STINKY; i < PET_PRESTO; i++)
+		for (int i = PET_STINKY; i < PET_END; i++)
 			if (aCurProf->IsPetUnlocked(i))
 				SpawnPet(i, -1, -1, false, false);
 	}
@@ -3384,13 +3384,17 @@ void Sexy::Board::HandleBuyEgg()
 	else if(mTank == 5)
 	{
 		aPetId = PET_PRESTO;
-		mApp->mCurrentProfile->UnlockPet(aPetId, true);
+		if (!mApp->mCurrentProfile->HasAPConnection())
+			mApp->mCurrentProfile->UnlockPet(aPetId, true);
 	}
 	else
 	{
 		aPetId = mTank * 5 - 6 + mLevel;
 		if(aPetId >= PET_STINKY && aPetId < PET_END)
-			mApp->mCurrentProfile->UnlockPet(aPetId, true);
+		{
+			if (!mApp->mCurrentProfile->HasAPConnection())
+				mApp->mCurrentProfile->UnlockPet(aPetId, true);
+		}
 	}
 
 	if (aPetId == PET_PRESTO)

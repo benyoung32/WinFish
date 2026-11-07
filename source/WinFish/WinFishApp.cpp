@@ -38,10 +38,14 @@
 #include "WorkerThread.h"
 #include "APBridge.h"
 #include "APGameController.h"
+#include "APSaveImporter.h"
 #include "ArchipelagoDialog.h"
 #include "HighScoreMgr.h"
 #include "ProfileMgr.h"
 #include "FishSongMgr.h"
+
+#include <commdlg.h>
+#include <cderr.h>
 
 #include "MoneyDialog.h"
 #include "ContinueDialog.h"
@@ -693,7 +697,7 @@ bool Sexy::WinFishApp::KillDialog(int theDialogId)
 	{
 		Widget* aTheScr = NULL;
 		if (mDialogMap.size() == 0 && ((aTheScr = mStoreScreen) != NULL || 
-			(aTheScr = mBoard) != NULL || (aTheScr = mGameSelector) != NULL))
+			(aTheScr = mBoard) != NULL || (aTheScr = mGameSelector) != NULL || (aTheScr = mTitleScreen) != NULL))
 			mWidgetManager->SetFocus(aTheScr);
 
 		if (mBoard != NULL)
@@ -2394,6 +2398,9 @@ void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
 	}
 	mCurrentProfile->mTank = 1;
 	mCurrentProfile->mLevel = 1;
+	for (int i = 0; i < 24; i++)
+		mCurrentProfile->mUnlockedPets[i] = false;
+	mCurrentProfile->mNumOfUnlockedPets = 0;
 	if (mAPController != NULL)
 		mAPController->ResetSession();
 }
@@ -2891,12 +2898,17 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 
 	if (!doApply)
 	{
-		// Every profile is an AP profile, so there's nothing to fall back to without one.
+		UserDialog* aUserDia = (UserDialog*)GetDialog(DIALOG_USER_DIALOG);
+		if (aUserDia != NULL)
+		{
+			KillDialog(DIALOG_ARCHIPELAGO);
+			return;
+		}
+
 		if (mCurrentProfile == NULL)
 		{
-			DoDialog(DIALOG_INFO, true, "Connection Required",
-				"Insaniquarium Archipelago needs a connection to an Archipelago server. Please enter your server and slot.",
-				"OK", Dialog::BUTTONS_FOOTER);
+			KillDialog(DIALOG_ARCHIPELAGO);
+			DoWhoAreYouDialog();
 			return;
 		}
 		KillDialog(DIALOG_ARCHIPELAGO);
@@ -2964,6 +2976,176 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 	mProfileMgr->SaveUsersDat();
 	KillDialog(DIALOG_ARCHIPELAGO);
 	mWidgetManager->MarkAllDirty();
+}
+
+bool Sexy::WinFishApp::PromptImportAPSave()
+{
+	char aCurrentDir[MAX_PATH] = "";
+	::GetCurrentDirectoryA(MAX_PATH, aCurrentDir);
+
+	char aFileName[MAX_PATH] = "";
+	OPENFILENAMEA anOfn;
+	memset(&anOfn, 0, sizeof(anOfn));
+	anOfn.lStructSize = sizeof(anOfn);
+	anOfn.hwndOwner = mHWnd;
+	anOfn.lpstrFilter = "Archipelago Insaniquarium Save (*.apinsani;)\0*.apinsani;\0All Files (*.*)\0*.*\0";
+	anOfn.lpstrFile = aFileName;
+	anOfn.nMaxFile = MAX_PATH;
+	anOfn.lpstrTitle = "Select Archipelago Save (.apinsani)";
+	anOfn.lpstrDefExt = "apinsani";
+	anOfn.nFilterIndex = 1;
+	anOfn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+	BOOL aResult = ::GetOpenFileNameA(&anOfn);
+	if (!aResult && ::CommDlgExtendedError() == CDERR_STRUCTSIZE)
+	{
+		// Fallback for environments requiring legacy struct size
+		anOfn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+		aResult = ::GetOpenFileNameA(&anOfn);
+	}
+
+	// Restore current working directory since GetOpenFileName can change it
+	if (aCurrentDir[0] != '\0')
+		::SetCurrentDirectoryA(aCurrentDir);
+
+	// Explicitly restore foreground and input focus to the game window
+	::SetForegroundWindow(mHWnd);
+	::SetActiveWindow(mHWnd);
+	::SetFocus(mHWnd);
+
+	if (mWidgetManager != NULL)
+	{
+		mWidgetManager->GotFocus();
+		mWidgetManager->MarkAllDirty();
+	}
+
+	if (aResult)
+	{
+		return ImportAPSaveFile(aFileName);
+	}
+	return false;
+}
+
+bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
+{
+	APArchiveContents anArchive;
+	std::string anErr;
+	if (!APSaveImporter::ExtractArchive(theFilePath, anArchive, anErr))
+	{
+		SexyString aMsg = "Failed to extract save archive: " + anErr;
+		DoDialog(DIALOG_INFO, true, "Import Error", aMsg, "OK", Dialog::BUTTONS_FOOTER);
+		return false;
+	}
+
+	if (!anArchive.mHasUser1Dat || anArchive.mUser1Dat.empty())
+	{
+		DoDialog(DIALOG_INFO, true, "Import Error", "The file does not contain valid user save data.", "OK", Dialog::BUTTONS_FOOTER);
+		return false;
+	}
+
+	UserProfile aNewProf;
+
+	// Populate Archipelago slot and server before SyncData so HasAPConnection() is recognized
+	if (!anArchive.mSlotName.empty())
+		aNewProf.mAPSlot = anArchive.mSlotName;
+	if (!anArchive.mServer.empty())
+		aNewProf.mAPServer = anArchive.mServer;
+
+	DataReader aDR;
+	aDR.OpenMemory(anArchive.mUser1Dat.data(), static_cast<unsigned long>(anArchive.mUser1Dat.size()), false);
+	DataSync aDS(aDR);
+	aNewProf.SyncData(aDS);
+
+	// In Archipelago, all pets must be awarded as items from the server, not pre-unlocked from save templates
+	for (int i = 0; i < PET_END; i++)
+		aNewProf.mUnlockedPets[i] = false;
+	aNewProf.mNumOfUnlockedPets = 0;
+
+	if (anArchive.mHasSlotDataJson && !anArchive.mSlotDataJson.empty())
+		aNewProf.mAPSlotData = anArchive.mSlotDataJson;
+
+	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : (int)aNewProf.mTank;
+	if (aTank < 1 || aTank > 4)
+		aTank = 1;
+	aNewProf.mAPUnlockedTanks[aTank - 1] = true;
+	aNewProf.mTank = aTank;
+	int aInitLvl = (int)aNewProf.mLevel;
+	aNewProf.mAPTankLevels[aTank - 1] = (aInitLvl > 1) ? aInitLvl : 1;
+
+	SexyString aUserNameFromUsersDat = "";
+	if (anArchive.mHasUsersDat && !anArchive.mUsersDat.empty())
+	{
+		DataReader aUsersDR;
+		aUsersDR.OpenMemory(anArchive.mUsersDat.data(), static_cast<unsigned long>(anArchive.mUsersDat.size()), false);
+		DataSync aUsersDS(aUsersDR);
+		int aDatVer = 0;
+		aUsersDS.SyncLong(aDatVer);
+		if (aDatVer == gUsersDatVersion)
+		{
+			int aCount = aUsersDR.ReadShort();
+			if (aCount > 0)
+			{
+				aUsersDS.SyncString(aUserNameFromUsersDat);
+			}
+		}
+	}
+
+	SexyString aProfileKey = "";
+	if (aNewProf.HasAPConnection())
+		aProfileKey = UserProfile::MakeAPProfileKey(aNewProf.mAPSlot, aNewProf.mAPServer);
+	else if (!aUserNameFromUsersDat.empty())
+		aProfileKey = aUserNameFromUsersDat;
+	else
+		aProfileKey = aNewProf.mUserName.empty() ? "AP Run" : aNewProf.mUserName;
+
+	aNewProf.mUserName = aProfileKey;
+
+	UserProfile* anExisting = mProfileMgr->GetUserProfile(aProfileKey);
+	if (anExisting != NULL)
+	{
+		int anId = anExisting->mId;
+		int aSeq = anExisting->m0x40;
+		*anExisting = aNewProf;
+		anExisting->mId = anId;
+		anExisting->m0x40 = aSeq;
+		anExisting->Save();
+		mCurrentProfile = anExisting;
+	}
+	else
+	{
+		int aNewId = mProfileMgr->m0x10++;
+		aNewProf.mId = aNewId;
+		aNewProf.m0x40 = mProfileMgr->m0x14++;
+		UserProfile* anInserted = mProfileMgr->InsertProfile(&aNewProf);
+		if (anInserted != NULL)
+		{
+			anInserted->Save();
+			mCurrentProfile = anInserted;
+		}
+	}
+
+	mProfileMgr->SaveUsersDat();
+
+	KillDialog(DIALOG_ARCHIPELAGO);
+
+	UserDialog* aUserDia = (UserDialog*)GetDialog(DIALOG_USER_DIALOG);
+	if (aUserDia != NULL)
+	{
+		aUserDia->PopulateList();
+	}
+
+	if (mAPController != NULL && mCurrentProfile != NULL)
+	{
+		mAPController->ResetSession();
+		mAPController->LoadFromProfile(mCurrentProfile);
+	}
+
+	SexyString aDisplayName = mCurrentProfile ? mCurrentProfile->GetDisplayName() : aProfileKey;
+	DoDialog(DIALOG_INFO, true, "Profile Imported",
+		StrFormat("Successfully imported profile '%s'!", aDisplayName.c_str()), "OK", Dialog::BUTTONS_FOOTER);
+
+	mWidgetManager->MarkAllDirty();
+	return true;
 }
 
 void Sexy::WinFishApp::UserDialogOkPressed(bool applyChanges)
