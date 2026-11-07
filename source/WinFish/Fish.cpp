@@ -1699,26 +1699,25 @@ void Sexy::Fish::FishOnGrow()
             }
             else if (aLevel == 2)
             {
-                if (!aBoard->mSlotUnlocked[SlotTypes::SLOT_FOODLVL])
+                if (!aBoard->mSlotUnlocked[SlotTypes::SLOT_EGG])
                 {
-                    aBoard->mMessageShown[15] = true;
-                    if (!aFinishedGame)
-                        aBoard->ShowText("Upgrade Food Quality to make food more nourishing!", false, 11);
-                    aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLVL, true);
-                    return;
+                    aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_EGG, true);
+                    aBoard->mMessageShown[2] = false;
+                    aBoard->mMessageShown[40] = true;
+                    if (!aFinishedGame && aBoard->mMessageWidget->mMessageTimer < 1)
+                    {
+                        aBoard->ShowText("Buy 3 egg pieces to complete level!", false, 7);
+                        return;
+                    }
                 }
             }
             else
             { //53
-                aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLVL, true);
-                aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLIMIT, true);
                 aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_OSCAR, true);
             }
         }
         else if (aTank == 2)
         {
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLVL, true);
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLIMIT, true);
             aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_POTION, true);
             if (aLevel == 1)
             {
@@ -1730,15 +1729,11 @@ void Sexy::Fish::FishOnGrow()
         }
         else if (aTank == 3)
         {
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLVL, true);
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLIMIT, true);
             aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_GRUBBER, true);
             return;
         }
         else if (aTank == 4)
         {
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLVL, true);
-            aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_FOODLIMIT, true);
             aBoard->MakeAndUnlockMenuButton(SlotTypes::SLOT_OSCAR, true);
             return;
         }

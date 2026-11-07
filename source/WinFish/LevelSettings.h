@@ -3,6 +3,7 @@
 
 #include <map>
 #include "Board.h"
+#include "LevelData.h"
 
 namespace Sexy
 {
@@ -21,19 +22,18 @@ namespace Sexy
 	public:
 		static LevelSettingsManager* Get();
 
-		bool						HasOverride(int theTank, int theLevel) const;
-		const LevelConfig*			GetOverride(int theTank, int theLevel) const;
-		void						SetOverride(int theTank, int theLevel, const LevelConfig& theConfig);
+		bool						HasOverride(const LevelData& theLevel) const;
+		const LevelConfig*			GetOverride(const LevelData& theLevel) const;
+		void						SetOverride(const LevelData& theLevel, const LevelConfig& theConfig);
 		void						ClearOverrides();
 
 		// Populates theConfig with standard vanilla level data
-		static void					GetDefaultConfig(int theTank, int theLevel, bool theRelaxMode, LevelConfig& theConfig);
+		static void					GetDefaultConfig(const LevelData& theLevel, bool theRelaxMode, LevelConfig& theConfig);
 
 	private:
 		LevelSettingsManager();
-		std::map<std::pair<int, int>, LevelConfig> mOverrides;
+		std::map<LevelData, LevelConfig> mOverrides;
 	};
 }
 
 #endif // __LEVELSETTINGS_H__
-

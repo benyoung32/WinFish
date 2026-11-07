@@ -9,6 +9,7 @@
 
 #include "APDefinitions.h"
 #include "APBridge.h"
+#include "LevelData.h"
 
 namespace Sexy
 {
@@ -37,13 +38,13 @@ namespace Sexy
 		int							GetWeaponLevel() const { return mWeaponLevel; }
 		int							GetStartingMoneyBonus() const { return mStartingMoneyBonus; }
 		bool						IsPetUnlocked(int thePetIndex) const;
-		bool						IsTankUnlocked(int theTank) const;
+		bool						IsTankUnlocked(const LevelData& theLevel) const;
 
 		// Location Check Dispatch
 		void						ReportLocation(int64_t theLocationId, const std::string& theLocationName = "");
-		void						ReportEggPiece(int theTank, int theLevel, int thePiece);
-		void						ReportTankComplete(int theTank);
-		void						ReportTimeTrialComplete(int theTank);
+		void						ReportEggPiece(const LevelData& theLevel, int thePiece);
+		void						ReportTankComplete(const LevelData& theLevel);
+		void						ReportTimeTrialComplete(const LevelData& theLevel);
 		void						ReportCyrax();
 		void						ReportBonusPet(int theBonusPetIndex);
 
@@ -82,4 +83,3 @@ namespace Sexy
 }
 
 #endif // __APGAMECONTROLLER_H__
-

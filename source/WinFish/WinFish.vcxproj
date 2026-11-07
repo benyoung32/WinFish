@@ -258,6 +258,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)"</Command>
     <ClInclude Include="APBridge.h" />
     <ClInclude Include="APDefinitions.h" />
     <ClInclude Include="APGameController.h" />
+    <ClInclude Include="LevelData.h" />
     <ClInclude Include="LevelSettings.h" />
     <ClInclude Include="ArchipelagoDialog.h" />
     <ClInclude Include="BallFish.h" />

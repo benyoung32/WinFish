@@ -64,7 +64,7 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 		bool anAPActive = (mApp->mAPController != NULL && mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->HasAPConnection());
 		if (anAPActive)
 		{
-			if (mApp->mAPController->IsTankUnlocked(i + 1))
+			if (mApp->mAPController->IsTankUnlocked(LevelData(i + 1)))
 				mTankButtons[i]->SetDisabled(false);
 			else
 			{

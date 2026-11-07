@@ -76,11 +76,12 @@ void APGameController::ResetSession()
 	mNotificationCooldown = 0;
 }
 
-bool APGameController::IsTankUnlocked(int theTank) const
+bool APGameController::IsTankUnlocked(const LevelData& theLevel) const
 {
-	if (theTank >= 1 && theTank <= 4)
-		return mUnlockedTanks[theTank];
-	if (theTank == 5)
+	int aTank = theLevel.mTank;
+	if (aTank >= 1 && aTank <= 4)
+		return mUnlockedTanks[aTank];
+	if (aTank == 5)
 		return mUnlockedTanks[1] && mUnlockedTanks[2] && mUnlockedTanks[3] && mUnlockedTanks[4];
 	return false;
 }
@@ -114,12 +115,22 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		mFoodQuality++;
 		if (mFoodQuality > 2)
 			mFoodQuality = 2;
+		if (mApp != NULL && mApp->mBoard != NULL)
+		{
+			if (gFoodType < mFoodQuality)
+				gFoodType = mFoodQuality;
+		}
 		break;
 
 	case APItem::FOOD_QUANTITY:
 		mFoodQuantity++;
 		if (mFoodQuantity > 8)
 			mFoodQuantity = 8;
+		if (mApp != NULL && mApp->mBoard != NULL)
+		{
+			if (gFoodLimit < (1 + mFoodQuantity))
+				gFoodLimit = 1 + mFoodQuantity;
+		}
 		break;
 
 	case APItem::PET_SLOT:
@@ -128,6 +139,13 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	case APItem::WEAPON_UPGRADE:
 		mWeaponLevel++;
+		if (mApp != NULL && mApp->mBoard != NULL)
+		{
+			int aLaser = 2 + mWeaponLevel;
+			if (aLaser > 12)
+				aLaser = 12;
+			mApp->mBoard->m0x3e4 = aLaser;
+		}
 		break;
 
 	case APItem::STARTING_MONEY:
@@ -178,38 +196,37 @@ void APGameController::ReportLocation(int64_t theLocationId, const std::string& 
 	}
 }
 
-void APGameController::ReportEggPiece(int theTank, int theLevel, int thePiece)
+void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 {
-	if (theTank < 1 || theTank > 4 || theLevel < 1 || theLevel > 5 || thePiece < 1 || thePiece > 3)
+	if (thePiece < 1 || thePiece > 3)
 		return;
 
 	// Formula matching APDefinitions.h:
 	// Tank 1 starts at 2 (Tank 1 Complete is 1, then Tank 1-1 Piece 1 is 2)
 	// Each tank block is 17 locations (1 Tank Complete + 15 Egg Pieces + 1 Time Trial Complete)
-	int64_t aLocId = static_cast<int64_t>((theTank - 1) * 17 + 2 + (theLevel - 1) * 3 + (thePiece - 1));
-	std::string aLocName = StrFormat("Tank %d-%d Egg Piece %d", theTank, theLevel, thePiece);
+	int64_t aLocId = static_cast<int64_t>((theLevel.mTank - 1) * 17 + 2 + (theLevel.mLevel - 1) * 3 + (thePiece - 1));
+	std::string aLocName = StrFormat("Tank %d-%d Egg Piece %d", theLevel.mTank, theLevel.mLevel, thePiece);
 	ReportLocation(aLocId, aLocName);
 }
 
-void APGameController::ReportTankComplete(int theTank)
+void APGameController::ReportTankComplete(const LevelData& theLevel)
 {
-	if (theTank < 1 || theTank > 4)
-		return;
-
+	int aTank = theLevel.mTank;
 	// Tank 1 Complete = 1, Tank 2 = 18, Tank 3 = 35, Tank 4 = 52
-	int64_t aLocId = static_cast<int64_t>(1 + (theTank - 1) * 17);
-	std::string aLocName = StrFormat("Tank %d Complete", theTank);
+	int64_t aLocId = static_cast<int64_t>(1 + (aTank - 1) * 17);
+	std::string aLocName = StrFormat("Tank %d Complete", aTank);
 	ReportLocation(aLocId, aLocName);
 }
 
-void APGameController::ReportTimeTrialComplete(int theTank)
+void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
 {
-	if (theTank < 1 || theTank > 4)
+	int aTank = theLevel.mTank;
+	if (aTank < 1 || aTank > 4)
 		return;
 
 	// Time Trial 1 = 17, Time Trial 2 = 34, Time Trial 3 = 51, Time Trial 4 = 68
-	int64_t aLocId = static_cast<int64_t>(theTank * 17);
-	std::string aLocName = StrFormat("Time Trial %d Complete", theTank);
+	int64_t aLocId = static_cast<int64_t>(aTank * 17);
+	std::string aLocName = StrFormat("Time Trial %d Complete", aTank);
 	ReportLocation(aLocId, aLocName);
 }
 
@@ -286,7 +303,7 @@ void APGameController::UpdateBoard(Board* theBoard)
 		}
 		else if (aTrap == APItem::TRAP_FAMINE)
 		{
-			// Set guppies hunger high
+			//TODO: Set guppies hunger high
 			theBoard->ShowText("FAMINE TRAP ACTIVATED!", true, -1);
 		}
 	}
@@ -296,10 +313,6 @@ void APGameController::QueueNotification(const std::string& theMessage)
 {
 	if (theMessage.empty())
 		return;
-
-	// Prevent excessive queue growth
-	if (mNotificationQueue.size() >= 20)
-		mNotificationQueue.pop_front();
 
 	mNotificationQueue.push_back(theMessage);
 }

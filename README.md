@@ -1,3 +1,5 @@
+# Insaniquarium APClient written by dmwever
+
 # Insaniquarium Deluxe Decompilation
 
 Based on reverse engineering of Windows executable distributed on PopCap.com.

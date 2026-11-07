@@ -709,8 +709,8 @@ void Board::Update()
 			mShouldSave = false;
 			Unk04();
 			mApp->mHighScoreMgr->RecordTimeTrialHighScore(mTank, mApp->mCurrentProfile, mMoney);
-			if (mApp->mAPController != NULL && mTank >= 1 && mTank <= 4)
-				mApp->mAPController->ReportTimeTrialComplete(mTank);
+			if (mApp->mAPController != NULL && LevelData::IsValid(mTank, 1))
+				mApp->mAPController->ReportTimeTrialComplete(LevelData(mTank, 1));
 			mApp->DoTimesUpDialog();
 			return;
 		}
@@ -3280,9 +3280,9 @@ void Sexy::Board::HandleBuyEgg()
 
 	m0x43c++;
 	int aPieceBought = m0x43c - 1;
-	if (mApp->mAPController != NULL && aPieceBought >= 1 && aPieceBought <= 3)
+	if (mApp->mAPController != NULL && aPieceBought >= 1 && aPieceBought <= 3 && LevelData::IsValid(mTank, mLevel))
 	{
-		mApp->mAPController->ReportEggPiece(mTank, mLevel, aPieceBought);
+		mApp->mAPController->ReportEggPiece(LevelData(mTank, mLevel), aPieceBought);
 	}
 
 	if (m0x43c >= 4 && mApp->mAPController != NULL)
@@ -3293,9 +3293,9 @@ void Sexy::Board::HandleBuyEgg()
 			if (mApp->mAPBridge != NULL)
 				mApp->mAPBridge->SendGoal();
 		}
-		else if (mLevel == 5)
+		else if (mLevel == 5 && LevelData::IsValid(mTank, mLevel))
 		{
-			mApp->mAPController->ReportTankComplete(mTank);
+			mApp->mAPController->ReportTankComplete(LevelData(mTank, mLevel));
 		}
 	}
 
@@ -3869,230 +3869,28 @@ void Sexy::Board::ResetLevel(WidgetManager* theWidgetManager)
 
 void Sexy::Board::DeterminePricesAndSlots()
 {
-	if (LevelSettingsManager::Get()->HasOverride(mTank, mLevel))
+	LevelConfig aCfg;
+	if (LevelData::IsValid(mTank, mLevel) && LevelSettingsManager::Get()->HasOverride(LevelData(mTank, mLevel)))
 	{
-		const LevelConfig* aCfg = LevelSettingsManager::Get()->GetOverride(mTank, mLevel);
-		for (int i = 0; i < SLOT_END; i++)
-		{
-			mSlotNumber[i] = aCfg->mSlotNumber[i];
-			mSlotPrices[i] = aCfg->mSlotPrices[i];
-		}
-		mAlienExpect = aCfg->mAlienExpect;
-		mAlienTimer = aCfg->mAlienTimer;
-		return;
+		aCfg = *LevelSettingsManager::Get()->GetOverride(LevelData(mTank, mLevel));
 	}
-	if (!mApp->mRelaxMode)
+	else if (LevelData::IsValid(mTank, mLevel) || mApp->mRelaxMode)
 	{
-		if (mTank == 1)
-		{
-			mSlotPrices[SLOT_OSCAR] = 1000;
-			mSlotPrices[SLOT_WEAPON] = 1000;
-			mSlotNumber[SLOT_GUPPY] = 0;
-			mSlotNumber[SLOT_FOODLVL] = 1;
-			mSlotNumber[SLOT_FOODLIMIT] = 2;
-			mSlotNumber[SLOT_OSCAR] = 3;
-			mSlotNumber[SLOT_WEAPON] = 5;
-			mSlotNumber[SLOT_EGG] = 6;
-			mSlotPrices[SLOT_GUPPY] = 100;
-			mSlotPrices[SLOT_FOODLVL] = 200;
-			mSlotPrices[SLOT_FOODLIMIT] = 300;
-			switch (mLevel)
-			{
-			case 1:
-				mAlienExpect = ALIEN_NONE;
-				mSlotPrices[SLOT_EGG] = 150;
-				mSlotNumber[SLOT_FOODLVL] = -1;
-				mSlotNumber[SLOT_FOODLIMIT] = -1;
-				mSlotNumber[SLOT_OSCAR] = -1;
-				mSlotNumber[SLOT_WEAPON] = -1;
-				break;
-			case 2:
-				mAlienExpect = ALIEN_WEAK_SYLV;
-				mSlotPrices[SLOT_EGG] = 500;
-				mAlienTimer = 1750;
-				mSlotNumber[SLOT_OSCAR] = -1;
-				mSlotNumber[SLOT_WEAPON] = -1;
-				break;
-			case 3:
-				mAlienExpect = ALIEN_STRONG_SYLV;
-				mSlotPrices[SLOT_EGG] = 2000;
-				break;
-			case 4:	
-				mAlienExpect = ALIEN_BALROG;
-				mSlotPrices[SLOT_EGG] = 3000;
-				break;
-			case 5:	
-				mAlienExpect = ALIEN_BALROG;
-				mSlotPrices[SLOT_EGG] = 5000;
-				break;
-			}
-		}
-		else if (mTank == 2)
-		{
-			mSlotNumber[SLOT_GUPPY] = 0;
-			mSlotNumber[SLOT_FOODLVL] = 1;
-			mSlotNumber[SLOT_FOODLIMIT] = 2;
-			mSlotNumber[SLOT_POTION] = 3;
-			mSlotNumber[SLOT_STARCATCHER] = 4;
-			mSlotNumber[SLOT_WEAPON] = 5;
-			mSlotNumber[SLOT_EGG] = 6;
-			mSlotPrices[SLOT_GUPPY] = 100;
-			mSlotPrices[SLOT_FOODLVL] = 200;
-			mSlotPrices[SLOT_FOODLIMIT] = 300;
-			mSlotPrices[SLOT_POTION] = 250;
-			mSlotPrices[SLOT_STARCATCHER] = 750;
-			mSlotPrices[SLOT_WEAPON] = 1000;
-			switch (mLevel)
-			{
-			case 1:
-				mAlienExpect = ALIEN_STRONG_SYLV;
-				mSlotPrices[SLOT_EGG] = 750;
-				mSlotNumber[SLOT_WEAPON] = -1;
-				mSlotNumber[SLOT_STARCATCHER] = -1;
-				break;
-			case 2:
-				mAlienExpect = ALIEN_BALROG;
-				mSlotPrices[SLOT_EGG] = 3000;
-				break;
-			case 3:
-				mAlienExpect = ALIEN_GUS;
-				mSlotPrices[SLOT_EGG] = 5000;
-				break;
-			case 4:
-				mAlienExpect = ALIEN_DESTRUCTOR;
-				mSlotPrices[SLOT_EGG] = 7500;
-				break;
-			case 5:
-				mAlienExpect = mApp->mSeed->Next() % 2 + ALIEN_GUS;
-				mSlotPrices[SLOT_EGG] = 10000;
-				break;
-			}
-		}
-		else if (mTank == 3)
-		{
-			mSlotNumber[SLOT_GUPPY] = 0;
-			mSlotPrices[SLOT_GEKKO] = 2000;
-			mSlotPrices[SLOT_WEAPON] = 2000;
-			mSlotNumber[SLOT_FOODLVL] = 1;
-			mSlotNumber[SLOT_FOODLIMIT] = 2;
-			mSlotNumber[SLOT_GRUBBER] = 3;
-			mSlotNumber[SLOT_GEKKO] = 4;
-			mSlotNumber[SLOT_WEAPON] = 5;
-			mSlotNumber[SLOT_EGG] = 6;
-			mSlotPrices[SLOT_GUPPY] = 100;
-			mSlotPrices[SLOT_FOODLVL] = 200;
-			mSlotPrices[SLOT_FOODLIMIT] = 300;
-			mSlotPrices[SLOT_GRUBBER] = 750;
-			switch (mLevel)
-			{
-			case 1:
-				mAlienExpect = ALIEN_BALROG;
-				mSlotPrices[SLOT_EGG] = 1000;
-				mSlotNumber[SLOT_WEAPON] = -1;
-				mSlotNumber[SLOT_GEKKO] = -1;
-				break;
-			case 2:
-				mAlienExpect = ALIEN_GUS + mApp->mSeed->Next() % 2;
-				mSlotPrices[SLOT_EGG] = 5000;
-				break;
-			case 3:
-				mAlienExpect = ALIEN_PSYCHOSQUID;
-				mSlotPrices[SLOT_EGG] = 7500;
-				break;
-			case 4:
-				mAlienExpect = ALIEN_ULYSEES;
-				mSlotPrices[SLOT_EGG] = 10000;
-				break;
-			case 5:
-				mAlienExpect = ALIEN_ULYSEES + mApp->mSeed->Next() % 2;
-				mSlotPrices[SLOT_EGG] = 15000;
-				break;
-			}
-		}
-		else if (mTank == 4)
-		{
-			mSlotNumber[SLOT_BREEDER] = 0;
-			mSlotPrices[SLOT_BREEDER] = 200;
-			mSlotPrices[SLOT_FOODLVL] = 200;
-			mSlotNumber[SLOT_FOODLVL] = 1;
-			mSlotNumber[SLOT_FOODLIMIT] = 2;
-			mSlotNumber[SLOT_OSCAR] = 3;
-			mSlotNumber[SLOT_ULTRA] = 4;
-			mSlotNumber[SLOT_WEAPON] = 5;
-			mSlotNumber[SLOT_EGG] = 6;
-			mSlotPrices[SLOT_FOODLIMIT] = 300;
-			mSlotPrices[SLOT_OSCAR] = 1000;
-			mSlotPrices[SLOT_ULTRA] = 10000;
-			mSlotPrices[SLOT_WEAPON] = 5000;
-			switch (mLevel)
-			{
-			case 1:
-				mAlienExpect = ALIEN_BALROG;
-				mSlotPrices[SLOT_EGG] = 3000;
-				mSlotNumber[SLOT_WEAPON] = -1;
-				mSlotNumber[SLOT_ULTRA] = -1;
-				break;
-			case 2:
-				mAlienExpect = 8;
-				mSlotPrices[SLOT_EGG] = 25000;
-				break;
-			case 3:
-				mAlienExpect = ALIEN_GUS;
-				mSlotPrices[SLOT_EGG] = 50000;
-				break;
-			case 4:
-				mAlienExpect = 8;
-				mSlotPrices[SLOT_EGG] = 75000;
-				break;
-			case 5:
-				mAlienExpect = 8;
-				mSlotPrices[SLOT_EGG] = 99999;
-				break;
-			}
-		}
-		else if (mTank == 5)
-		{
-			mSlotNumber[SLOT_EGG] = 6;
-			mSlotPrices[SLOT_EGG] = 0;
-			m0x43c = 3;
-			mAlienExpect = ALIEN_CYRAX;
-		}
+		LevelSettingsManager::GetDefaultConfig(LevelData(mTank, mLevel), mApp->mRelaxMode, aCfg);
 	}
-	else // Is relax mode
+
+	for (int i = 0; i < SLOT_END; i++)
 	{
-		mSlotPrices[SLOT_GUPPY] = 100;
-		mSlotPrices[SLOT_OSCAR] = 1000;
-		mSlotPrices[SLOT_ULTRA] = 10000;
-		mSlotPrices[SLOT_STARCATCHER] = 750;
-		mSlotPrices[SLOT_GRUBBER] = 750;
-		mSlotPrices[SLOT_GEKKO] = 2000;
-		mSlotNumber[SLOT_EGG] = 6;
-		switch (mTank)
-		{
-		case 1:
-			mSlotPrices[SLOT_EGG] = 5000;
-			mSlotNumber[SLOT_OSCAR] = 3;
-			mSlotNumber[SLOT_GUPPY] = 0;
-			break;
-		case 2:
-			mSlotPrices[SLOT_EGG] = 5000;
-			mSlotNumber[SLOT_STARCATCHER] = 3;
-			mSlotNumber[SLOT_GUPPY] = 0;
-			break;
-		case 3:
-			mSlotPrices[SLOT_EGG] = 10000;
-			mSlotNumber[SLOT_GRUBBER] = 3;
-			mSlotNumber[SLOT_GEKKO] = 5;
-			mSlotNumber[SLOT_GUPPY] = 0;
-			break;
-		case 4:
-			mSlotPrices[SLOT_EGG] = 25000;
-			mSlotNumber[SLOT_ULTRA] = 5;
-			mSlotNumber[SLOT_GUPPY] = 0;
-			break;
-		default:
-			break;
-		}
+		mSlotNumber[i] = aCfg.mSlotNumber[i];
+		mSlotPrices[i] = aCfg.mSlotPrices[i];
+	}
+	mAlienExpect = aCfg.mAlienExpect;
+	mAlienTimer = aCfg.mAlienTimer;
+	if (mTank == 5)
+		m0x43c = 3;
+
+	if (mApp->mRelaxMode)
+	{
 		for (int i = 0; i < SLOT_END; i++)
 			MakeAndUnlockMenuButton(i, true);
 		RelaxModeConfig();
