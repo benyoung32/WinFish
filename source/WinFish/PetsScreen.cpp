@@ -58,7 +58,7 @@ Sexy::PetsScreen::PetsScreen(WinFishApp* theApp)
 	int anYOffset = -374;
 	for (int i = 0; i < PET_END; i++)
 	{
-		if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK)
+		if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK && mApp->mCurrentProfile != NULL)
 			mApp->mCurrentProfile->m0x5a[i] = false;
 
 		mPetButtons[i] = new PetButtonWidget(IMAGE_SCL_STINKY_ID + i, i, this);
@@ -93,7 +93,7 @@ Sexy::PetsScreen::PetsScreen(WinFishApp* theApp)
 		}
 
 		ButtonHoleHelper(mBackgroundImage, (MemoryImage*) IMAGE_PETBUTTONHOLE, mPetButtons[i]->mX, mPetButtons[i]->mY);
-		if (!mApp->mCurrentProfile->IsPetUnlocked(i))
+		if (mApp->mCurrentProfile == NULL || !mApp->mCurrentProfile->IsPetUnlocked(i))
 			mPetButtons[i]->SetDisabled(true);
 
 		anYOffset += 83;
@@ -119,7 +119,10 @@ Sexy::PetsScreen::PetsScreen(WinFishApp* theApp)
 		}
 	}
 
-	m0x130 = mApp->mCurrentProfile->m0xb4 < mApp->mCurrentProfile->mNumOfUnlockedPets ? mApp->mCurrentProfile->m0xb4 : mApp->mCurrentProfile->mNumOfUnlockedPets;
+	if (mApp->mCurrentProfile != NULL)
+		m0x130 = mApp->mCurrentProfile->m0xb4 < mApp->mCurrentProfile->mNumOfUnlockedPets ? mApp->mCurrentProfile->m0xb4 : mApp->mCurrentProfile->mNumOfUnlockedPets;
+	else
+		m0x130 = 0;
 
 	if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK && m0x130 > 4)
 		m0x130 = 4;
@@ -220,6 +223,7 @@ void Sexy::PetsScreen::DrawOverlay(Graphics* g)
 	else
 		aStr1 = "to take to the next level";
 
+	// TODO: This free slot variable should be reworked to reflect the unlocked slot items
 	int aFreeSlots = m0x130 - m0x124;
 	SexyString aStr2 = "";
 	if (aFreeSlots > 1)

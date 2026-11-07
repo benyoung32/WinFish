@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
-#include <algorithm>
 #include <fstream>
 
 #include "apclientpp/zlib/include/zlib.h"
@@ -114,19 +113,21 @@ namespace Sexy
 	};
 #pragma pack(pop)
 
-	bool APSaveImporter::ExtractArchive(const std::string& theZipFilePath, APArchiveContents& theOutContents, std::string& theOutError)
+	bool APSaveImporter::ExtractArchive(const std::string& theZipFilePath, APArchiveContents& output, std::string& theOutError)
 	{
-		theOutContents.mHasUsersDat = false;
-		theOutContents.mHasUser1Dat = false;
-		theOutContents.mHasArchipelagoJson = false;
-		theOutContents.mHasSlotDataJson = false;
-		theOutContents.mUsersDat.clear();
-		theOutContents.mUser1Dat.clear();
-		theOutContents.mArchipelagoJson.clear();
-		theOutContents.mSlotDataJson.clear();
-		theOutContents.mSlotName.clear();
-		theOutContents.mServer.clear();
-		theOutContents.mPlayerId = 0;
+		output.mHasUsersDat = false;
+		output.mHasUser1Dat = false;
+		output.mHasArchipelagoJson = false;
+		output.mHasSlotDataJson = false;
+		output.mUsersDat.clear();
+		output.mUser1Dat.clear();
+		output.mArchipelagoJson.clear();
+		output.mSlotDataJson.clear();
+		output.mSlotName.clear();
+		output.mServer.clear();
+		output.mPassword.clear();
+		output.mSeed.clear();
+		output.mPlayerId = 0;
 		theOutError.clear();
 
 		std::ifstream aFile(theZipFilePath, std::ios::binary | std::ios::ate);
@@ -264,23 +265,23 @@ namespace Sexy
 							{
 								if (isUsersDat)
 								{
-									theOutContents.mUsersDat = anUncompressed;
-									theOutContents.mHasUsersDat = true;
+									output.mUsersDat = anUncompressed;
+									output.mHasUsersDat = true;
 								}
-								if (isUser1Dat || (!theOutContents.mHasUser1Dat && isAnyUserDat))
+								if (isUser1Dat || (!output.mHasUser1Dat && isAnyUserDat))
 								{
-									theOutContents.mUser1Dat = anUncompressed;
-									theOutContents.mHasUser1Dat = true;
+									output.mUser1Dat = anUncompressed;
+									output.mHasUser1Dat = true;
 								}
 								if (isArchipelagoJson)
 								{
-									theOutContents.mArchipelagoJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
-									theOutContents.mHasArchipelagoJson = true;
+									output.mArchipelagoJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
+									output.mHasArchipelagoJson = true;
 								}
 								if (isSlotDataJson)
 								{
-									theOutContents.mSlotDataJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
-									theOutContents.mHasSlotDataJson = true;
+									output.mSlotDataJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
+									output.mHasSlotDataJson = true;
 								}
 							}
 						}
@@ -291,49 +292,69 @@ namespace Sexy
 			aCurr = aNextEntry;
 		}
 
-		if (!theOutContents.mHasUser1Dat)
+		if (!output.mHasUser1Dat)
 		{
 			theOutError = "The file does not contain user save data (user1.dat).";
 			return false;
 		}
 
 		// Parse archipelago.json if present
-		if (theOutContents.mHasArchipelagoJson && !theOutContents.mArchipelagoJson.empty())
+		if (output.mHasArchipelagoJson && !output.mArchipelagoJson.empty())
 		{
-			ExtractJsonString(theOutContents.mArchipelagoJson, "player_name", theOutContents.mSlotName);
-			ExtractJsonInt(theOutContents.mArchipelagoJson, "player", theOutContents.mPlayerId);
-			ExtractJsonString(theOutContents.mArchipelagoJson, "server", theOutContents.mServer);
+			ExtractJsonString(output.mArchipelagoJson, "player_name", output.mSlotName);
+			if (output.mSlotName.empty())
+				ExtractJsonString(output.mArchipelagoJson, "slot_name", output.mSlotName);
+			if (output.mSlotName.empty())
+				ExtractJsonString(output.mArchipelagoJson, "slot", output.mSlotName);
+			if (output.mSlotName.empty())
+				ExtractJsonString(output.mArchipelagoJson, "name", output.mSlotName);
+
+			ExtractJsonInt(output.mArchipelagoJson, "player", output.mPlayerId);
+
+			ExtractJsonString(output.mArchipelagoJson, "server", output.mServer);
+			if (output.mServer.empty())
+				ExtractJsonString(output.mArchipelagoJson, "host", output.mServer);
+			if (output.mServer.empty())
+				ExtractJsonString(output.mArchipelagoJson, "url", output.mServer);
+			if (output.mServer.empty())
+				ExtractJsonString(output.mArchipelagoJson, "address", output.mServer);
+
+			ExtractJsonString(output.mArchipelagoJson, "password", output.mPassword);
+
+			ExtractJsonString(output.mArchipelagoJson, "seed_name", output.mSeed);
+			if (output.mSeed.empty())
+				ExtractJsonString(output.mArchipelagoJson, "seed", output.mSeed);
 		}
 
 		// Parse slot_data.json if present (e.g. starting_tank_unlock)
-		theOutContents.mStartingTank = 1;
-		if (theOutContents.mHasSlotDataJson && !theOutContents.mSlotDataJson.empty())
+		output.mStartingTank = 1;
+		if (output.mHasSlotDataJson && !output.mSlotDataJson.empty())
 		{
 			std::string aStartingTankStr;
-			if (ExtractJsonString(theOutContents.mSlotDataJson, "starting_tank_unlock", aStartingTankStr))
+			if (ExtractJsonString(output.mSlotDataJson, "starting_tank_unlock", aStartingTankStr))
 			{
 				if (aStartingTankStr.find("Tank 2") != std::string::npos)
-					theOutContents.mStartingTank = 2;
+					output.mStartingTank = 2;
 				else if (aStartingTankStr.find("Tank 3") != std::string::npos)
-					theOutContents.mStartingTank = 3;
+					output.mStartingTank = 3;
 				else if (aStartingTankStr.find("Tank 4") != std::string::npos)
-					theOutContents.mStartingTank = 4;
+					output.mStartingTank = 4;
 			}
 		}
 
 		// Fallback for slot name from users.dat if not found in archipelago.json
-		if (theOutContents.mSlotName.empty() && theOutContents.mHasUsersDat && theOutContents.mUsersDat.size() >= 8)
+		if (output.mSlotName.empty() && output.mHasUsersDat && output.mUsersDat.size() >= 8)
 		{
-			const uint8_t* p = theOutContents.mUsersDat.data();
+			const uint8_t* p = output.mUsersDat.data();
 			uint16_t aNameLen = *reinterpret_cast<const uint16_t*>(p + 6);
-			if (aNameLen > 0 && 8 + aNameLen <= theOutContents.mUsersDat.size())
+			if (aNameLen > 0 && 8 + aNameLen <= output.mUsersDat.size())
 			{
-				theOutContents.mSlotName.assign(reinterpret_cast<const char*>(p + 8), aNameLen);
+				output.mSlotName.assign(reinterpret_cast<const char*>(p + 8), aNameLen);
 			}
 		}
 
 		// Fallback for slot name from archive filename (e.g. "P1_Player1_5BNvm3JeQtW6CrcD9ATMbA.apinsani")
-		if (theOutContents.mSlotName.empty())
+		if (output.mSlotName.empty())
 		{
 			std::string aBase = theZipFilePath;
 			size_t aSlash = aBase.find_last_of("/\\");
@@ -349,17 +370,17 @@ namespace Sexy
 				size_t aSecondUnder = (aFirstUnder != std::string::npos) ? aBase.find('_', aFirstUnder + 1) : std::string::npos;
 				if (aFirstUnder != std::string::npos && aSecondUnder != std::string::npos && aSecondUnder > aFirstUnder + 1)
 				{
-					theOutContents.mSlotName = aBase.substr(aFirstUnder + 1, aSecondUnder - aFirstUnder - 1);
+					output.mSlotName = aBase.substr(aFirstUnder + 1, aSecondUnder - aFirstUnder - 1);
 				}
 			}
-			if (theOutContents.mSlotName.empty())
-				theOutContents.mSlotName = aBase;
+			if (output.mSlotName.empty())
+				output.mSlotName = aBase;
 		}
 
 		// Prefill default server if none was in archipelago.json
-		if (theOutContents.mServer.empty())
+		if (output.mServer.empty())
 		{
-			theOutContents.mServer = "archipelago.gg:";
+			output.mServer = "archipelago.gg:";
 		}
 
 		return true;

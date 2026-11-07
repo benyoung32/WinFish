@@ -365,6 +365,7 @@ namespace Sexy
 
 		void						DoDialogUnkF(int theId, bool isModal, const SexyString& theDiaHeader, const SexyString& theDiaLines, const SexyString& theDiaFooter, int theBtnMode);
 
+		UserProfile*				EnsureActiveProfile();
 		void						DeleteUser(bool doDelete);
 		void						StartGame();
 		bool						LoadBoardGame();

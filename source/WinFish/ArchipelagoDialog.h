@@ -25,7 +25,6 @@ namespace Sexy
 
 		SexyString				mUserName;		// profile being edited; empty for a new connection
 		EditWidget*				mEditWidgets[NUM_EDITS];
-		DialogButton*			mImportButton;
 
 	public:
 		// theProfile == NULL opens a new connection with theDefaultServer prefilled.

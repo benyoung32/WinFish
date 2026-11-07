@@ -61,7 +61,7 @@ void Sexy::UserDialog::PopulateList()
 		mListWidget->AddLine("(New Connection)", false);
 
 	// Only Archipelago profiles are listed; profiles from before the mod stay on disk but hidden.
-	if (mApp->mCurrentProfile && mApp->mCurrentProfile->HasAPConnection() && !mTransferShells)
+	if (mApp->mCurrentProfile && mApp->mCurrentProfile->IsAPProfile() && !mTransferShells)
 		mListWidget->SetSelect(mListWidget->AddLine(mApp->mCurrentProfile->mUserName, false));
 
 	for (UserProfilesMap::iterator it = mApp->mProfileMgr->mProfilesMap->begin();
@@ -72,7 +72,7 @@ void Sexy::UserDialog::PopulateList()
 			continue;
 		// AP settings live in user%d.dat, which isn't loaded until a profile is used.
 		aProf->LoadFromMemory();
-		if (aProf->HasAPConnection())
+		if (aProf->IsAPProfile())
 			mListWidget->AddLine(aProf->mUserName, false);
 	}
 
@@ -80,6 +80,9 @@ void Sexy::UserDialog::PopulateList()
 		mScrollbarWidget->SetVisible(false);
 	else
 		mScrollbarWidget->SetVisible(true);
+
+	if (!mTransferShells && mListWidget->mSelectIdx < 0 && mListWidget->GetLineCount() > 1)
+		mListWidget->SetSelect(1);
 
 	mListWidget->MarkDirty();
 	MarkDirty();
@@ -212,6 +215,7 @@ void Sexy::UserDialog::ListClicked(int theId, int theIdx, int theClickCount)
 	}
 	if (theIdx == 0)
 	{
+		mApp->KillDialog(DIALOG_USER_DIALOG);
 		mApp->DoArchipelagoDialog("");
 		return;
 	}

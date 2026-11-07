@@ -2181,6 +2181,7 @@ void Sexy::Board::StartGame()
 		aRandVal--;
 	}
 	UserProfile* aCurProf = mApp->mCurrentProfile;
+	// TODO: this <=3 check should be reworked to reflect the players current pet slots
 	if ((!aCurProf->mFinishedGame || (mApp->mGameMode != GAMEMODE_TIME_TRIAL &&
 		mApp->mGameMode != GAMEMODE_CHALLENGE)) && aCurProf->mNumOfUnlockedPets <= 3)
 	{

@@ -35,12 +35,15 @@ Sexy::ArchipelagoDialog::ArchipelagoDialog(WinFishApp* theApp, UserProfile* theP
 	std::string aValues[NUM_EDITS];
 	if (theProfile)
 	{
-		aValues[EDIT_SERVER] = theProfile->mAPServer;
+		aValues[EDIT_SERVER] = theProfile->mAPServer.empty() ? theDefaultServer : theProfile->mAPServer;
 		aValues[EDIT_SLOT] = theProfile->mAPSlot;
 		aValues[EDIT_PASSWORD] = theProfile->mAPPassword;
 	}
 	else
 		aValues[EDIT_SERVER] = theDefaultServer;
+
+	if (aValues[EDIT_SERVER].empty())
+		aValues[EDIT_SERVER] = "archipelago.gg:";
 
 	for (int i = 0; i < NUM_EDITS; i++)
 	{
@@ -58,6 +61,7 @@ Sexy::ArchipelagoDialog::ArchipelagoDialog(WinFishApp* theApp, UserProfile* theP
 		mEditWidgets[i]->mTabNext = mEditWidgets[(i + 1) % NUM_EDITS];
 		mEditWidgets[i]->mTabPrev = mEditWidgets[(i + NUM_EDITS - 1) % NUM_EDITS];
 	}
+
 }
 
 Sexy::ArchipelagoDialog::~ArchipelagoDialog()
@@ -106,7 +110,7 @@ void Sexy::ArchipelagoDialog::Resize(int theX, int theY, int theWidth, int theHe
 
 int Sexy::ArchipelagoDialog::GetPreferredHeight(int theWidth)
 {
-	return MoneyDialog::GetPreferredHeight(theWidth) + NUM_EDITS * (24 + 34) + 36;
+	return MoneyDialog::GetPreferredHeight(theWidth) + NUM_EDITS * (24 + 34);
 }
 
 void Sexy::ArchipelagoDialog::ButtonPress(int theId)
@@ -116,11 +120,6 @@ void Sexy::ArchipelagoDialog::ButtonPress(int theId)
 
 void Sexy::ArchipelagoDialog::ButtonDepress(int theId)
 {
-	if (theId == 100)
-	{
-		mApp->PromptImportAPSave();
-		return;
-	}
 	MoneyDialog::ButtonDepress(theId);
 }
 
@@ -148,4 +147,5 @@ void Sexy::ArchipelagoDialog::ApplyTo(UserProfile* theProfile)
 	theProfile->mAPServer = GetServer();
 	theProfile->mAPSlot = GetSlot();
 	theProfile->mAPPassword = mEditWidgets[EDIT_PASSWORD]->mString;
+	theProfile->mIsAPProfile = true;
 }

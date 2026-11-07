@@ -137,7 +137,7 @@ void Sexy::HighScoreScreen::DrawGameModePage(Graphics* g)
 	float aRadVal = 280;
 	bool loc56 = false;
 
-	if (mPage == PAGE_ADV && mApp->mCurrentProfile->mFinishedGame)
+	if (mPage == PAGE_ADV && mApp->mCurrentProfile && mApp->mCurrentProfile->mFinishedGame)
 	{
 		loc56 = true;
 		aRadVal = 240;
@@ -371,7 +371,7 @@ void Sexy::HighScoreScreen::DrawPersonalRecordsPage(Graphics* g)
 
 			g->DrawString(StrFormat("%d-%d", aTankNum, aLevelNum), aXPosText, aTextYPos);
 
-			int aScore = mApp->mCurrentProfile->GetAdventureScore(aTankNum, aLevelNum);
+			int aScore = mApp->mCurrentProfile ? mApp->mCurrentProfile->GetAdventureScore(aTankNum, aLevelNum) : -1;
 
 			SexyString aScoreStr = "-----";
 			if (aScore >= 0)
@@ -389,7 +389,7 @@ void Sexy::HighScoreScreen::DrawPersonalRecordsPage(Graphics* g)
 		aXPosText += 166;
 	}
 
-	int aFinalBossScore = mApp->mCurrentProfile->GetAdventureScore(5, 1);
+	int aFinalBossScore = mApp->mCurrentProfile ? mApp->mCurrentProfile->GetAdventureScore(5, 1) : -1;
 
 	if (aFinalBossScore >= 0)
 	{
@@ -436,10 +436,13 @@ void Sexy::HighScoreScreen::DrawPersonalRecordsPage(Graphics* g)
 
 			g->DrawString(StrFormat("Tank %d", aTankNum), aTextXPos, aTextYPos);
 			int aScore = -1;
-			if (i == 0)
-				aScore = mApp->mCurrentProfile->GetTimeTrialScore(aTankNum);
-			else
-				aScore = mApp->mCurrentProfile->GetChallengeScore(aTankNum);
+			if (mApp->mCurrentProfile)
+			{
+				if (i == 0)
+					aScore = mApp->mCurrentProfile->GetTimeTrialScore(aTankNum);
+				else
+					aScore = mApp->mCurrentProfile->GetChallengeScore(aTankNum);
+			}
 
 			SexyString aScoreStr = "-----";
 			if (aScore >= 0)

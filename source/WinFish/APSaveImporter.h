@@ -21,6 +21,8 @@ namespace Sexy
 
 		std::string mSlotName;
 		std::string mServer;
+		std::string mPassword;
+		std::string mSeed;
 		int mPlayerId;
 		int mStartingTank;
 

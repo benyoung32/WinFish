@@ -77,6 +77,7 @@ UserProfile* Sexy::ProfileMgr::GetFirstUserProfile()
 UserProfile* Sexy::ProfileMgr::GetFirstAPProfile()
 {
     UserProfile* aCurrentProfile = ((WinFishApp*)gSexyApp)->mCurrentProfile;
+    // Prefer profiles that already have a server and slot connection
     for (UserProfilesMap::iterator it = mProfilesMap->begin(); it != mProfilesMap->end(); ++it)
     {
         UserProfile* aProf = &it->second;
@@ -84,6 +85,19 @@ UserProfile* Sexy::ProfileMgr::GetFirstAPProfile()
         if (aProf != aCurrentProfile)
             aProf->LoadFromMemory();
         if (aProf->HasAPConnection())
+        {
+            aProf->m0x40 = m0x14;
+            m0x14++;
+            return aProf;
+        }
+    }
+    // Fall back to any AP profile (e.g. unconfigured or newly imported)
+    for (UserProfilesMap::iterator it = mProfilesMap->begin(); it != mProfilesMap->end(); ++it)
+    {
+        UserProfile* aProf = &it->second;
+        if (aProf != aCurrentProfile)
+            aProf->LoadFromMemory();
+        if (aProf->IsAPProfile())
         {
             aProf->m0x40 = m0x14;
             m0x14++;
@@ -468,6 +482,7 @@ void Sexy::UserProfile::Init()
         mAPUnlockedTanks[i] = false;
         mAPTankLevels[i] = 1;
     }
+    mIsAPProfile = false;
 }
 
 void Sexy::UserProfile::SetCheatFlag(char thePos, bool theFlag)
@@ -527,6 +542,9 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
         unkFlag = true;
         theReader->RollbackBytes(4);
     }
+
+    if (theReader)
+        mIsAPProfile = (aVer >= 0x80000001);
 
     theDataSync.SyncLong(mShells);
     theDataSync.SyncLong(mTank);
@@ -629,7 +647,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
 
     if (theReader)
     {
-        if (!HasAPConnection())
+        if (!IsAPProfile())
         {
             int anArrLvl = mTank * 5 - 6 + mLevel;
             if (mTank > 4)

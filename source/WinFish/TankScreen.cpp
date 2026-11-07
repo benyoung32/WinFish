@@ -25,7 +25,7 @@ Sexy::TankScreen::TankScreen(WinFishApp* theApp)
 	mStoriesButton = MakeDialogButton(4, this, "Stories", FONT_JUNGLEFEVER12OUTLINE);
 	mStoriesButton->Resize(245, 247, 150, mStoriesButton->mHeight);
 	mStoriesButton->SetColor(0, Color(255, 240, 0));
-	if (mApp->mCurrentProfile->m0x7c == 0 || mApp->mGameMode != GAMEMODE_CHALLENGE)
+	if (mApp->mCurrentProfile == NULL || mApp->mCurrentProfile->m0x7c == 0 || mApp->mGameMode != GAMEMODE_CHALLENGE)
 		mStoriesButton->mVisible = false;
 	m0xa8[0] = 70;
 	m0xa8[1] = 71;
@@ -79,7 +79,7 @@ void Sexy::TankScreen::UpdateButtonStates()
 		}
 		else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 		{
-			if (mApp->mCurrentProfile->mTank >= i + 2 || mApp->mCurrentProfile->mFinishedGame)
+			if (mApp->mCurrentProfile != NULL && (mApp->mCurrentProfile->mTank >= i + 2 || mApp->mCurrentProfile->mFinishedGame))
 			{
 				mTankButtons[i]->SetDisabled(false);
 				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
@@ -96,7 +96,7 @@ void Sexy::TankScreen::UpdateButtonStates()
 		}
 		else if (mApp->mGameMode == GAMEMODE_CHALLENGE)
 		{
-			if (i > 0 && !mApp->mCurrentProfile->m0x78[i-1])
+			if (i > 0 && (mApp->mCurrentProfile == NULL || !mApp->mCurrentProfile->m0x78[i-1]))
 			{
 				mTankButtons[i]->SetDisabled(true);
 				mTankButtons[i]->mComponentImage = nullptr;
@@ -113,7 +113,7 @@ void Sexy::TankScreen::UpdateButtonStates()
 		}
 		else // GAMEMODE_ADVENTURE (non-AP fallback)
 		{
-			if (mApp->mCurrentProfile->mTank >= i + 1 || mApp->mCurrentProfile->mFinishedGame)
+			if (mApp->mCurrentProfile != NULL && (mApp->mCurrentProfile->mTank >= i + 1 || mApp->mCurrentProfile->mFinishedGame))
 			{
 				mTankButtons[i]->SetDisabled(false);
 				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;

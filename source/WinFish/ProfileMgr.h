@@ -65,6 +65,7 @@ namespace Sexy
 		int mAPStartingMoneyBonus;
 		bool mAPUnlockedTanks[4];
 		int mAPTankLevels[4];
+		bool mIsAPProfile;
 
 	public:
 		UserProfile();
@@ -93,7 +94,8 @@ namespace Sexy
 		int							GetTimeTrialScore(int theTank);
 		int							GetChallengeScore(int theTank);
 
-		bool						HasAPConnection() const { return !mAPSlot.empty(); }
+		bool						IsAPProfile() const { return mIsAPProfile || !mAPSlot.empty() || !mAPSlotData.empty(); }
+		bool						HasAPConnection() const { return !mAPServer.empty() && mAPServer != "archipelago.gg:" && !mAPSlot.empty(); }
 
 		static SexyString			MakeAPProfileKey(const std::string& theSlot, const std::string& theServer);
 		SexyString					GetDisplayName() const;

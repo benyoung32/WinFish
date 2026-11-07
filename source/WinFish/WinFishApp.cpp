@@ -488,7 +488,14 @@ void Sexy::WinFishApp::Init()
 				mCurrentProfile = mProfileMgr->GetFirstUserProfile();
 
 			if (!anIsScreenSaver && (mCurrentProfile == NULL || !mCurrentProfile->HasAPConnection()))
-				mCurrentProfile = mProfileMgr->GetFirstAPProfile();
+			{
+				UserProfile* anAPProf = mProfileMgr->GetFirstAPProfile();
+				if (anAPProf != NULL)
+					mCurrentProfile = anAPProf;
+			}
+
+			if (mCurrentProfile == NULL)
+				mCurrentProfile = EnsureActiveProfile();
 
 			if (!anIsScreenSaver || mCurrentProfile != NULL)
 			{
@@ -1898,16 +1905,19 @@ void Sexy::WinFishApp::SwitchToBoard(bool theFlag1, bool theFlag2)
 	if (theFlag1 && LoadBoardGame())
 		return;
 
-	for (int i = 0; i < 24; i++)
-		mCurrentProfile->m0x5a[i] = false;
+	if (mCurrentProfile != NULL)
+	{
+		for (int i = 0; i < 24; i++)
+			mCurrentProfile->m0x5a[i] = false;
+	}
 
-	if (theFlag2 && mGameMode == GAMEMODE_ADVENTURE && !mCurrentProfile->mFinishedGame && 
+	if (theFlag2 && mGameMode == GAMEMODE_ADVENTURE && mCurrentProfile != NULL && !mCurrentProfile->mFinishedGame && 
 		mCurrentProfile->mTank == 1 && mCurrentProfile->mLevel < 4)
 	{
 		SwitchToHelpScreen(true);
 		return;
 	}
-	if (!IsBonusLevel() && mGameMode != GAMEMODE_VIRTUAL_TANK && 
+	if (!IsBonusLevel() && mGameMode != GAMEMODE_VIRTUAL_TANK && mCurrentProfile != NULL && 
 		(mCurrentProfile->mNumOfUnlockedPets > 3 && (mGameMode != GAMEMODE_ADVENTURE || mCurrentProfile->mTank != 5)))
 	{
 		SwitchToPetsScreen();
@@ -1934,15 +1944,17 @@ void Sexy::WinFishApp::SwitchToGameSelector()
 	if (mCurrentProfile)
 		mCurrentProfile->Unk01();
 
+	EnsureActiveProfile();
+
 	mGameSelector = new GameSelector(this);
 	mGameSelector->Resize(0, 0, mWidth, mHeight);
 	mWidgetManager->AddWidget(mGameSelector);
 	mWidgetManager->BringToBack(mGameSelector);
 	mWidgetManager->SetFocus(mGameSelector);
 
-	if (!mCurrentProfile)
+	if (mCurrentProfile == NULL || !mCurrentProfile->HasAPConnection())
 	{
-		DoArchipelagoDialog("");
+		DoArchipelagoDialog(mCurrentProfile != NULL ? mCurrentProfile->mUserName : "");
 	}
 	if (CheckTrialEnded())
 		DoTrialVersionExpiredDialog();
@@ -2262,11 +2274,13 @@ void Sexy::WinFishApp::UpdateArchipelago()
 	// Reconnect whenever the current profile or its AP settings change; this covers profile
 	// switch, rename and delete without hooking every place that assigns mCurrentProfile.
 	std::string aServer, aSlot, aPassword;
+	bool aHasConnection = false;
 	if (mCurrentProfile != NULL)
 	{
 		aServer = mCurrentProfile->mAPServer;
 		aSlot = mCurrentProfile->mAPSlot;
 		aPassword = mCurrentProfile->mAPPassword;
+		aHasConnection = mCurrentProfile->HasAPConnection();
 	}
 
 	if (mCurrentProfile != mAPProfile || aServer != mAPServer || aSlot != mAPSlot || aPassword != mAPPassword)
@@ -2280,7 +2294,7 @@ void Sexy::WinFishApp::UpdateArchipelago()
 		KillDialog(DIALOG_AP_NEW_SEED);
 		mAPSeedPromptOpen = false;
 
-		if (aServer.empty() || aSlot.empty())
+		if (!aHasConnection)
 			mAPBridge->Disconnect();
 		else
 			mAPBridge->Connect(aServer, aSlot, aPassword);
@@ -2830,6 +2844,39 @@ void Sexy::WinFishApp::DoDeleteWarningDialog(SexyString& theName)
 	DoDialog(DIALOG_ARE_YOU_SURE_DELETE, true, "Are You Sure?", StrFormat("This will permanently remove \'%s\' from the player roster!", theName.c_str()), "", Dialog::BUTTONS_YES_NO);
 }
 
+UserProfile* Sexy::WinFishApp::EnsureActiveProfile()
+{
+	if (mCurrentProfile != NULL)
+		return mCurrentProfile;
+
+	mCurrentProfile = mProfileMgr->GetFirstAPProfile();
+	if (mCurrentProfile != NULL)
+		return mCurrentProfile;
+
+	mCurrentProfile = mProfileMgr->GetFirstUserProfile();
+	if (mCurrentProfile != NULL)
+		return mCurrentProfile;
+
+	// Fallback when there are no active profiles: create a default profile so game state and menus never have a null profile
+	SexyString aDefaultName = "Player";
+	int aSuffix = 1;
+	while (mProfileMgr->GetUserProfile(aDefaultName) != NULL)
+	{
+		aSuffix++;
+		aDefaultName = StrFormat("Player %d", aSuffix);
+	}
+
+	UserProfile* aFallback = mProfileMgr->MakeNewUser(&aDefaultName);
+	if (aFallback != NULL)
+	{
+		aFallback->mIsAPProfile = true;
+		aFallback->Save();
+		mProfileMgr->SaveUsersDat();
+		mCurrentProfile = aFallback;
+	}
+	return mCurrentProfile;
+}
+
 void Sexy::WinFishApp::DeleteUser(bool deleteUser)
 {
 	KillDialog(DIALOG_ARE_YOU_SURE_DELETE);
@@ -2859,10 +2906,15 @@ void Sexy::WinFishApp::DeleteUser(bool deleteUser)
 		mCurrentProfile = mProfileMgr->GetUserProfile(aNextUserName);
 		if (!mCurrentProfile)
 			mCurrentProfile = mProfileMgr->GetFirstAPProfile();
+		if (!mCurrentProfile)
+			mCurrentProfile = mProfileMgr->GetFirstUserProfile();
+		if (!mCurrentProfile)
+			mCurrentProfile = EnsureActiveProfile();
 	}
 	mProfileMgr->SaveUsersDat();
-	if (!mCurrentProfile)
-		DoArchipelagoDialog("");
+	aDia->PopulateList();
+	if (mCurrentProfile == NULL || !mCurrentProfile->HasAPConnection())
+		DoArchipelagoDialog(mCurrentProfile != NULL ? mCurrentProfile->mUserName : "");
 	mWidgetManager->MarkAllDirty();
 }
 
@@ -2917,9 +2969,9 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 
 	std::string aServer = aDia->GetServer();
 	std::string aSlot = aDia->GetSlot();
-	if (aServer.empty() || aSlot.empty())
+	if (aServer.empty() || aSlot.empty() || aServer == "archipelago.gg:")
 	{
-		DoDialog(DIALOG_INFO, true, "Missing Details", "Please enter both the server and your slot name.", "OK", Dialog::BUTTONS_FOOTER);
+		DoDialog(DIALOG_INFO, true, "Missing Details", "Please enter both the server (including port) and your slot name.", "OK", Dialog::BUTTONS_FOOTER);
 		return;
 	}
 
@@ -2936,13 +2988,13 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 				"OK", Dialog::BUTTONS_FOOTER);
 			return;
 		}
+		aProf->mIsAPProfile = true;
 		mCurrentProfile = aProf;
 		KillDialog(DIALOG_USER_DIALOG);
 	}
 	else
 	{
 		SexyString anOldName = aDia->mUserName;
-		bool isCurrent = mCurrentProfile != NULL && mCurrentProfile->mUserName == anOldName;
 
 		if (aNewName != anOldName)
 		{
@@ -2953,10 +3005,6 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 					"There is already a profile for this slot and server.", "OK", Dialog::BUTTONS_FOOTER);
 				return;
 			}
-
-			UserDialog* aUserDia = (UserDialog*)GetDialog(DIALOG_USER_DIALOG);
-			if (aUserDia != NULL && aUserDia->mListWidget->mSelectIdx > 0)
-				aUserDia->mListWidget->SetLine(aUserDia->mListWidget->mSelectIdx, aNewName);
 		}
 
 		UserProfilesMap::iterator anIt = mProfileMgr->mProfilesMap->find(aNewName);
@@ -2966,12 +3014,14 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 			return;
 		}
 		aProf = &anIt->second;
-		if (isCurrent)
-			mCurrentProfile = aProf;
+		aProf->mIsAPProfile = true;
+		mCurrentProfile = aProf;
+		KillDialog(DIALOG_USER_DIALOG);
 	}
 
 	// UpdateArchipelago notices the new settings and reconnects if this is the current profile.
 	aDia->ApplyTo(aProf);
+	aProf->mIsAPProfile = true;
 	aProf->Save();
 	mProfileMgr->SaveUsersDat();
 	KillDialog(DIALOG_ARCHIPELAGO);
@@ -3043,85 +3093,64 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 		return false;
 	}
 
-	UserProfile aNewProf;
-
-	// Populate Archipelago slot and server before SyncData so HasAPConnection() is recognized
-	if (!anArchive.mSlotName.empty())
-		aNewProf.mAPSlot = anArchive.mSlotName;
-	if (!anArchive.mServer.empty())
-		aNewProf.mAPServer = anArchive.mServer;
+	UserProfile newProf;
 
 	DataReader aDR;
 	aDR.OpenMemory(anArchive.mUser1Dat.data(), static_cast<unsigned long>(anArchive.mUser1Dat.size()), false);
 	DataSync aDS(aDR);
-	aNewProf.SyncData(aDS);
+	newProf.SyncData(aDS);
 
 	// In Archipelago, all pets must be awarded as items from the server, not pre-unlocked from save templates
 	for (int i = 0; i < PET_END; i++)
-		aNewProf.mUnlockedPets[i] = false;
-	aNewProf.mNumOfUnlockedPets = 0;
+		newProf.mUnlockedPets[i] = false;
+	newProf.mNumOfUnlockedPets = 0;
 
 	if (anArchive.mHasSlotDataJson && !anArchive.mSlotDataJson.empty())
-		aNewProf.mAPSlotData = anArchive.mSlotDataJson;
+		newProf.mAPSlotData = anArchive.mSlotDataJson;
 
-	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : (int)aNewProf.mTank;
+	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : (int)newProf.mTank;
 	if (aTank < 1 || aTank > 4)
 		aTank = 1;
-	aNewProf.mAPUnlockedTanks[aTank - 1] = true;
-	aNewProf.mTank = aTank;
-	int aInitLvl = (int)aNewProf.mLevel;
-	aNewProf.mAPTankLevels[aTank - 1] = (aInitLvl > 1) ? aInitLvl : 1;
+	newProf.mAPUnlockedTanks[aTank - 1] = true;
+	newProf.mTank = aTank;
+	int aInitLvl = (int)newProf.mLevel;
+	newProf.mAPTankLevels[aTank - 1] = (aInitLvl > 1) ? aInitLvl : 1;
 
-	SexyString aUserNameFromUsersDat = "";
-	if (anArchive.mHasUsersDat && !anArchive.mUsersDat.empty())
+	newProf.mIsAPProfile = true;
+	
+	newProf.mAPSlot = "";
+		
+	newProf.mAPServer = "archipelago.gg:";
+	
+	newProf.mAPPassword = "";
+	
+	newProf.mAPSeed = anArchive.mSeed;
+
+	// Determine profile name. If slot and server are already present, use "Slot @ Server".
+
+	SexyString aBaseName = "AP Save";
+	SexyString aCandidateName = aBaseName;
+	int aSuffix = 1;
+	while (mProfileMgr->GetUserProfile(aCandidateName) != NULL)
 	{
-		DataReader aUsersDR;
-		aUsersDR.OpenMemory(anArchive.mUsersDat.data(), static_cast<unsigned long>(anArchive.mUsersDat.size()), false);
-		DataSync aUsersDS(aUsersDR);
-		int aDatVer = 0;
-		aUsersDS.SyncLong(aDatVer);
-		if (aDatVer == gUsersDatVersion)
-		{
-			int aCount = aUsersDR.ReadShort();
-			if (aCount > 0)
-			{
-				aUsersDS.SyncString(aUserNameFromUsersDat);
-			}
-		}
+		aSuffix++;
+		aCandidateName = StrFormat("%s %d", aBaseName.c_str(), aSuffix);
 	}
+	newProf.mUserName = aCandidateName;
 
-	SexyString aProfileKey = "";
-	if (aNewProf.HasAPConnection())
-		aProfileKey = UserProfile::MakeAPProfileKey(aNewProf.mAPSlot, aNewProf.mAPServer);
-	else if (!aUserNameFromUsersDat.empty())
-		aProfileKey = aUserNameFromUsersDat;
-	else
-		aProfileKey = aNewProf.mUserName.empty() ? "AP Run" : aNewProf.mUserName;
-
-	aNewProf.mUserName = aProfileKey;
-
-	UserProfile* anExisting = mProfileMgr->GetUserProfile(aProfileKey);
-	if (anExisting != NULL)
+	while (FileExists(GetAppDataFolder() + StrFormat("userdata/user%d.dat", mProfileMgr->m0x10)))
 	{
-		int anId = anExisting->mId;
-		int aSeq = anExisting->m0x40;
-		*anExisting = aNewProf;
-		anExisting->mId = anId;
-		anExisting->m0x40 = aSeq;
-		anExisting->Save();
-		mCurrentProfile = anExisting;
+		mProfileMgr->m0x10++;
 	}
-	else
+	int aNewId = mProfileMgr->m0x10++;
+	newProf.mId = aNewId;
+	newProf.m0x40 = mProfileMgr->m0x14++;
+	UserProfile* anInserted = mProfileMgr->InsertProfile(&newProf);
+	if (anInserted != NULL)
 	{
-		int aNewId = mProfileMgr->m0x10++;
-		aNewProf.mId = aNewId;
-		aNewProf.m0x40 = mProfileMgr->m0x14++;
-		UserProfile* anInserted = mProfileMgr->InsertProfile(&aNewProf);
-		if (anInserted != NULL)
-		{
-			anInserted->Save();
-			mCurrentProfile = anInserted;
-		}
+		anInserted->Save();
+		mCurrentProfile = anInserted;
+		mProfileMgr->CapMaxUserCount();
 	}
 
 	mProfileMgr->SaveUsersDat();
@@ -3140,9 +3169,9 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 		mAPController->LoadFromProfile(mCurrentProfile);
 	}
 
-	SexyString aDisplayName = mCurrentProfile ? mCurrentProfile->GetDisplayName() : aProfileKey;
 	DoDialog(DIALOG_INFO, true, "Profile Imported",
-		StrFormat("Successfully imported profile '%s'!", aDisplayName.c_str()), "OK", Dialog::BUTTONS_FOOTER);
+		StrFormat("Successfully imported profile'!\nSelect it and click Edit to enter your server and slot."),
+		"OK", Dialog::BUTTONS_FOOTER);
 
 	mWidgetManager->MarkAllDirty();
 	return true;
@@ -3156,6 +3185,13 @@ void Sexy::WinFishApp::UserDialogOkPressed(bool applyChanges)
 
 	if (applyChanges)
 	{
+		if (aDia->mListWidget->mSelectIdx == 0 && !aDia->mTransferShells)
+		{
+			KillDialog(DIALOG_USER_DIALOG);
+			DoArchipelagoDialog("");
+			return;
+		}
+
 		SexyString aUserName = aDia->GetSelectedUserName();
 		UserProfile* aProf = mProfileMgr->GetUserProfile(aUserName);
 		if (aProf)
@@ -3171,12 +3207,21 @@ void Sexy::WinFishApp::UserDialogOkPressed(bool applyChanges)
 		}
 	}
 
+	EnsureActiveProfile();
+
 	KillDialog(DIALOG_USER_DIALOG);
+
+	if (applyChanges && mCurrentProfile != NULL && !mCurrentProfile->HasAPConnection())
+	{
+		DoArchipelagoDialog(mCurrentProfile->mUserName);
+	}
 }
 
 int Sexy::WinFishApp::GetCurrentTank()
 {
 	if (mBoard)
 		return mBoard->mTank;
-	return mCurrentProfile->mTank;
+	if (mCurrentProfile)
+		return mCurrentProfile->mTank;
+	return 1;
 }
