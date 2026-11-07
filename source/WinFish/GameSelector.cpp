@@ -414,7 +414,9 @@ void Sexy::GameSelector::ButtonDepress(int theId)
 	{
 		mApp->mGameMode = GAMEMODE_ADVENTURE;
 		mApp->RemoveGameSelector();
-		mApp->SwitchToBoard(true, true);
+		if (mApp->LoadBoardGame())
+			return;
+		mApp->SwitchToTankScreen();
 	}
 	else if (theId == 2)
 	{

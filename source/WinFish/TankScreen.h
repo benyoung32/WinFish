@@ -31,6 +31,7 @@ namespace Sexy
 		virtual void			ButtonDepress(int theId);
 
 		void					DrawBolts(Graphics* g, int xOffset, int yOffset, bool drawRight, bool drawBottom);
+		void					UpdateButtonStates();
 	};
 }
 

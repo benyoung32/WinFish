@@ -6,7 +6,11 @@ OPTIONAL:
 
 add auto clicking setting. the gun can only fire every 0.25 settings so this could be the speed. this can be enabled just by enabling the rapid fire from wpn level 10 alreayd in the game 
 
-reuse the time trial tank select for the main game mode. only the tanks that have been received as items from the AP pool should be available for selection. 
+~~reuse the time trial tank select for the main game mode. only the tanks that have been received as items from the AP pool should be available for selection.~~ (DONE) 
+
+borderless fullscreen
+
+disable check for update dialogue 
 
 ## INVESTIGATE:
 
@@ -24,7 +28,7 @@ prefill the server entry box with archipelago.gg:
 create a AP status screen that lists the total received items (pets 10/20, etc. etc.) 
     bonus money
     tanks unlocked
-    
+
 # ideas from discord: 
 
 maybe even some optional items that affect the virtual tank, like the alien summoner.
@@ -37,8 +41,3 @@ it was kind of fun that way tbh
 
 Trap idea lol
 for 30 seconds all fish have diarrhea. instead of normal drops, all fish drop boogers
-
-
-
-
-standing 

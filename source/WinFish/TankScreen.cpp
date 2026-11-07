@@ -55,17 +55,20 @@ Sexy::TankScreen::~TankScreen()
 		delete mStoriesButton;
 }
 
-void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
+void Sexy::TankScreen::UpdateButtonStates()
 {
-	Widget::AddedToManager(theWidgetManager);
-	theWidgetManager->AddWidget(mMenuButton);
 	for (int i = 0; i < 4; i++)
 	{
 		bool anAPActive = (mApp->mAPController != NULL && mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->HasAPConnection());
 		if (anAPActive)
 		{
 			if (mApp->mAPController->IsTankUnlocked(LevelData(i + 1)))
+			{
 				mTankButtons[i]->SetDisabled(false);
+				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
+				mTankButtons[i]->mFrameNoDraw = false;
+				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
+			}
 			else
 			{
 				mTankButtons[i]->SetDisabled(true);
@@ -77,7 +80,12 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 		else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 		{
 			if (mApp->mCurrentProfile->mTank >= i + 2 || mApp->mCurrentProfile->mFinishedGame)
+			{
 				mTankButtons[i]->SetDisabled(false);
+				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
+				mTankButtons[i]->mFrameNoDraw = false;
+				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
+			}
 			else
 			{
 				mTankButtons[i]->SetDisabled(true);
@@ -86,9 +94,9 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 				mTankButtons[i]->SetColor(0, Color::White);
 			}
 		}
-		else
+		else if (mApp->mGameMode == GAMEMODE_CHALLENGE)
 		{
-			if (mApp->mGameMode == GAMEMODE_CHALLENGE && i > 0 && !mApp->mCurrentProfile->m0x78[i-1])
+			if (i > 0 && !mApp->mCurrentProfile->m0x78[i-1])
 			{
 				mTankButtons[i]->SetDisabled(true);
 				mTankButtons[i]->mComponentImage = nullptr;
@@ -96,11 +104,42 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 				mTankButtons[i]->SetColor(0, Color::White);
 			}
 			else
+			{
 				mTankButtons[i]->SetDisabled(false);
+				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
+				mTankButtons[i]->mFrameNoDraw = false;
+				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
+			}
 		}
+		else // GAMEMODE_ADVENTURE (non-AP fallback)
+		{
+			if (mApp->mCurrentProfile->mTank >= i + 1 || mApp->mCurrentProfile->mFinishedGame)
+			{
+				mTankButtons[i]->SetDisabled(false);
+				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
+				mTankButtons[i]->mFrameNoDraw = false;
+				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
+			}
+			else
+			{
+				mTankButtons[i]->SetDisabled(true);
+				mTankButtons[i]->mComponentImage = nullptr;
+				mTankButtons[i]->mFrameNoDraw = true;
+				mTankButtons[i]->SetColor(0, Color::White);
+			}
+		}
+	}
+}
+
+void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
+{
+	Widget::AddedToManager(theWidgetManager);
+	theWidgetManager->AddWidget(mMenuButton);
+	UpdateButtonStates();
+	for (int i = 0; i < 4; i++)
+	{
 		theWidgetManager->AddWidget(mTankButtons[i]);
 	}
-
 
 	theWidgetManager->AddWidget(mStoriesButton);
 }
@@ -116,6 +155,7 @@ void Sexy::TankScreen::RemovedFromManager(WidgetManager* theWidgetManager)
 
 void Sexy::TankScreen::Update()
 {
+	UpdateButtonStates();
 	MarkDirty();
 }
 
@@ -179,6 +219,8 @@ void Sexy::TankScreen::Draw(Graphics* g)
 				WriteWordWrapped(g, aDrawStrRect, StrFormat("Complete Tank %d\nin Adventure Mode\nto Unlock this Tank", i + 1), -1, 0);
 			else if(mApp->mGameMode == GAMEMODE_CHALLENGE)
 				WriteWordWrapped(g, aDrawStrRect, StrFormat("Complete Tank %d\nin Challenge Mode\nto Unlock this Tank", i), -1, 0);
+			else if (mApp->mGameMode == GAMEMODE_ADVENTURE)
+				WriteWordWrapped(g, aDrawStrRect, StrFormat("Complete Tank %d\nin Adventure Mode\nto Unlock this Tank", i), -1, 0);
 		}
 	}
 }
@@ -198,8 +240,25 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 	else if (theId < 4)
 	{
 		mApp->RemoveTankScreen();
-		mApp->mTankGameModeChoose = theId+1;
-		mApp->SwitchToBoard(true, true);
+		int aSelectedTank = theId + 1;
+		mApp->mTankGameModeChoose = aSelectedTank;
+
+		if (mApp->mGameMode == GAMEMODE_ADVENTURE && mApp->mCurrentProfile != NULL)
+		{
+			if (mApp->mCurrentProfile->mTank >= 1 && mApp->mCurrentProfile->mTank <= 4)
+			{
+				mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
+			}
+			mApp->mCurrentProfile->mTank = aSelectedTank;
+			int aLevel = mApp->mCurrentProfile->mAPTankLevels[aSelectedTank - 1];
+			if (aLevel < 1 || aLevel > 5)
+				aLevel = 1;
+			mApp->mCurrentProfile->mLevel = aLevel;
+			mApp->SaveCurrentUserData();
+		}
+
+		bool aLoadBoard = (mApp->mGameMode != GAMEMODE_ADVENTURE);
+		mApp->SwitchToBoard(aLoadBoard, true);
 	}
 	else if (theId == 4)
 	{

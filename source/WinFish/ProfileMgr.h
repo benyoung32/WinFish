@@ -64,6 +64,7 @@ namespace Sexy
 		int mAPWeaponLevel;
 		int mAPStartingMoneyBonus;
 		bool mAPUnlockedTanks[4];
+		int mAPTankLevels[4];
 
 	public:
 		UserProfile();

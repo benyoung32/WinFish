@@ -1977,10 +1977,7 @@ void Sexy::WinFishApp::RestartLevel()
 	EraseFile(aSavePath);
 	StopMusic();
 	PlayMusic(2, 0);
-	if (mGameMode == GAMEMODE_ADVENTURE)
-		SwitchToBoard(false, true);
-	else
-		SwitchToTankScreen();
+	SwitchToTankScreen();
 }
 
 void Sexy::WinFishApp::RemoveGameSelector()
@@ -2390,6 +2387,15 @@ void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
 	mCurrentProfile->mAPSeed = mAPBridge->GetSeed();
 	mCurrentProfile->mAPItemIndex = 0;
 	mCurrentProfile->mAPPendingChecks.clear();
+	for (int i = 0; i < 4; i++)
+	{
+		mCurrentProfile->mAPUnlockedTanks[i] = false;
+		mCurrentProfile->mAPTankLevels[i] = 1;
+	}
+	mCurrentProfile->mTank = 1;
+	mCurrentProfile->mLevel = 1;
+	if (mAPController != NULL)
+		mAPController->ResetSession();
 }
 
 void Sexy::WinFishApp::ApplyArchipelagoItem(const APReceivedItem& theItem)

@@ -464,7 +464,10 @@ void Sexy::UserProfile::Init()
     mAPWeaponLevel = 0;
     mAPStartingMoneyBonus = 0;
     for (int i = 0; i < 4; i++)
+    {
         mAPUnlockedTanks[i] = false;
+        mAPTankLevels[i] = 1;
+    }
 }
 
 void Sexy::UserProfile::SetCheatFlag(char thePos, bool theFlag)
@@ -513,7 +516,8 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     // 0x80000000 is the original game's format; 0x80000001 is Fishapelago's first release, which appends
     // the Archipelago fields below.
     // 0x80000000 is original; 0x80000001 is Fishapelago v1; 0x80000002 adds embedded slot data & AP state (Option C)
-    uint aVer = 0x80000002;
+    // 0x80000003 adds per-tank adventure levels (mAPTankLevels)
+    uint aVer = 0x80000003;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -617,6 +621,12 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
             theDataSync.SyncBool(mAPUnlockedTanks[i]);
     }
 
+    if (aVer >= 0x80000003)
+    {
+        for (int i = 0; i < 4; i++)
+            theDataSync.SyncLong(mAPTankLevels[i]);
+    }
+
     if (theReader)
     {
         int anArrLvl = mTank * 5 - 6 + mLevel;
@@ -663,6 +673,13 @@ bool Sexy::UserProfile::IsPetUnlocked(int idx)
 void Sexy::UserProfile::NextLevel()
 {
     mLevel++;
+    if (mTank >= 1 && mTank <= 4)
+    {
+        if (mLevel <= 5)
+            mAPTankLevels[mTank - 1] = mLevel;
+        else
+            mAPTankLevels[mTank - 1] = 1;
+    }
     if (mTank == 4 && mLevel == 6)
     {
         mTank = 5;

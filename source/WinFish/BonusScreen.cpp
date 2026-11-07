@@ -298,6 +298,8 @@ void Sexy::BonusScreen::ButtonDepress(int theId)
 				mApp->SwitchToStoryScreen(m0xb8);
 			else if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 2)
 				mApp->SwitchToInterludeScreen();
+			else if (mApp->mGameMode == GAMEMODE_ADVENTURE)
+				mApp->SwitchToTankScreen();
 			else
 				mApp->SwitchToBoard(true, true);
 		}

@@ -2691,8 +2691,20 @@ void Sexy::Board::InitLevel()
 
 	if (mApp->mGameMode == GAMEMODE_ADVENTURE)
 	{
-		mTank = mApp->mCurrentProfile->mTank;
-		mLevel = mApp->mCurrentProfile->mLevel;
+		if (mApp->mTankGameModeChoose >= 1 && mApp->mTankGameModeChoose <= 4)
+			mTank = mApp->mTankGameModeChoose;
+		else if (mApp->mCurrentProfile != NULL)
+			mTank = mApp->mCurrentProfile->mTank;
+		else
+			mTank = 1;
+
+		if (mApp->mCurrentProfile != NULL)
+		{
+			mApp->mCurrentProfile->mTank = mTank;
+			mLevel = mApp->mCurrentProfile->mLevel;
+		}
+		else
+			mLevel = 1;
 	}
 	else
 	{
