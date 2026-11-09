@@ -379,6 +379,14 @@ namespace Sexy
 	{
 		return APLocationToString(static_cast<APLocation>(theLocationId));
 	}
+
+	// Archipelago Victory Conditions / Goals
+	enum class APGoal : int
+	{
+		CYRAX = 0,      // Defeat Cyrax (Tank 5)
+		ALL_TANKS = 1,  // Complete Tanks 1-4
+		ALL_PETS = 2,   // Unlock all 24 pets
+	};
 }
 
 #endif // __APDEFINITIONS_H__

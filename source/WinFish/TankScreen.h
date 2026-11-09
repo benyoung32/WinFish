@@ -12,10 +12,16 @@ namespace Sexy
 	class TankScreen : public Widget, public ButtonListener
 	{
 	public:
+		enum
+		{
+			BUTTON_CYRAX = 5
+		};
+
 		WinFishApp* mApp;
 		DialogButton* mMenuButton;
 		DialogButton* mStoriesButton;
 		DialogButton* mTankButtons[4];
+		DialogButton* mCyraxButton;
 		int m0xa8[8];
 
 	public:
@@ -32,6 +38,7 @@ namespace Sexy
 
 		void					DrawBolts(Graphics* g, int xOffset, int yOffset, bool drawRight, bool drawBottom);
 		void					UpdateButtonStates();
+		bool					AreAllTanksCompleted() const;
 	};
 }
 

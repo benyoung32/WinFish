@@ -703,20 +703,20 @@ void Sexy::UserProfile::NextLevel()
         else
             mAPTankLevels[mTank - 1] = 1;
     }
-    if (mTank == 4 && mLevel == 6)
+    if (mTank == 4 && mLevel > 6)
     {
         mTank = 5;
+        mLevel = 1;
+    }
+    else if (mLevel > 6)
+    {
+        mTank++;
         mLevel = 1;
     }
     if (mTank == 5 && mLevel > 1)
     {
         mCyraxNum++;
         mFinishedGame = true;
-    }
-    if (mLevel > 6 || (mFinishedGame && mLevel > 5))
-    {
-        mTank++;
-        mLevel = 1;
     }
     m0x58 = true;
 }

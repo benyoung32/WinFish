@@ -711,6 +711,7 @@ void Board::Update()
 			mApp->mHighScoreMgr->RecordTimeTrialHighScore(mTank, mApp->mCurrentProfile, mMoney);
 			if (mApp->mAPController != NULL && LevelData::IsValid(mTank, 1))
 				mApp->mAPController->ReportTimeTrialComplete(LevelData(mTank, 1));
+			CheckVictoryCondition();
 			mApp->DoTimesUpDialog();
 			return;
 		}
@@ -736,6 +737,7 @@ void Board::Update()
 					mApp->mCurrentProfile->NextLevel();
 					if (mLevel < 6)
 						mApp->mHighScoreMgr->RecordAdventureHighScore(mTank, mLevel, mApp->mCurrentProfile, m0x3fc);
+					CheckVictoryCondition();
 					mApp->SwitchToBonusScreen();
 					return;
 				}
@@ -1246,7 +1248,7 @@ void Board::Draw(Graphics* g)
 			g->DrawString("Time Trial", 15, 470);
 		else if(mApp->mGameMode == GAMEMODE_SANDBOX)
 			g->DrawString("Sandbox", 15, 470);
-		else if(!mIsBonusRound || mApp->mCurrentProfile->mFinishedGame && mTank != 5)
+		else if(!mIsBonusRound)
 			g->DrawString(StrFormat("Tank %d-%d", mTank, mLevel), 15, 470);
 		else if(mTank != 5)
 			g->DrawString("Bonus Round", 15, 470);
@@ -2692,7 +2694,7 @@ void Sexy::Board::InitLevel()
 
 	if (mApp->mGameMode == GAMEMODE_ADVENTURE)
 	{
-		if (mApp->mTankGameModeChoose >= 1 && mApp->mTankGameModeChoose <= 4)
+		if (mApp->mTankGameModeChoose >= 1 && mApp->mTankGameModeChoose <= 5)
 			mTank = mApp->mTankGameModeChoose;
 		else if (mApp->mCurrentProfile != NULL)
 			mTank = mApp->mCurrentProfile->mTank;
@@ -2858,6 +2860,12 @@ void Sexy::Board::StartMusic()
 
 	mApp->StopMusic();
 	mApp->PlayMusic(1, 3);
+}
+
+void Sexy::Board::CheckVictoryCondition()
+{
+	if (mApp != NULL && mApp->mAPController != NULL)
+		mApp->mAPController->CheckVictoryCondition();
 }
 
 int Sexy::Board::Unk01()
@@ -3298,18 +3306,21 @@ void Sexy::Board::HandleBuyEgg()
 		mApp->mAPController->ReportEggPiece(LevelData(mTank, mLevel), aPieceBought);
 	}
 
-	if (m0x43c >= 4 && mApp->mAPController != NULL)
+	if (m0x43c >= 4)
 	{
-		if (mTank == 5)
+		if (mApp->mAPController != NULL)
 		{
-			mApp->mAPController->ReportCyrax();
-			if (mApp->mAPBridge != NULL)
-				mApp->mAPBridge->SendGoal();
+			if (mTank == 5)
+			{
+				mApp->mAPController->ReportCyrax();
+			}
+			else if (mLevel == 5 && LevelData::IsValid(mTank, mLevel))
+			{
+				mApp->mAPController->ReportTankComplete(LevelData(mTank, mLevel));
+			}
 		}
-		else if (mLevel == 5 && LevelData::IsValid(mTank, mLevel))
-		{
-			mApp->mAPController->ReportTankComplete(LevelData(mTank, mLevel));
-		}
+
+		CheckVictoryCondition();
 	}
 
 	if (mApp->mGameMode == GAMEMODE_CHALLENGE)
@@ -3362,19 +3373,10 @@ void Sexy::Board::HandleBuyEgg()
 	}
 	mApp->mHighScoreMgr->RecordAdventureHighScore(mTank, mLevel, mApp->mCurrentProfile, aScore);
 
-	if (mApp->mCurrentProfile->mFinishedGame)
+	if (mTank == 5 && mLevel == 1 && mApp->mCurrentProfile->mFinishedGame)
 	{
-		if (mTank == 5 && mLevel == 1)
-		{
-			mApp->mCurrentProfile->NextLevel();
-			mApp->SwitchToBonusScreen();
-			return;
-		}
-		mShouldSave = true;
-		ResetLevel(mWidgetManager);
-		mApp->StopMusic();
-		mApp->PlayMusic(2, 54);
-		InitBonusLevel();
+		mApp->mCurrentProfile->NextLevel();
+		mApp->SwitchToBonusScreen();
 		return;
 	}
 
@@ -3385,17 +3387,10 @@ void Sexy::Board::HandleBuyEgg()
 	else if(mTank == 5)
 	{
 		aPetId = PET_PRESTO;
-		if (!mApp->mCurrentProfile->HasAPConnection())
-			mApp->mCurrentProfile->UnlockPet(aPetId, true);
 	}
 	else
 	{
 		aPetId = mTank * 5 - 6 + mLevel;
-		if(aPetId >= PET_STINKY && aPetId < PET_END)
-		{
-			if (!mApp->mCurrentProfile->HasAPConnection())
-				mApp->mCurrentProfile->UnlockPet(aPetId, true);
-		}
 	}
 
 	if (aPetId == PET_PRESTO)

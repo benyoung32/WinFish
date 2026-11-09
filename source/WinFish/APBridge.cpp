@@ -35,6 +35,10 @@ APBridge::APBridge(const std::string& theDataFolder, const std::string& theCertF
 	mJustConnected = false;
 	mDataFolder = theDataFolder;
 	mCertFile = theCertFile;
+	mGoalSent = false;
+
+	if (!mSlotData.LoadFromFile("slot_data.json"))
+		mSlotData.LoadFromFile(mDataFolder + "slot_data.json");
 }
 
 APBridge::~APBridge()
@@ -82,11 +86,12 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 		mClient->ConnectSlot(mSlot, mPassword, AP_ITEMS_HANDLING);
 	});
 
-	mClient->set_slot_connected_handler([this](const nlohmann::json&)
+	mClient->set_slot_connected_handler([this](const nlohmann::json& theSlotData)
 	{
 		mState = AP_SLOT_CONNECTED;
 		mLastError.clear();
 		mJustConnected = true;
+		mSlotData.ParseJson(theSlotData.dump());
 	});
 
 	mClient->set_items_received_handler([this](const std::list<APClient::NetworkItem>& theItems)
@@ -154,6 +159,10 @@ void APBridge::Disconnect()
 	mClient = NULL;
 	mState = AP_DISCONNECTED;
 	mSentItems.clear();
+	mGoalSent = false;
+	mSlotData = SlotData();
+	if (!mSlotData.LoadFromFile("slot_data.json"))
+		mSlotData.LoadFromFile(mDataFolder + "slot_data.json");
 }
 
 void APBridge::StopForWrongSeed()
@@ -217,7 +226,10 @@ void APBridge::SendChecks(const std::set<int>& theLocations)
 void APBridge::SendGoal()
 {
 	if (mClient != NULL)
+	{
 		mClient->StatusUpdate(APClient::ClientStatus::GOAL);
+		mGoalSent = true;
+	}
 }
 
 void APBridge::RequestSync()

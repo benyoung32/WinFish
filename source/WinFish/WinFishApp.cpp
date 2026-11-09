@@ -316,65 +316,38 @@ Sexy::WinFishApp::~WinFishApp()
 	for (int i = 0; i < DIALOG_END_ID; i++)
 		KillDialog(i);
 	ProcessSafeDeleteList(); // This line missed in original game
-
+	mWidgetManager->RemoveAllWidgets();
 	if (mBoard != NULL)
 	{
 		mBoard->SaveCurrentGame();
-		mWidgetManager->RemoveWidget(mBoard);
 		delete mBoard;
 		mBoard = NULL;
 	}
 
-	if (mTitleScreen != NULL)
-		mWidgetManager->RemoveWidget(mTitleScreen);
 	delete mTitleScreen;
 
-	if (mStoreScreen != NULL)
-		mWidgetManager->RemoveWidget(mStoreScreen);
 	delete mStoreScreen;
 
-	if (mHatchScreen != NULL)
-		mWidgetManager->RemoveWidget(mHatchScreen);
 	delete mHatchScreen;
 
-	if (mBonusScreen != NULL)
-		mWidgetManager->RemoveWidget(mBonusScreen);
 	delete mBonusScreen;
 
-	if (mHighScoreScreen != NULL)
-		mWidgetManager->RemoveWidget(mHighScoreScreen);
 	delete mHighScoreScreen;
 
-	if (mHelpScreen != NULL)
-		mWidgetManager->RemoveWidget(mHelpScreen);
 	delete mHelpScreen;
 
-	if (mInterludeScreen != NULL)
-		mWidgetManager->RemoveWidget(mInterludeScreen);
 	delete mInterludeScreen;
 
-	if (mStoryScreen != NULL)
-		mWidgetManager->RemoveWidget(mStoryScreen);
 	delete mStoryScreen;
 
-	if (mSimFishScreen != NULL)
-		mWidgetManager->RemoveWidget(mSimFishScreen);
 	delete mSimFishScreen;
 
-	if (mTankScreen != NULL)
-		mWidgetManager->RemoveWidget(mTankScreen);
 	delete mTankScreen;
 
-	if (mPetsScreen != NULL)
-		mWidgetManager->RemoveWidget(mPetsScreen);
 	delete mPetsScreen;
 
-	if (mSimSetupScreen != NULL)
-		mWidgetManager->RemoveWidget(mSimSetupScreen);
 	delete mSimSetupScreen;
 
-	if (mGameSelector != NULL)
-		mWidgetManager->RemoveWidget(mGameSelector);
 	delete mGameSelector;
 
 	delete mAPBridge;
@@ -1187,7 +1160,6 @@ void Sexy::WinFishApp::Shutdown()
 		SaveCurrentUserData();
 		RemoveBoard();
 	}
-	UpdatePlayData();
 
 	time_t aTodaysDate = GetTodayStartSeconds();
 	int aSecondsPlayed = mUpdateCount / 36;
@@ -1932,7 +1904,6 @@ void Sexy::WinFishApp::DoQuitDialog()
 void Sexy::WinFishApp::SwitchToGameSelector()
 {
 	RemoveBoard();
-	UpdatePlayData();
 	if (mGameSelector)
 	{
 		mWidgetManager->RemoveWidget(mGameSelector);
@@ -1953,8 +1924,6 @@ void Sexy::WinFishApp::SwitchToGameSelector()
 	{
 		DoArchipelagoDialog(mCurrentProfile != NULL ? mCurrentProfile->mUserName : "");
 	}
-	if (CheckTrialEnded())
-		DoTrialVersionExpiredDialog();
 }
 
 void Sexy::WinFishApp::SwitchToHelpScreen(bool instructions)
@@ -2005,53 +1974,15 @@ void Sexy::WinFishApp::RemoveGameSelector()
 
 void Sexy::WinFishApp::UpdatePlayData()
 {
-	if (m0x884)
-	{
-		mPlaytimeCounter2++;
-		m0x884 = false;
-	}
-	if (mMaxTime > 0)
-	{
-		int anUnk01 = mPlaytimeCounter * mFrameTime;
-		mTimesPlayed = mTimesPlayed + anUnk01 / 60000;
-		mPlaytimeCounter2 = 0;
-		mPlaytimeCounter = 0;
-		return;
-	}
-	if (mMaxPlays > 0)
-	{
-		mTimesPlayed += mPlaytimeCounter2;
-	}
-	mPlaytimeCounter2 = 0;
-	mPlaytimeCounter = 0;
 }
 
 bool Sexy::WinFishApp::CheckTrialEnded()
 {
-	if (mIsRegistered || IsScreenSaver())
-		return false;
-	UpdatePlayData();
-
-	if (mMaxTime > 0)
-		if(mMaxTime <= mTimesPlayed)
-			return true;
-
-	if (mMaxTime <= 0 && mMaxPlays > 0)
-	{
-		int aPlaysLeft = mMaxPlays - mTimesPlayed;
-
-		if (m0x884)
-			aPlaysLeft--;
-
-		if (aPlaysLeft <= 0)
-			return true; 
-	}
-
-	if (mMaxTime <= 0 && mMaxPlays <= 0 && mMaxExecutions > 0)
-		if (mTimesExecuted > mMaxExecutions)
-			return true;
-
 	return false;
+}
+
+void Sexy::WinFishApp::DoTrialVersionExpiredDialog()
+{
 }
 
 void Sexy::WinFishApp::ApplyOptionsSettings()
@@ -2065,13 +1996,6 @@ void Sexy::WinFishApp::ApplyOptionsSettings()
 	ClearUpdateBacklog(true);
 	if (mBoard)
 		mBoard->ApplyShadowsIf3D();
-}
-
-void Sexy::WinFishApp::DoTrialVersionExpiredDialog()
-{
-	Dialog* aDia = DoDialog(3, true, "PLEASE REGISTER!", "Your trial version of Insaniquarium has expired!\n\nYou must register your copy\nto continue playing.", "", Dialog::BUTTONS_OK_CANCEL);
-	aDia->mYesButton->mLabel = "Register";
-	aDia->mNoButton->mLabel = "Quit";
 }
 
 void Sexy::WinFishApp::DoUpdateDialog()
@@ -3101,6 +3025,8 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 	for (int i = 0; i < PET_END; i++)
 		newProf.mUnlockedPets[i] = false;
 	newProf.mNumOfUnlockedPets = 0;
+	newProf.mFinishedGame = false;
+	newProf.mFinishedGameCount = 0;
 
 	if (anArchive.mHasSlotDataJson && !anArchive.mSlotDataJson.empty())
 		newProf.mAPSlotData = anArchive.mSlotDataJson;

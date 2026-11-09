@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>C:\Users\Ben\Documents\Code\WinFish\WinFish\source;..\source;</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
@@ -105,7 +105,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libcmtd.lib;SexyAppFramework.lib;ws2_32.lib;crypt32.lib;libssl.lib;libcrypto.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>false</OptimizeReferences>
       <OutputFile>$(OutDir)Insaniquarium.exe</OutputFile>
@@ -180,6 +180,9 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)" /Y</Command>
     <ClCompile Include="ArchipelagoDialog.cpp" />
     <ClCompile Include="APGameController.cpp" />
     <ClCompile Include="APSaveImporter.cpp" />
+    <ClCompile Include="SlotData.cpp">
+      <AdditionalIncludeDirectories>$(SolutionDir)source\apclientpp\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="LevelSettings.cpp" />
     <ClCompile Include="BallFish.cpp" />
     <ClCompile Include="BetaSupport.cpp" />
@@ -261,6 +264,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)" /Y</Command>
     <ClInclude Include="APDefinitions.h" />
     <ClInclude Include="APGameController.h" />
     <ClInclude Include="APSaveImporter.h" />
+    <ClInclude Include="SlotData.h" />
     <ClInclude Include="LevelData.h" />
     <ClInclude Include="LevelSettings.h" />
     <ClInclude Include="ArchipelagoDialog.h" />

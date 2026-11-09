@@ -281,6 +281,7 @@ namespace Sexy
 		void					InitLevel();
 		void					InitBonusLevel();
 		void					StartMusic();
+		void					CheckVictoryCondition();
 		int						Unk01();
 		int						Unk02();
 		void					Unk03();

@@ -12,8 +12,13 @@ add auto clicking setting. the gun can only fire every 0.25 settings so this cou
 
 borderless fullscreen
 
-fix: bonus level triggers after every level
-fix: all pets start out unlocked
+~~fix: bonus level triggers after every level~~ (DONE)
+~~fix: cyrax unreachable. A boss battle option should be added to the tank select after all 4 tanks have been completed~~ (DONE)
+fix: pet slot items are non-functional. see todos related to the built in 3 pet slot limit. 
+
+TODO: integrate new victory conditions 
+TODO: integrate upgrade availibity choice
+TODO: implement aliensanity
 
 ## INVESTIGATE:
 
@@ -46,6 +51,8 @@ virtual tank: I have no ideas/plans for this, I never really play virtual tank b
 high score page: 
 could be reworked to include scores from community? or other information from the archipelago 
 
+# TODO:
+replace the egg icon with the archipelago asset
 # ideas from discord: 
 
 maybe even some optional items that affect the virtual tank, like the alien summoner.

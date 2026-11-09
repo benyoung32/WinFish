@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "APDefinitions.h"
+#include "SlotData.h"
 
 // Thin wrapper around apclientpp. Only APBridge.cpp includes apclient.hpp, so asio/websocketpp
 // never reach the SexyAppFramework headers (Common.h pins _WIN32_WINNT to 0x0500, asio needs 0x0600+).
@@ -76,6 +77,11 @@ namespace Sexy
 		// Asks the server to resend all received items (used when an item index is skipped).
 		void RequestSync();
 
+		bool IsGoalSent() const { return mGoalSent; }
+		void SetGoalSent(bool theGoalSent) { mGoalSent = theGoalSent; }
+		const SlotData& GetSlotData() const { return mSlotData; }
+		SlotData& GetSlotData() { return mSlotData; }
+
 	private:
 		APClient* mClient;
 		State mState;
@@ -91,6 +97,8 @@ namespace Sexy
 		std::vector<APReceivedItem> mReceivedItems;
 		std::vector<int> mConfirmedChecks;
 		std::vector<APSentItem> mSentItems;
+		bool mGoalSent;
+		SlotData mSlotData;
 	};
 };
 

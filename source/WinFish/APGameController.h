@@ -48,6 +48,10 @@ namespace Sexy
 		void						ReportCyrax();
 		void						ReportBonusPet(int theBonusPetIndex);
 
+		// Goal & Victory Conditions
+		bool						CheckVictoryCondition();
+		bool						AreAllTanksCompleted() const;
+
 		// Board / Gameplay Session Hooks
 		void						ApplyLevelStart(Board* theBoard);
 		void						UpdateBoard(Board* theBoard);

@@ -46,6 +46,9 @@ void APGameController::Update()
 		{
 			QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
 		}
+
+		if (!mBridge->IsGoalSent())
+			CheckVictoryCondition();
 	}
 }
 
@@ -188,6 +191,8 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 	// Persist updated controller state to the profile
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
 		SaveToProfile(mApp->mCurrentProfile);
+
+	CheckVictoryCondition();
 }
 
 void APGameController::ReportLocation(int64_t theLocationId, const std::string& theLocationName)
@@ -245,6 +250,67 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 
 	int64_t aLocId = static_cast<int64_t>(APLocation::BONUS_PET_1) + theBonusPetIndex;
 	ReportLocation(aLocId, StrFormat("Bonus Pet %d", theBonusPetIndex + 1));
+}
+
+bool APGameController::AreAllTanksCompleted() const
+{
+	if (mBridge == NULL)
+		return false;
+
+	bool aTank1 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_1_COMPLETE));
+	bool aTank2 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_2_COMPLETE));
+	bool aTank3 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_3_COMPLETE));
+	bool aTank4 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_4_COMPLETE));
+
+	return aTank1 && aTank2 && aTank3 && aTank4;
+}
+
+// TODO: rework to match new victory condition work
+bool APGameController::CheckVictoryCondition()
+{
+	if (mBridge == NULL || mBridge->IsGoalSent())
+		return false;
+
+	APGoal aGoal = mBridge->GetSlotData().GetGoal();
+	bool aVictory = false;
+
+	switch (aGoal)
+	{
+	case APGoal::ALL_TANKS:
+	{
+		aVictory = AreAllTanksCompleted();
+		break;
+	}
+
+	case APGoal::ALL_PETS:
+	{
+		int aPetCount = 0;
+		for (int i = 0; i < 24; i++)
+		{
+			if (mUnlockedPets[i])
+				aPetCount++;
+		}
+		aVictory = (aPetCount >= 24);
+		break;
+	}
+
+	case APGoal::CYRAX:
+	default:
+	{
+		if (mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_CYRAX)))
+			aVictory = true;
+		break;
+	}
+	}
+
+	if (aVictory)
+	{
+		mBridge->SendGoal();
+		QueueNotification("Archipelago: Goal Achieved!");
+		return true;
+	}
+
+	return false;
 }
 
 void APGameController::ApplyLevelStart(Board* theBoard)

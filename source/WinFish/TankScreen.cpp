@@ -42,6 +42,12 @@ Sexy::TankScreen::TankScreen(WinFishApp* theApp)
 		mTankButtons[i]->SetFont(FONT_JUNGLEFEVER12OUTLINE);
 		mTankButtons[i]->Resize(m0xa8[i * 2] + 14, m0xa8[i * 2 + 1] + 134, 193, mTankButtons[i]->mHeight);
 	}
+
+	mCyraxButton = MakeDialogButton2(BUTTON_CYRAX, this, "Cyrax", IMAGE_MAINBUTTON);
+	mCyraxButton->SetFont(FONT_JUNGLEFEVER12OUTLINE);
+	mCyraxButton->Resize((mWidth - 193) / 2, 442, 193, mCyraxButton->mHeight);
+	mCyraxButton->SetColor(0, Color(255, 240, 0));
+	mCyraxButton->mVisible = false;
 }
 
 Sexy::TankScreen::~TankScreen()
@@ -53,6 +59,8 @@ Sexy::TankScreen::~TankScreen()
 		delete mMenuButton;
 	if (mStoriesButton)
 		delete mStoriesButton;
+	if (mCyraxButton)
+		delete mCyraxButton;
 }
 
 void Sexy::TankScreen::UpdateButtonStates()
@@ -129,6 +137,30 @@ void Sexy::TankScreen::UpdateButtonStates()
 			}
 		}
 	}
+
+	if (mApp->mGameMode == GAMEMODE_ADVENTURE)
+	{
+		mCyraxButton->mVisible = true;
+		if (AreAllTanksCompleted())
+		{
+			mCyraxButton->SetDisabled(false);
+			mCyraxButton->mComponentImage = IMAGE_MAINBUTTON;
+			mCyraxButton->mFrameNoDraw = false;
+			mCyraxButton->SetColor(0, Color(255, 240, 0));
+		}
+		else
+		{
+			mCyraxButton->SetDisabled(true);
+			mCyraxButton->mComponentImage = IMAGE_MAINBUTTON;
+			mCyraxButton->mFrameNoDraw = false;
+			mCyraxButton->SetColor(0, Color(160, 160, 160));
+		}
+	}
+	else
+	{
+		mCyraxButton->mVisible = false;
+		mCyraxButton->SetDisabled(true);
+	}
 }
 
 void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
@@ -142,6 +174,7 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 	}
 
 	theWidgetManager->AddWidget(mStoriesButton);
+	theWidgetManager->AddWidget(mCyraxButton);
 }
 
 void Sexy::TankScreen::RemovedFromManager(WidgetManager* theWidgetManager)
@@ -151,6 +184,7 @@ void Sexy::TankScreen::RemovedFromManager(WidgetManager* theWidgetManager)
 	for (int i = 0; i < 4; i++)
 		theWidgetManager->RemoveWidget(mTankButtons[i]);
 	theWidgetManager->RemoveWidget(mStoriesButton);
+	theWidgetManager->RemoveWidget(mCyraxButton);
 }
 
 void Sexy::TankScreen::Update()
@@ -265,6 +299,39 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		mApp->RemoveTankScreen();
 		mApp->SwitchToStoryScreen(-1);
 	}
+	else if (theId == BUTTON_CYRAX)
+	{
+		mApp->RemoveTankScreen();
+		int aSelectedTank = 5;
+		mApp->mTankGameModeChoose = aSelectedTank;
+
+		if (mApp->mGameMode == GAMEMODE_ADVENTURE && mApp->mCurrentProfile != NULL)
+		{
+			if (mApp->mCurrentProfile->mTank >= 1 && mApp->mCurrentProfile->mTank <= 4)
+			{
+				mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
+			}
+			mApp->mCurrentProfile->mTank = 5;
+			mApp->mCurrentProfile->mLevel = 1;
+			mApp->SaveCurrentUserData();
+		}
+
+		mApp->SwitchToBoard(false, true);
+	}
+}
+
+bool Sexy::TankScreen::AreAllTanksCompleted() const
+{
+	if (mApp != NULL && mApp->mAPController != NULL)
+		return mApp->mAPController->AreAllTanksCompleted();
+
+	if (mApp == NULL || mApp->mAPBridge == NULL)
+		return false;
+
+	return mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_1_COMPLETE)) &&
+	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_2_COMPLETE)) &&
+	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_3_COMPLETE)) &&
+	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_4_COMPLETE));
 }
 
 void Sexy::TankScreen::DrawBolts(Graphics* g, int xOffset, int yOffset, bool drawRight, bool drawBottom)
