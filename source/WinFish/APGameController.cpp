@@ -1,4 +1,5 @@
 #include "APGameController.h"
+#include "APDefinitions.h"
 #include "WinFishApp.h"
 #include "Board.h"
 #include "Fish.h"
@@ -98,6 +99,14 @@ bool APGameController::IsPetUnlocked(int thePetIndex) const
 	return false;
 }
 
+int APGameController::GetPetSlots() const
+{
+	int aStart = 0;
+	if (mBridge != NULL)
+		aStart = mBridge->GetSlotData().mStartPetSlots;
+	return aStart + mPetSlots;
+}
+
 void APGameController::OnItemReceived(const APReceivedItem& theItem)
 {
 	mReceivedHistory.push_back(theItem);
@@ -140,6 +149,8 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	case APItem::PET_SLOT:
 		mPetSlots++;
+		if (mApp != NULL && mApp->mCurrentProfile != NULL)
+			mApp->mCurrentProfile->m0xb4 = GetPetSlots();
 		break;
 
 	// TODO: allow this check to be affected by settings (should weapon upgrades give 2 lvls each or just 1)
@@ -271,38 +282,28 @@ bool APGameController::CheckVictoryCondition()
 	if (mBridge == NULL || mBridge->IsGoalSent())
 		return false;
 
-	APGoal aGoal = mBridge->GetSlotData().GetGoal();
 	bool aVictory = false;
-
-	switch (aGoal)
+	if (mBridge->GetSlotData().mCyraxRequired)
 	{
-	case APGoal::ALL_TANKS:
-	{
-		aVictory = AreAllTanksCompleted();
-		break;
+		aVictory = 	mBridge->IsLocationChecked(AP_LOCATION_CYRAX);
 	}
 
-	case APGoal::ALL_PETS:
+	if (mBridge->GetSlotData().mChallengeModeRequired) 
+	{ 
+		aVictory =  mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_1_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_2_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_3_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_4_COMPLETE);
+	}
+	
+	if (mBridge->GetSlotData().mTimeTrialRequired)
 	{
-		int aPetCount = 0;
-		for (int i = 0; i < 24; i++)
-		{
-			if (mUnlockedPets[i])
-				aPetCount++;
-		}
-		aVictory = (aPetCount >= 24);
-		break;
+		aVictory =  mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_1_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_2_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_3_COMPLETE) &&
+					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_4_COMPLETE);
 	}
-
-	case APGoal::CYRAX:
-	default:
-	{
-		if (mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_CYRAX)))
-			aVictory = true;
-		break;
-	}
-	}
-
+	
 	if (aVictory)
 	{
 		mBridge->SendGoal();
@@ -333,7 +334,7 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 			aLaser = 12;
 		theBoard->m0x3e4 = aLaser;
 	}
-
+	
 	// Apply food quality & quantity upgrades if received
 	if (mFoodQuality > 0 && gFoodType < mFoodQuality)
 		gFoodType = mFoodQuality;
@@ -359,22 +360,22 @@ void APGameController::UpdateBoard(Board* theBoard)
 		theBoard->ShowText(aMsg, false, -1);
 		mNotificationCooldown = 180; // ~3 seconds at 60fps
 	}
-
+	// TODO: traps should be dispensed according to some timer or cooldown
 	// Service traps during active gameplay
 	if (!mPendingTraps.empty())
 	{
-		APItem aTrap = mPendingTraps.front();
+		APItem trap = mPendingTraps.front();
 		mPendingTraps.pop_front();
 
-		if (aTrap == APItem::TRAP_ALIEN_ATTACK)
+		if (trap == APItem::TRAP_ALIEN_ATTACK)
 		{
 			// Force alien timer to zero or trigger alien arrival
 			theBoard->mAlienTimer = 1;
 			theBoard->ShowText("ALIEN ATTACK TRAP ACTIVATED!", true, -1);
 		}
-		else if (aTrap == APItem::TRAP_FAMINE)
+		else if (trap == APItem::TRAP_FAMINE)
 		{
-			// TODO: check that -100 is the correct value. fish die at -500
+			// TODO: check that newHunger is the correct value. fish die at -500
 			int newHunger = -1;
 			theBoard->ShowText("FAMINE TRAP ACTIVATED!", true, -1);
 			if (theBoard->mFishList != NULL)
@@ -416,6 +417,7 @@ void APGameController::LoadFromProfile(UserProfile* theProfile)
 	mFoodQuality = theProfile->mAPFoodQuality;
 	mFoodQuantity = theProfile->mAPFoodQuantity;
 	mPetSlots = theProfile->mAPPetSlots;
+	theProfile->m0xb4 = GetPetSlots();
 	mWeaponLevel = theProfile->mAPWeaponLevel;
 	mStartingMoneyBonus = theProfile->mAPStartingMoneyBonus;
 
@@ -434,6 +436,7 @@ void APGameController::SaveToProfile(UserProfile* theProfile)
 	theProfile->mAPFoodQuality = mFoodQuality;
 	theProfile->mAPFoodQuantity = mFoodQuantity;
 	theProfile->mAPPetSlots = mPetSlots;
+	theProfile->m0xb4 = GetPetSlots();
 	theProfile->mAPWeaponLevel = mWeaponLevel;
 	theProfile->mAPStartingMoneyBonus = mStartingMoneyBonus;
 

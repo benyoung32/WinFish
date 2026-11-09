@@ -1857,6 +1857,15 @@ void Sexy::WinFishApp::DoOptionsDialog(bool theFlag)
 	AddDialog(DIALOG_OPTIONS, aDia);
 }
 
+int Sexy::WinFishApp::GetMaxPetSlots() const
+{
+	if (mAPController != NULL)
+		return mAPController->GetPetSlots();
+	if (mCurrentProfile != NULL)
+		return mCurrentProfile->m0xb4;
+	return 0;
+}
+
 void Sexy::WinFishApp::SwitchToBoard(bool theFlag1, bool theFlag2)
 {
 	if (CheckTrialEnded())
@@ -1886,8 +1895,9 @@ void Sexy::WinFishApp::SwitchToBoard(bool theFlag1, bool theFlag2)
 		SwitchToHelpScreen(true);
 		return;
 	}
+	int aMaxSlots = GetMaxPetSlots();
 	if (!IsBonusLevel() && mGameMode != GAMEMODE_VIRTUAL_TANK && mCurrentProfile != NULL && 
-		(mCurrentProfile->mNumOfUnlockedPets > 3 && (mGameMode != GAMEMODE_ADVENTURE || mCurrentProfile->mTank != 5)))
+		(aMaxSlots > 0 && mCurrentProfile->mNumOfUnlockedPets > aMaxSlots && (mGameMode != GAMEMODE_ADVENTURE || mCurrentProfile->mTank != 5)))
 	{
 		SwitchToPetsScreen();
 		return;

@@ -2183,19 +2183,31 @@ void Sexy::Board::StartGame()
 		aRandVal--;
 	}
 	UserProfile* aCurProf = mApp->mCurrentProfile;
-	// TODO: this <=3 check should be reworked to reflect the players current pet slots
-	if ((!aCurProf->mFinishedGame || (mApp->mGameMode != GAMEMODE_TIME_TRIAL &&
-		mApp->mGameMode != GAMEMODE_CHALLENGE)) && aCurProf->mNumOfUnlockedPets <= 3)
+	int aMaxSlots = mApp->GetMaxPetSlots();
+	if (mTank != 5)
 	{
-		for (int i = PET_STINKY; i < PET_END; i++)
-			if (aCurProf->IsPetUnlocked(i))
-				SpawnPet(i, -1, -1, false, false);
-	}
-	else
-	{
-		for (int i = PET_STINKY; i < PET_END; i++)
-			if (aCurProf->m0x5a[i])
-				SpawnPet(i, -1, -1, false, false);
+		if (aMaxSlots <= 0)
+		{
+			// No pet slots available; spawn no pets
+		}
+		else if (aCurProf->mNumOfUnlockedPets <= aMaxSlots)
+		{
+			for (int i = PET_STINKY; i < PET_END; i++)
+				if (aCurProf->IsPetUnlocked(i))
+					SpawnPet(i, -1, -1, false, false);
+		}
+		else
+		{
+			int aSpawnedCount = 0;
+			for (int i = PET_STINKY; i < PET_END; i++)
+			{
+				if (aCurProf->m0x5a[i] && aSpawnedCount < aMaxSlots)
+				{
+					SpawnPet(i, -1, -1, false, false);
+					aSpawnedCount++;
+				}
+			}
+		}
 	}
 
 	if (!mApp->mRelaxMode)

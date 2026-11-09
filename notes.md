@@ -14,13 +14,20 @@ borderless fullscreen
 
 ~~fix: bonus level triggers after every level~~ (DONE)
 ~~fix: cyrax unreachable. A boss battle option should be added to the tank select after all 4 tanks have been completed~~ (DONE)
-fix: pet slot items are non-functional. see todos related to the built in 3 pet slot limit. 
+~~fix: pet slot items are non-functional. see todos related to the built in 3 pet slot limit.~~ (DONE) 
 
 TODO: integrate new victory conditions 
 TODO: integrate upgrade availibity choice
 TODO: implement aliensanity
 
 ## INVESTIGATE:
+
+TODO: deleting a profile should not open the AP edit dialogue 
+
+"include bonus pets" always acts as true, even if false
+universal tracker currently crashes out, even with the yaml present
+bonus pets logic is also a bit off, my tank 4 unlock generated on bonus pet 2 when I only have like 100 shells + bonus pet 1, I think I'd have to do all the story levels over again + some extra to be able to afford it lul
+cyrax goal doesn't seem to work, I have all the levels beat but there is no way to get to cyrax's level. it just booted me back to the level select, and it said 2nd final boss on the "continue" button, but there was no dedicated button for it and clicking Tank 4 just took me to 4-1
 
 time trial - no required threshold, could choose threshold for check or have several thresholds. 
 challenge mode

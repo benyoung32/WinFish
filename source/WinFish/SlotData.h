@@ -8,11 +8,14 @@ namespace Sexy
 {
 	struct SlotData
 	{
-		int				mGoal;                     // 0 = CYRAX, 1 = ALL_TANKS, 2 = ALL_PETS (matches APGoal)
+		bool			mCyraxRequired;
+		bool 			mTimeTrialRequired;
+		bool			mChallengeModeRequired;
 		int				mStartingTank;             // 1, 2, 3, or 4
 		bool			mAliensanity;              // defeat each alien for the first time is a check
 		int				mUpgradeAvailability;      // 0 = instant, 1 = free in shop, 2 = shop buy
 		int				mStartingMoneyBonus;       // starting bonus money if set in slot_data
+		int				mStartPetSlots;            // starting pet slots from slot_data (default 0)
 		std::string		mRawJson;                  // raw JSON content from slot_data.json
 
 		SlotData();
@@ -20,13 +23,17 @@ namespace Sexy
 
 		bool			LoadFromFile(const std::string& theFilePath);
 		bool			ParseJson(const std::string& theJsonStr);
-
-		APGoal			GetGoal() const { return static_cast<APGoal>(mGoal); }
-		bool			IsGoal(APGoal theGoal) const { return mGoal == static_cast<int>(theGoal); }
 		int				GetStartingTank() const { return mStartingTank; }
 	};
 
 	typedef SlotData slotData;
+
+	enum UpgradeAvailability
+	{
+		UPGRADE_AVAILABILITY_INSTANT = 0,
+		UPGRADE_AVAILABILITY_FREE_IN_SHOP = 1,
+		UPGRADE_AVAILABILITY_SHOP_BUY = 2
+	};
 }
 
 #endif // __SLOTDATA_H__

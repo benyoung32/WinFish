@@ -119,13 +119,18 @@ Sexy::PetsScreen::PetsScreen(WinFishApp* theApp)
 		}
 	}
 
-	if (mApp->mCurrentProfile != NULL)
-		m0x130 = mApp->mCurrentProfile->m0xb4 < mApp->mCurrentProfile->mNumOfUnlockedPets ? mApp->mCurrentProfile->m0xb4 : mApp->mCurrentProfile->mNumOfUnlockedPets;
+	if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+	{
+		m0x130 = (mApp->mCurrentProfile != NULL) ? mApp->mCurrentProfile->mNumOfUnlockedPets : 0;
+	}
 	else
-		m0x130 = 0;
-
-	if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK && m0x130 > 4)
-		m0x130 = 4;
+	{
+		int aMaxSlots = mApp->GetMaxPetSlots();
+		if (mApp->mCurrentProfile != NULL)
+			m0x130 = aMaxSlots < mApp->mCurrentProfile->mNumOfUnlockedPets ? aMaxSlots : mApp->mCurrentProfile->mNumOfUnlockedPets;
+		else
+			m0x130 = 0;
+	}
 
 	mOverlay = new PetScreenOverlay();
 	mOverlay->mScreen = this;
@@ -223,10 +228,14 @@ void Sexy::PetsScreen::DrawOverlay(Graphics* g)
 	else
 		aStr1 = "to take to the next level";
 
-	// TODO: This free slot variable should be reworked to reflect the unlocked slot items
 	int aFreeSlots = m0x130 - m0x124;
 	SexyString aStr2 = "";
-	if (aFreeSlots > 1)
+	if (m0x130 == 0)
+	{
+		aStr2 = "No pet slots available";
+		aStr1 = "";
+	}
+	else if (aFreeSlots > 1)
 		aStr2 = StrFormat("Choose %d more pets", aFreeSlots);
 	else if (aFreeSlots == 1)
 		aStr2 = "Choose 1 more pet";
@@ -298,7 +307,7 @@ void Sexy::PetsScreen::ButtonDepress(int theId)
 					mApp->mCurrentProfile->m0x5a[i] = mPetButtons[i]->m0x130;
 			}
 
-			if (m0x124 > 2 || mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+			if (m0x124 >= m0x130 || mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
 			{
 				mApp->RemovePetsScreen();
 				if (aFlag)
@@ -312,17 +321,15 @@ void Sexy::PetsScreen::ButtonDepress(int theId)
 					mApp->mBoard->PauseGame(false);
 				}
 			}
-			else if(m0x130 < 4)
-			{
-				mApp->DoDialog(20, true, "Select More Pets?", 
-					"Are you sure you want to continue to the next level without selecting 3 pets?", 
-					"", Dialog::BUTTONS_YES_NO);
-			}
 			else
 			{
-				mApp->DoDialog(20, true, "Select More Pets?", 
-					"Are you sure you want to continue to the next level without selecting at least 3 pets?", 
-					"", Dialog::BUTTONS_YES_NO);
+				SexyString aPrompt;
+				if (m0x130 == 1)
+					aPrompt = "Are you sure you want to continue to the next level without selecting 1 pet?";
+				else
+					aPrompt = StrFormat("Are you sure you want to continue to the next level without selecting %d pets?", m0x130);
+
+				mApp->DoDialog(20, true, "Select More Pets?", aPrompt, "", Dialog::BUTTONS_YES_NO);
 			}
 		}
 		else if (theId == 100)

@@ -257,7 +257,7 @@ namespace Sexy
 								{
 									int aRet = inflate(&aStrm, Z_FINISH);
 									inflateEnd(&aStrm);
-									anOk = (aRet == Z_STREAM_END || aRet == Z_OK);
+									anOk = (aRet == Z_STREAM_END || aRet == Z_OK || (aRet == Z_BUF_ERROR && aStrm.total_out == anUncompSize));
 								}
 							}
 

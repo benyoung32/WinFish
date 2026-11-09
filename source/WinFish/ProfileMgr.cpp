@@ -3,6 +3,7 @@
 #include "ProfileMgr.h"
 #include "WinFishApp.h"
 #include "WinFishCommon.h"
+#include "APGameController.h"
 
 using namespace Sexy;
 
@@ -429,7 +430,7 @@ void Sexy::UserProfile::Init()
     m0x4c = 0;
     mCyraxNum = 0;
     mFinishedGameCount = 0;
-    m0xb4 = 3;
+    m0xb4 = 0;
     mCheatCodeFlags = 0;
     SetCheatFlag(1, true);
     m0x8c = 0;
@@ -741,4 +742,12 @@ SexyString Sexy::UserProfile::GetSaveGameFilePath(int theGameMode, int theUserId
     sprintf(aPathBuffer, "userdata\\%s%d.dat", aGameModeString, theUserId);
 
     return SexyString(GetAppDataFolder() + aPathBuffer);
+}
+
+int Sexy::UserProfile::GetMaxPetSlots() const
+{
+    WinFishApp* anApp = dynamic_cast<WinFishApp*>(gSexyApp);
+    if (anApp != NULL && anApp->mAPController != NULL)
+        return anApp->mAPController->GetPetSlots();
+    return m0xb4;
 }

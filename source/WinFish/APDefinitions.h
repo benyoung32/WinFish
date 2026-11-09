@@ -1,4 +1,4 @@
-#ifndef __APDEFINITIONS_H__
+﻿#ifndef __APDEFINITIONS_H__
 #define __APDEFINITIONS_H__
 
 // ===========================================================================
@@ -23,6 +23,7 @@ namespace Sexy
 		PET_SLOT = 102LL, // Pet Slot Upgrade
 		STARTING_MONEY = 103LL, // Starting Money +100
 		WEAPON_UPGRADE = 104LL, // Progressive Weapon Upgrade
+		BONUS_SHELLS = 105LL, // Bonus Shells
 		STINKY = 201LL, // Stinky the Snail
 		NIKO = 202LL, // Niko the Oyster
 		ITCHY = 203LL, // Itchy the Swordfish
@@ -72,62 +73,66 @@ namespace Sexy
 		TANK_1_5_EGG_PIECE_2 = 15LL, // Tank 1-5 Egg Piece 2
 		TANK_1_5_EGG_PIECE_3 = 16LL, // Tank 1-5 Egg Piece 3
 		TIME_TRIAL_1_COMPLETE = 17LL, // Time Trial 1 Complete
-		TANK_2_COMPLETE = 18LL, // Tank 2 Complete
-		TANK_2_1_EGG_PIECE_1 = 19LL, // Tank 2-1 Egg Piece 1
-		TANK_2_1_EGG_PIECE_2 = 20LL, // Tank 2-1 Egg Piece 2
-		TANK_2_1_EGG_PIECE_3 = 21LL, // Tank 2-1 Egg Piece 3
-		TANK_2_2_EGG_PIECE_1 = 22LL, // Tank 2-2 Egg Piece 1
-		TANK_2_2_EGG_PIECE_2 = 23LL, // Tank 2-2 Egg Piece 2
-		TANK_2_2_EGG_PIECE_3 = 24LL, // Tank 2-2 Egg Piece 3
-		TANK_2_3_EGG_PIECE_1 = 25LL, // Tank 2-3 Egg Piece 1
-		TANK_2_3_EGG_PIECE_2 = 26LL, // Tank 2-3 Egg Piece 2
-		TANK_2_3_EGG_PIECE_3 = 27LL, // Tank 2-3 Egg Piece 3
-		TANK_2_4_EGG_PIECE_1 = 28LL, // Tank 2-4 Egg Piece 1
-		TANK_2_4_EGG_PIECE_2 = 29LL, // Tank 2-4 Egg Piece 2
-		TANK_2_4_EGG_PIECE_3 = 30LL, // Tank 2-4 Egg Piece 3
-		TANK_2_5_EGG_PIECE_1 = 31LL, // Tank 2-5 Egg Piece 1
-		TANK_2_5_EGG_PIECE_2 = 32LL, // Tank 2-5 Egg Piece 2
-		TANK_2_5_EGG_PIECE_3 = 33LL, // Tank 2-5 Egg Piece 3
-		TIME_TRIAL_2_COMPLETE = 34LL, // Time Trial 2 Complete
-		TANK_3_COMPLETE = 35LL, // Tank 3 Complete
-		TANK_3_1_EGG_PIECE_1 = 36LL, // Tank 3-1 Egg Piece 1
-		TANK_3_1_EGG_PIECE_2 = 37LL, // Tank 3-1 Egg Piece 2
-		TANK_3_1_EGG_PIECE_3 = 38LL, // Tank 3-1 Egg Piece 3
-		TANK_3_2_EGG_PIECE_1 = 39LL, // Tank 3-2 Egg Piece 1
-		TANK_3_2_EGG_PIECE_2 = 40LL, // Tank 3-2 Egg Piece 2
-		TANK_3_2_EGG_PIECE_3 = 41LL, // Tank 3-2 Egg Piece 3
-		TANK_3_3_EGG_PIECE_1 = 42LL, // Tank 3-3 Egg Piece 1
-		TANK_3_3_EGG_PIECE_2 = 43LL, // Tank 3-3 Egg Piece 2
-		TANK_3_3_EGG_PIECE_3 = 44LL, // Tank 3-3 Egg Piece 3
-		TANK_3_4_EGG_PIECE_1 = 45LL, // Tank 3-4 Egg Piece 1
-		TANK_3_4_EGG_PIECE_2 = 46LL, // Tank 3-4 Egg Piece 2
-		TANK_3_4_EGG_PIECE_3 = 47LL, // Tank 3-4 Egg Piece 3
-		TANK_3_5_EGG_PIECE_1 = 48LL, // Tank 3-5 Egg Piece 1
-		TANK_3_5_EGG_PIECE_2 = 49LL, // Tank 3-5 Egg Piece 2
-		TANK_3_5_EGG_PIECE_3 = 50LL, // Tank 3-5 Egg Piece 3
-		TIME_TRIAL_3_COMPLETE = 51LL, // Time Trial 3 Complete
-		TANK_4_COMPLETE = 52LL, // Tank 4 Complete
-		TANK_4_1_EGG_PIECE_1 = 53LL, // Tank 4-1 Egg Piece 1
-		TANK_4_1_EGG_PIECE_2 = 54LL, // Tank 4-1 Egg Piece 2
-		TANK_4_1_EGG_PIECE_3 = 55LL, // Tank 4-1 Egg Piece 3
-		TANK_4_2_EGG_PIECE_1 = 56LL, // Tank 4-2 Egg Piece 1
-		TANK_4_2_EGG_PIECE_2 = 57LL, // Tank 4-2 Egg Piece 2
-		TANK_4_2_EGG_PIECE_3 = 58LL, // Tank 4-2 Egg Piece 3
-		TANK_4_3_EGG_PIECE_1 = 59LL, // Tank 4-3 Egg Piece 1
-		TANK_4_3_EGG_PIECE_2 = 60LL, // Tank 4-3 Egg Piece 2
-		TANK_4_3_EGG_PIECE_3 = 61LL, // Tank 4-3 Egg Piece 3
-		TANK_4_4_EGG_PIECE_1 = 62LL, // Tank 4-4 Egg Piece 1
-		TANK_4_4_EGG_PIECE_2 = 63LL, // Tank 4-4 Egg Piece 2
-		TANK_4_4_EGG_PIECE_3 = 64LL, // Tank 4-4 Egg Piece 3
-		TANK_4_5_EGG_PIECE_1 = 65LL, // Tank 4-5 Egg Piece 1
-		TANK_4_5_EGG_PIECE_2 = 66LL, // Tank 4-5 Egg Piece 2
-		TANK_4_5_EGG_PIECE_3 = 67LL, // Tank 4-5 Egg Piece 3
-		TIME_TRIAL_4_COMPLETE = 68LL, // Time Trial 4 Complete
-		CYRAX = 69LL, // Cyrax
-		BONUS_PET_1 = 70LL, // Bonus Pet 1
-		BONUS_PET_2 = 71LL, // Bonus Pet 2
-		BONUS_PET_3 = 72LL, // Bonus Pet 3
-		BONUS_PET_4 = 73LL, // Bonus Pet 4
+		CHALLENGE_1_COMPLETE = 18LL, // Challenge 1 Complete
+		TANK_2_COMPLETE = 19LL, // Tank 2 Complete
+		TANK_2_1_EGG_PIECE_1 = 20LL, // Tank 2-1 Egg Piece 1
+		TANK_2_1_EGG_PIECE_2 = 21LL, // Tank 2-1 Egg Piece 2
+		TANK_2_1_EGG_PIECE_3 = 22LL, // Tank 2-1 Egg Piece 3
+		TANK_2_2_EGG_PIECE_1 = 23LL, // Tank 2-2 Egg Piece 1
+		TANK_2_2_EGG_PIECE_2 = 24LL, // Tank 2-2 Egg Piece 2
+		TANK_2_2_EGG_PIECE_3 = 25LL, // Tank 2-2 Egg Piece 3
+		TANK_2_3_EGG_PIECE_1 = 26LL, // Tank 2-3 Egg Piece 1
+		TANK_2_3_EGG_PIECE_2 = 27LL, // Tank 2-3 Egg Piece 2
+		TANK_2_3_EGG_PIECE_3 = 28LL, // Tank 2-3 Egg Piece 3
+		TANK_2_4_EGG_PIECE_1 = 29LL, // Tank 2-4 Egg Piece 1
+		TANK_2_4_EGG_PIECE_2 = 30LL, // Tank 2-4 Egg Piece 2
+		TANK_2_4_EGG_PIECE_3 = 31LL, // Tank 2-4 Egg Piece 3
+		TANK_2_5_EGG_PIECE_1 = 32LL, // Tank 2-5 Egg Piece 1
+		TANK_2_5_EGG_PIECE_2 = 33LL, // Tank 2-5 Egg Piece 2
+		TANK_2_5_EGG_PIECE_3 = 34LL, // Tank 2-5 Egg Piece 3
+		TIME_TRIAL_2_COMPLETE = 35LL, // Time Trial 2 Complete
+		CHALLENGE_2_COMPLETE = 36LL, // Challenge 2 Complete
+		TANK_3_COMPLETE = 37LL, // Tank 3 Complete
+		TANK_3_1_EGG_PIECE_1 = 38LL, // Tank 3-1 Egg Piece 1
+		TANK_3_1_EGG_PIECE_2 = 39LL, // Tank 3-1 Egg Piece 2
+		TANK_3_1_EGG_PIECE_3 = 40LL, // Tank 3-1 Egg Piece 3
+		TANK_3_2_EGG_PIECE_1 = 41LL, // Tank 3-2 Egg Piece 1
+		TANK_3_2_EGG_PIECE_2 = 42LL, // Tank 3-2 Egg Piece 2
+		TANK_3_2_EGG_PIECE_3 = 43LL, // Tank 3-2 Egg Piece 3
+		TANK_3_3_EGG_PIECE_1 = 44LL, // Tank 3-3 Egg Piece 1
+		TANK_3_3_EGG_PIECE_2 = 45LL, // Tank 3-3 Egg Piece 2
+		TANK_3_3_EGG_PIECE_3 = 46LL, // Tank 3-3 Egg Piece 3
+		TANK_3_4_EGG_PIECE_1 = 47LL, // Tank 3-4 Egg Piece 1
+		TANK_3_4_EGG_PIECE_2 = 48LL, // Tank 3-4 Egg Piece 2
+		TANK_3_4_EGG_PIECE_3 = 49LL, // Tank 3-4 Egg Piece 3
+		TANK_3_5_EGG_PIECE_1 = 50LL, // Tank 3-5 Egg Piece 1
+		TANK_3_5_EGG_PIECE_2 = 51LL, // Tank 3-5 Egg Piece 2
+		TANK_3_5_EGG_PIECE_3 = 52LL, // Tank 3-5 Egg Piece 3
+		TIME_TRIAL_3_COMPLETE = 53LL, // Time Trial 3 Complete
+		CHALLENGE_3_COMPLETE = 54LL, // Challenge 3 Complete
+		TANK_4_COMPLETE = 55LL, // Tank 4 Complete
+		TANK_4_1_EGG_PIECE_1 = 56LL, // Tank 4-1 Egg Piece 1
+		TANK_4_1_EGG_PIECE_2 = 57LL, // Tank 4-1 Egg Piece 2
+		TANK_4_1_EGG_PIECE_3 = 58LL, // Tank 4-1 Egg Piece 3
+		TANK_4_2_EGG_PIECE_1 = 59LL, // Tank 4-2 Egg Piece 1
+		TANK_4_2_EGG_PIECE_2 = 60LL, // Tank 4-2 Egg Piece 2
+		TANK_4_2_EGG_PIECE_3 = 61LL, // Tank 4-2 Egg Piece 3
+		TANK_4_3_EGG_PIECE_1 = 62LL, // Tank 4-3 Egg Piece 1
+		TANK_4_3_EGG_PIECE_2 = 63LL, // Tank 4-3 Egg Piece 2
+		TANK_4_3_EGG_PIECE_3 = 64LL, // Tank 4-3 Egg Piece 3
+		TANK_4_4_EGG_PIECE_1 = 65LL, // Tank 4-4 Egg Piece 1
+		TANK_4_4_EGG_PIECE_2 = 66LL, // Tank 4-4 Egg Piece 2
+		TANK_4_4_EGG_PIECE_3 = 67LL, // Tank 4-4 Egg Piece 3
+		TANK_4_5_EGG_PIECE_1 = 68LL, // Tank 4-5 Egg Piece 1
+		TANK_4_5_EGG_PIECE_2 = 69LL, // Tank 4-5 Egg Piece 2
+		TANK_4_5_EGG_PIECE_3 = 70LL, // Tank 4-5 Egg Piece 3
+		TIME_TRIAL_4_COMPLETE = 71LL, // Time Trial 4 Complete
+		CHALLENGE_4_COMPLETE = 72LL, // Challenge 4 Complete
+		CYRAX = 73LL, // Cyrax
+		BONUS_PET_1 = 74LL, // Bonus Pet 1
+		BONUS_PET_2 = 75LL, // Bonus Pet 2
+		BONUS_PET_3 = 76LL, // Bonus Pet 3
+		BONUS_PET_4 = 77LL, // Bonus Pet 4
 	};
 
 	// -----------------------------------------------------------------------
@@ -142,6 +147,7 @@ namespace Sexy
 	static const int64_t AP_ITEM_PET_SLOT = 102LL;
 	static const int64_t AP_ITEM_STARTING_MONEY = 103LL;
 	static const int64_t AP_ITEM_WEAPON_UPGRADE = 104LL;
+	static const int64_t AP_ITEM_BONUS_SHELLS = 105LL;
 	static const int64_t AP_ITEM_STINKY = 201LL;
 	static const int64_t AP_ITEM_NIKO = 202LL;
 	static const int64_t AP_ITEM_ITCHY = 203LL;
@@ -186,62 +192,66 @@ namespace Sexy
 	static const int64_t AP_LOCATION_TANK_1_5_EGG_PIECE_2 = 15LL;
 	static const int64_t AP_LOCATION_TANK_1_5_EGG_PIECE_3 = 16LL;
 	static const int64_t AP_LOCATION_TIME_TRIAL_1_COMPLETE = 17LL;
-	static const int64_t AP_LOCATION_TANK_2_COMPLETE = 18LL;
-	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_1 = 19LL;
-	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_2 = 20LL;
-	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_3 = 21LL;
-	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_1 = 22LL;
-	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_2 = 23LL;
-	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_3 = 24LL;
-	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_1 = 25LL;
-	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_2 = 26LL;
-	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_3 = 27LL;
-	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_1 = 28LL;
-	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_2 = 29LL;
-	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_3 = 30LL;
-	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_1 = 31LL;
-	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_2 = 32LL;
-	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_3 = 33LL;
-	static const int64_t AP_LOCATION_TIME_TRIAL_2_COMPLETE = 34LL;
-	static const int64_t AP_LOCATION_TANK_3_COMPLETE = 35LL;
-	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_1 = 36LL;
-	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_2 = 37LL;
-	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_3 = 38LL;
-	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_1 = 39LL;
-	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_2 = 40LL;
-	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_3 = 41LL;
-	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_1 = 42LL;
-	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_2 = 43LL;
-	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_3 = 44LL;
-	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_1 = 45LL;
-	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_2 = 46LL;
-	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_3 = 47LL;
-	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_1 = 48LL;
-	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_2 = 49LL;
-	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_3 = 50LL;
-	static const int64_t AP_LOCATION_TIME_TRIAL_3_COMPLETE = 51LL;
-	static const int64_t AP_LOCATION_TANK_4_COMPLETE = 52LL;
-	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_1 = 53LL;
-	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_2 = 54LL;
-	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_3 = 55LL;
-	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_1 = 56LL;
-	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_2 = 57LL;
-	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_3 = 58LL;
-	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_1 = 59LL;
-	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_2 = 60LL;
-	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_3 = 61LL;
-	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_1 = 62LL;
-	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_2 = 63LL;
-	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_3 = 64LL;
-	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_1 = 65LL;
-	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_2 = 66LL;
-	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_3 = 67LL;
-	static const int64_t AP_LOCATION_TIME_TRIAL_4_COMPLETE = 68LL;
-	static const int64_t AP_LOCATION_CYRAX = 69LL;
-	static const int64_t AP_LOCATION_BONUS_PET_1 = 70LL;
-	static const int64_t AP_LOCATION_BONUS_PET_2 = 71LL;
-	static const int64_t AP_LOCATION_BONUS_PET_3 = 72LL;
-	static const int64_t AP_LOCATION_BONUS_PET_4 = 73LL;
+	static const int64_t AP_LOCATION_CHALLENGE_1_COMPLETE = 18LL;
+	static const int64_t AP_LOCATION_TANK_2_COMPLETE = 19LL;
+	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_1 = 20LL;
+	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_2 = 21LL;
+	static const int64_t AP_LOCATION_TANK_2_1_EGG_PIECE_3 = 22LL;
+	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_1 = 23LL;
+	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_2 = 24LL;
+	static const int64_t AP_LOCATION_TANK_2_2_EGG_PIECE_3 = 25LL;
+	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_1 = 26LL;
+	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_2 = 27LL;
+	static const int64_t AP_LOCATION_TANK_2_3_EGG_PIECE_3 = 28LL;
+	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_1 = 29LL;
+	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_2 = 30LL;
+	static const int64_t AP_LOCATION_TANK_2_4_EGG_PIECE_3 = 31LL;
+	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_1 = 32LL;
+	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_2 = 33LL;
+	static const int64_t AP_LOCATION_TANK_2_5_EGG_PIECE_3 = 34LL;
+	static const int64_t AP_LOCATION_TIME_TRIAL_2_COMPLETE = 35LL;
+	static const int64_t AP_LOCATION_CHALLENGE_2_COMPLETE = 36LL;
+	static const int64_t AP_LOCATION_TANK_3_COMPLETE = 37LL;
+	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_1 = 38LL;
+	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_2 = 39LL;
+	static const int64_t AP_LOCATION_TANK_3_1_EGG_PIECE_3 = 40LL;
+	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_1 = 41LL;
+	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_2 = 42LL;
+	static const int64_t AP_LOCATION_TANK_3_2_EGG_PIECE_3 = 43LL;
+	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_1 = 44LL;
+	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_2 = 45LL;
+	static const int64_t AP_LOCATION_TANK_3_3_EGG_PIECE_3 = 46LL;
+	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_1 = 47LL;
+	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_2 = 48LL;
+	static const int64_t AP_LOCATION_TANK_3_4_EGG_PIECE_3 = 49LL;
+	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_1 = 50LL;
+	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_2 = 51LL;
+	static const int64_t AP_LOCATION_TANK_3_5_EGG_PIECE_3 = 52LL;
+	static const int64_t AP_LOCATION_TIME_TRIAL_3_COMPLETE = 53LL;
+	static const int64_t AP_LOCATION_CHALLENGE_3_COMPLETE = 54LL;
+	static const int64_t AP_LOCATION_TANK_4_COMPLETE = 55LL;
+	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_1 = 56LL;
+	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_2 = 57LL;
+	static const int64_t AP_LOCATION_TANK_4_1_EGG_PIECE_3 = 58LL;
+	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_1 = 59LL;
+	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_2 = 60LL;
+	static const int64_t AP_LOCATION_TANK_4_2_EGG_PIECE_3 = 61LL;
+	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_1 = 62LL;
+	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_2 = 63LL;
+	static const int64_t AP_LOCATION_TANK_4_3_EGG_PIECE_3 = 64LL;
+	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_1 = 65LL;
+	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_2 = 66LL;
+	static const int64_t AP_LOCATION_TANK_4_4_EGG_PIECE_3 = 67LL;
+	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_1 = 68LL;
+	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_2 = 69LL;
+	static const int64_t AP_LOCATION_TANK_4_5_EGG_PIECE_3 = 70LL;
+	static const int64_t AP_LOCATION_TIME_TRIAL_4_COMPLETE = 71LL;
+	static const int64_t AP_LOCATION_CHALLENGE_4_COMPLETE = 72LL;
+	static const int64_t AP_LOCATION_CYRAX = 73LL;
+	static const int64_t AP_LOCATION_BONUS_PET_1 = 74LL;
+	static const int64_t AP_LOCATION_BONUS_PET_2 = 75LL;
+	static const int64_t AP_LOCATION_BONUS_PET_3 = 76LL;
+	static const int64_t AP_LOCATION_BONUS_PET_4 = 77LL;
 
 	// -----------------------------------------------------------------------
 	// Helper String Conversion Functions
@@ -259,6 +269,7 @@ namespace Sexy
 		case APItem::PET_SLOT: return "Pet Slot Upgrade";
 		case APItem::STARTING_MONEY: return "Starting Money +100";
 		case APItem::WEAPON_UPGRADE: return "Progressive Weapon Upgrade";
+		case APItem::BONUS_SHELLS: return "Bonus Shells";
 		case APItem::STINKY: return "Stinky the Snail";
 		case APItem::NIKO: return "Niko the Oyster";
 		case APItem::ITCHY: return "Itchy the Swordfish";
@@ -315,6 +326,7 @@ namespace Sexy
 		case APLocation::TANK_1_5_EGG_PIECE_2: return "Tank 1-5 Egg Piece 2";
 		case APLocation::TANK_1_5_EGG_PIECE_3: return "Tank 1-5 Egg Piece 3";
 		case APLocation::TIME_TRIAL_1_COMPLETE: return "Time Trial 1 Complete";
+		case APLocation::CHALLENGE_1_COMPLETE: return "Challenge 1 Complete";
 		case APLocation::TANK_2_COMPLETE: return "Tank 2 Complete";
 		case APLocation::TANK_2_1_EGG_PIECE_1: return "Tank 2-1 Egg Piece 1";
 		case APLocation::TANK_2_1_EGG_PIECE_2: return "Tank 2-1 Egg Piece 2";
@@ -332,6 +344,7 @@ namespace Sexy
 		case APLocation::TANK_2_5_EGG_PIECE_2: return "Tank 2-5 Egg Piece 2";
 		case APLocation::TANK_2_5_EGG_PIECE_3: return "Tank 2-5 Egg Piece 3";
 		case APLocation::TIME_TRIAL_2_COMPLETE: return "Time Trial 2 Complete";
+		case APLocation::CHALLENGE_2_COMPLETE: return "Challenge 2 Complete";
 		case APLocation::TANK_3_COMPLETE: return "Tank 3 Complete";
 		case APLocation::TANK_3_1_EGG_PIECE_1: return "Tank 3-1 Egg Piece 1";
 		case APLocation::TANK_3_1_EGG_PIECE_2: return "Tank 3-1 Egg Piece 2";
@@ -349,6 +362,7 @@ namespace Sexy
 		case APLocation::TANK_3_5_EGG_PIECE_2: return "Tank 3-5 Egg Piece 2";
 		case APLocation::TANK_3_5_EGG_PIECE_3: return "Tank 3-5 Egg Piece 3";
 		case APLocation::TIME_TRIAL_3_COMPLETE: return "Time Trial 3 Complete";
+		case APLocation::CHALLENGE_3_COMPLETE: return "Challenge 3 Complete";
 		case APLocation::TANK_4_COMPLETE: return "Tank 4 Complete";
 		case APLocation::TANK_4_1_EGG_PIECE_1: return "Tank 4-1 Egg Piece 1";
 		case APLocation::TANK_4_1_EGG_PIECE_2: return "Tank 4-1 Egg Piece 2";
@@ -366,6 +380,7 @@ namespace Sexy
 		case APLocation::TANK_4_5_EGG_PIECE_2: return "Tank 4-5 Egg Piece 2";
 		case APLocation::TANK_4_5_EGG_PIECE_3: return "Tank 4-5 Egg Piece 3";
 		case APLocation::TIME_TRIAL_4_COMPLETE: return "Time Trial 4 Complete";
+		case APLocation::CHALLENGE_4_COMPLETE: return "Challenge 4 Complete";
 		case APLocation::CYRAX: return "Cyrax";
 		case APLocation::BONUS_PET_1: return "Bonus Pet 1";
 		case APLocation::BONUS_PET_2: return "Bonus Pet 2";
@@ -379,14 +394,7 @@ namespace Sexy
 	{
 		return APLocationToString(static_cast<APLocation>(theLocationId));
 	}
-
-	// Archipelago Victory Conditions / Goals
-	enum class APGoal : int
-	{
-		CYRAX = 0,      // Defeat Cyrax (Tank 5)
-		ALL_TANKS = 1,  // Complete Tanks 1-4
-		ALL_PETS = 2,   // Unlock all 24 pets
-	};
 }
 
 #endif // __APDEFINITIONS_H__
+

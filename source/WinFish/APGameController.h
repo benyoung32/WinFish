@@ -34,7 +34,8 @@ namespace Sexy
 		void						OnItemReceived(const APReceivedItem& theItem);
 		int							GetFoodQuality() const { return mFoodQuality; }
 		int							GetFoodQuantity() const { return mFoodQuantity; }
-		int							GetPetSlots() const { return mPetSlots; }
+		int							GetPetSlots() const;
+		int							GetReceivedPetSlots() const { return mPetSlots; }
 		int							GetWeaponLevel() const { return mWeaponLevel; }
 		int							GetStartingMoneyBonus() const { return mStartingMoneyBonus; }
 		bool						IsPetUnlocked(int thePetIndex) const;
