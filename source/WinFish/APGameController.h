@@ -50,6 +50,7 @@ namespace Sexy
 		bool						CheckVictoryCondition();
 
 		// Board / Gameplay Session Hooks
+		void						ApplyUpgradeAvailabilities(Board* theBoard);
 		void						ApplyLevelStart(Board* theBoard);
 		void						UpdateBoard(Board* theBoard);
 

@@ -722,6 +722,12 @@ void WinFishApp::LostFocus()
 
 bool Sexy::WinFishApp::DebugKeyDown(int theKey)
 {
+	// TODO: delete this cheat key 
+	if (theKey == KEYCODE_F9 && mBoard != NULL)
+	{
+		mBoard->KeyDown(KEYCODE_F9);
+		return true;
+	}
 	return SexyApp::DebugKeyDown(theKey);
 }
 
@@ -1859,11 +1865,11 @@ void Sexy::WinFishApp::DoOptionsDialog(bool theFlag)
 
 int Sexy::WinFishApp::GetMaxPetSlots() const
 {
+	if (mCurrentProfile != NULL)
+		return mCurrentProfile->GetMaxPetSlots();
 	if (mAPController != NULL)
 		return mAPController->GetPetSlots();
-	if (mCurrentProfile != NULL)
-		return mCurrentProfile->m0xb4;
-	return 0;
+	return 3;
 }
 
 void Sexy::WinFishApp::SwitchToBoard(bool theFlag1, bool theFlag2)
@@ -1889,15 +1895,29 @@ void Sexy::WinFishApp::SwitchToBoard(bool theFlag1, bool theFlag2)
 			mCurrentProfile->m0x5a[i] = false;
 	}
 
-	if (theFlag2 && mGameMode == GAMEMODE_ADVENTURE && mCurrentProfile != NULL && !mCurrentProfile->mFinishedGame && 
+	if (theFlag2 && mGameMode == GAMEMODE_ADVENTURE && mCurrentProfile != NULL && !mCurrentProfile->HasAPConnection() && !mCurrentProfile->mFinishedGame && 
 		mCurrentProfile->mTank == 1 && mCurrentProfile->mLevel < 4)
 	{
 		SwitchToHelpScreen(true);
 		return;
 	}
 	int aMaxSlots = GetMaxPetSlots();
+	bool aShouldShowPetsScreen = false;
 	if (!IsBonusLevel() && mGameMode != GAMEMODE_VIRTUAL_TANK && mCurrentProfile != NULL && 
-		(aMaxSlots > 0 && mCurrentProfile->mNumOfUnlockedPets > aMaxSlots && (mGameMode != GAMEMODE_ADVENTURE || mCurrentProfile->mTank != 5)))
+		(mGameMode != GAMEMODE_ADVENTURE || mCurrentProfile->mTank != 5))
+	{
+		if (mCurrentProfile->HasAPConnection())
+		{
+			aShouldShowPetsScreen = (aMaxSlots > 0 && mCurrentProfile->mNumOfUnlockedPets > 0);
+		}
+		else
+		{
+			aShouldShowPetsScreen = (mCurrentProfile->mNumOfUnlockedPets > 3 || 
+				((mCurrentProfile->mFinishedGame || mCurrentProfile->mTank > 1) && mCurrentProfile->mNumOfUnlockedPets > 0));
+		}
+	}
+
+	if (aShouldShowPetsScreen)
 	{
 		SwitchToPetsScreen();
 		return;
@@ -2199,6 +2219,7 @@ void Sexy::WinFishApp::UpdateFrames()
 
 void Sexy::WinFishApp::UpdateArchipelago()
 {
+	// this is called every frame 
 	if (mAPBridge == NULL)
 		return;
 

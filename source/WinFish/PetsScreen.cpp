@@ -190,6 +190,23 @@ void Sexy::PetsScreen::Update()
 	if (m0x134 != 0 && --m0x134 == 0)
 		m0x128 = m0x12c;
 
+	if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK && mApp->mCurrentProfile != NULL)
+	{
+		int aMaxSlots = mApp->GetMaxPetSlots();
+		m0x130 = aMaxSlots < mApp->mCurrentProfile->mNumOfUnlockedPets ? aMaxSlots : mApp->mCurrentProfile->mNumOfUnlockedPets;
+	}
+
+	if (mApp->mCurrentProfile != NULL)
+	{
+		for (int i = 0; i < PET_END; i++)
+		{
+			if (mApp->mCurrentProfile->IsPetUnlocked(i) && mPetButtons[i] != NULL && mPetButtons[i]->mDisabled)
+			{
+				mPetButtons[i]->SetDisabled(false);
+			}
+		}
+	}
+
 	m0x120++;
 	MarkDirty();
 }

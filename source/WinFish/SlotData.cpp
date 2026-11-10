@@ -50,31 +50,56 @@ bool Sexy::SlotData::ParseJson(const std::string& theJsonStr)
 	{
 		nlohmann::json aJson = nlohmann::json::parse(theJsonStr);
 
-		mCyraxRequired = aJson["cyrax_required"].get<bool>();
-		mTimeTrialRequired = aJson["time_trial_required"].get<bool>();
-		mChallengeModeRequired = aJson["challenge_mode_required"].get<bool>();
+		mCyraxRequired = aJson.value("cyrax_required", false);
+		mTimeTrialRequired = aJson.value("time_trial_required", false);
+		mChallengeModeRequired = aJson.value("challenge_mode_required", false);
 
 		// Starting Tank Unlock
-		std::string aTankStr = aJson["starting_tank_unlock"].get<std::string>();
-		if (aTankStr.find("Tank 2") != std::string::npos)
-			mStartingTank = 2;
-		else if (aTankStr.find("Tank 3") != std::string::npos)
-			mStartingTank = 3;
-		else if (aTankStr.find("Tank 4") != std::string::npos)
-			mStartingTank = 4;
-		else
-			mStartingTank = 1;
+		mStartingTank = 1;
+		if (aJson.contains("starting_tank_unlock"))
+		{
+			if (aJson["starting_tank_unlock"].is_string())
+			{
+				std::string aTankStr = aJson["starting_tank_unlock"].get<std::string>();
+				if (aTankStr.find("Tank 2") != std::string::npos || aTankStr == "2")
+					mStartingTank = 2;
+				else if (aTankStr.find("Tank 3") != std::string::npos || aTankStr == "3")
+					mStartingTank = 3;
+				else if (aTankStr.find("Tank 4") != std::string::npos || aTankStr == "4")
+					mStartingTank = 4;
+			}
+			else if (aJson["starting_tank_unlock"].is_number())
+			{
+				mStartingTank = aJson["starting_tank_unlock"].get<int>();
+			}
+		}
 
-		mAliensanity = aJson["aliensanity"].get<bool>();
+		mAliensanity = aJson.value("aliensanity", false);
 
-		mUpgradeAvailability = aJson["upgrade_availability"].get<int>();
+		// Upgrade Availability: 0 = instant, 1 = free in shop, 2 = shop buy
+		mUpgradeAvailability = UPGRADE_AVAILABILITY_INSTANT;
+		if (aJson.contains("upgrade_availability"))
+		{
+			if (aJson["upgrade_availability"].is_number())
+			{
+				mUpgradeAvailability = aJson["upgrade_availability"].get<int>();
+			}
+			else if (aJson["upgrade_availability"].is_string())
+			{
+				std::string aStr = aJson["upgrade_availability"].get<std::string>();
+				if (aStr == "free_in_shop" || aStr == "free")
+					mUpgradeAvailability = UPGRADE_AVAILABILITY_FREE_IN_SHOP;
+				else if (aStr == "shop_buy" || aStr == "shop")
+					mUpgradeAvailability = UPGRADE_AVAILABILITY_SHOP_BUY;
+				else
+					mUpgradeAvailability = UPGRADE_AVAILABILITY_INSTANT;
+			}
+		}
 
 		// Starting Money Bonus
-		if (aJson.contains("starting_money"))
-		{
-			if (aJson["starting_money"].is_number())
-				mStartingMoneyBonus = aJson["starting_money"].get<int>();
-		}
+		mStartingMoneyBonus = 0;
+		if (aJson.contains("starting_money") && aJson["starting_money"].is_number())
+			mStartingMoneyBonus = aJson["starting_money"].get<int>();
 
 		// Starting Pet Slots (default 0)
 		mStartPetSlots = 0;
@@ -82,13 +107,16 @@ bool Sexy::SlotData::ParseJson(const std::string& theJsonStr)
 		{
 			if (aJson["start_pet_slots"].is_number())
 				mStartPetSlots = aJson["start_pet_slots"].get<int>();
+			else if (aJson["start_pet_slots"].is_string())
+				mStartPetSlots = atoi(aJson["start_pet_slots"].get<std::string>().c_str());
 		}
 		else if (aJson.contains("starting_pet_slots"))
 		{
 			if (aJson["starting_pet_slots"].is_number())
 				mStartPetSlots = aJson["starting_pet_slots"].get<int>();
+			else if (aJson["starting_pet_slots"].is_string())
+				mStartPetSlots = atoi(aJson["starting_pet_slots"].get<std::string>().c_str());
 		}
-
 		return true;
 	}
 	catch (...)

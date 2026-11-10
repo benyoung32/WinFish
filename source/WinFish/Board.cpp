@@ -172,6 +172,10 @@ Board::Board(WinFishApp* theApp)
 	mBackButton = NULL;
 	mMoneyLabel = NULL;
 
+	mMaxFoodLimit = 9;
+	mMaxWeaponUpgrade = 12;
+	mMaxFoodQuality = 2;
+	
 	m0x4ec = false;
 	m0x4ed = false;
 	m0x4f0 = 0;
@@ -644,7 +648,7 @@ void Board::Update()
 	
 	mApp->mPlaytimeCounter++;
 
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE && m0x2e0 < m0x2dc && mGameUpdateCnt > 10800) // 105
+	if (mApp->mGameMode == GAMEMODE_CHALLENGE && m0x2e0 < mTotalActiveSlotsCount && mGameUpdateCnt > 10800) // 105
 	{
 		mApp->PlaySample(SOUND_BUTTONCLICK);
 		for (int i = 0; i < SLOT_END; i++) MakeAndUnlockMenuButton(i, true);
@@ -711,7 +715,6 @@ void Board::Update()
 			mApp->mHighScoreMgr->RecordTimeTrialHighScore(mTank, mApp->mCurrentProfile, mMoney);
 			if (mApp->mAPController != NULL && LevelData::IsValid(mTank, 1))
 				mApp->mAPController->ReportTimeTrialComplete(LevelData(mTank, 1));
-			CheckVictoryCondition();
 			mApp->DoTimesUpDialog();
 			return;
 		}
@@ -737,7 +740,6 @@ void Board::Update()
 					mApp->mCurrentProfile->NextLevel();
 					if (mLevel < 6)
 						mApp->mHighScoreMgr->RecordAdventureHighScore(mTank, mLevel, mApp->mCurrentProfile, m0x3fc);
-					CheckVictoryCondition();
 					mApp->SwitchToBonusScreen();
 					return;
 				}
@@ -876,7 +878,7 @@ void Board::Update()
 			mTankLightingSpeeds[i] = 640;
 	}
 
-	if (mApp->mGameMode == GAMEMODE_SANDBOX && m0x2e0 < m0x2dc && mTank != 5) // 424
+	if (mApp->mGameMode == GAMEMODE_SANDBOX && m0x2e0 < mTotalActiveSlotsCount && mTank != 5) // 424
 	{
 		for (int i = 0; i < SLOT_END; i++)
 			MakeAndUnlockMenuButton(i, true);
@@ -1468,6 +1470,22 @@ void Sexy::Board::KeyChar(SexyChar theChar)
 
 void Board::KeyDown(KeyCode theKey)
 {
+	if (theKey == KEYCODE_F9)
+	{
+		for (int i = 0; i < SLOT_END; i++)
+			MakeAndUnlockMenuButton(i, true);
+
+		mMoney += 100000;
+		if (mMoney > 9999999)
+			mMoney = 9999999;
+		if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK && mApp->mCurrentProfile != NULL)
+			mApp->mCurrentProfile->AddShells(100000);
+		UpdateMoneyLabelText();
+
+		PlaySample(SOUND_BUY_ID, 3, 1.0);
+		return;
+	}
+
 	if (!mApp->mDebugKeysEnabled)
 		for (int i = 0; i < (sizeof(mCheatCodes) / 4); i++)
 			if (mCheatCodes[i]->CheckCodeActivated(theKey))
@@ -2190,18 +2208,14 @@ void Sexy::Board::StartGame()
 		{
 			// No pet slots available; spawn no pets
 		}
-		else if (aCurProf->mNumOfUnlockedPets <= aMaxSlots)
-		{
-			for (int i = PET_STINKY; i < PET_END; i++)
-				if (aCurProf->IsPetUnlocked(i))
-					SpawnPet(i, -1, -1, false, false);
-		}
-		else
+		else if (aCurProf != NULL)
 		{
 			int aSpawnedCount = 0;
+			bool aAutoSpawnUnlocked = (!aCurProf->HasAPConnection() && mTank == 1 && !aCurProf->mFinishedGame && aCurProf->mLevel < 5);
 			for (int i = PET_STINKY; i < PET_END; i++)
 			{
-				if (aCurProf->m0x5a[i] && aSpawnedCount < aMaxSlots)
+				bool aShouldSpawn = aAutoSpawnUnlocked ? aCurProf->IsPetUnlocked(i) : aCurProf->m0x5a[i];
+				if (aShouldSpawn && aCurProf->IsPetUnlocked(i) && aSpawnedCount < aMaxSlots)
 				{
 					SpawnPet(i, -1, -1, false, false);
 					aSpawnedCount++;
@@ -2456,7 +2470,7 @@ bool Sexy::Board::SyncGameData(DataSync& theSync)
 	theSync.SyncLong(mCrosshair1Y);
 	theSync.SyncLong(mCrosshair2X);
 	theSync.SyncLong(mCrosshair2Y);
-	theSync.SyncLong(m0x2dc);
+	theSync.SyncLong(mTotalActiveSlotsCount);
 	theSync.SyncLong(m0x3b0);
 	theSync.SyncLong(m0x3b4);
 	theSync.SyncLong(m0x3b8);
@@ -2779,12 +2793,20 @@ void Sexy::Board::InitLevel()
 	UpdateMoneyLabelText();
 	memset(mMessageShown, 0, 54);
 	DeterminePricesAndSlots();
-	m0x2dc = 0;
+
+	mMaxFoodLimit = 9;
+	mMaxFoodQuality = 2;
+	mMaxWeaponUpgrade = 12;
+
+	if (mApp->mAPController != NULL)
+		mApp->mAPController->ApplyLevelStart(this);
+
+	mTotalActiveSlotsCount = 0;
 	m0x2e0 = 0;
 	for (int i = 0; i < SLOT_END; i++)
 	{
 		if (mSlotNumber[i] > -1)
-			m0x2dc++;
+			mTotalActiveSlotsCount++;
 		if (m0x374[i] == -1)
 			m0x374[i] = mSlotPrices[i] / 100;
 		m0x344[i] = mSlotPrices[i];
@@ -2792,8 +2814,6 @@ void Sexy::Board::InitLevel()
 
 	if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
 		MakeVirtualTankButtons();
-	if (mApp->mAPController != NULL)
-		mApp->mAPController->ApplyLevelStart(this);
 	mWidgetManager->MarkAllDirty();
 }
 
@@ -2872,12 +2892,6 @@ void Sexy::Board::StartMusic()
 
 	mApp->StopMusic();
 	mApp->PlayMusic(1, 3);
-}
-
-void Sexy::Board::CheckVictoryCondition()
-{
-	if (mApp != NULL && mApp->mAPController != NULL)
-		mApp->mAPController->CheckVictoryCondition();
 }
 
 int Sexy::Board::Unk01()
@@ -3263,6 +3277,7 @@ bool Sexy::Board::HasAnyFish()
 
 void Sexy::Board::HandleBuyEgg()
 {
+	mApp->mAPController->CheckVictoryCondition();	
 	MenuButtonWidget* aBtn = GetMenuButtonById(SLOT_EGG);
 	if (!aBtn)
 		return;
@@ -3331,8 +3346,6 @@ void Sexy::Board::HandleBuyEgg()
 				mApp->mAPController->ReportTankComplete(LevelData(mTank, mLevel));
 			}
 		}
-
-		CheckVictoryCondition();
 	}
 
 	if (mApp->mGameMode == GAMEMODE_CHALLENGE)
@@ -3702,6 +3715,7 @@ void Sexy::Board::RemoveWidgetHelper(Widget* theWidget)
 
 void Sexy::Board::ResetLevel(WidgetManager* theWidgetManager)
 {
+	// TODO: possibly shorten this function
 	mGameObjectSet.clear();
 	memset(mPetsInTank, 0, sizeof(mPetsInTank));
 	for (int i = 0; i < mFishList->size(); i++)
@@ -3886,23 +3900,13 @@ void Sexy::Board::ResetLevel(WidgetManager* theWidgetManager)
 		RemoveWidgetHelper(mMenuButtons[i]);
 		mMenuButtons[i] = 0;
 	}
-	m0x2dc = 0;
+	mTotalActiveSlotsCount = 0;
 	m0x2e0 = 0;
 	memset(mSlotUnlocked, 0, sizeof(mSlotUnlocked));	
 }
 
-void Sexy::Board::DeterminePricesAndSlots()
+void Sexy::Board::ApplyLevelConfig(LevelConfig aCfg) 
 {
-	LevelConfig aCfg;
-	if (LevelData::IsValid(mTank, mLevel) && LevelSettingsManager::Get()->HasOverride(LevelData(mTank, mLevel)))
-	{
-		aCfg = *LevelSettingsManager::Get()->GetOverride(LevelData(mTank, mLevel));
-	}
-	else if (LevelData::IsValid(mTank, mLevel) || mApp->mRelaxMode)
-	{
-		LevelSettingsManager::GetDefaultConfig(LevelData(mTank, mLevel), mApp->mRelaxMode, aCfg);
-	}
-
 	for (int i = 0; i < SLOT_END; i++)
 	{
 		mSlotNumber[i] = aCfg.mSlotNumber[i];
@@ -3933,7 +3937,12 @@ void Sexy::Board::DeterminePricesAndSlots()
 	{
 		mSlotPrices[SLOT_EGG] = 100;
 	}
-	else if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+
+}
+
+void Sexy::Board::SetBackground() 
+{
+	if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
 	{
 		ChangeBackground(mApp->mCurrentProfile->m0x8c + 1);
 		return;
@@ -3949,6 +3958,14 @@ void Sexy::Board::DeterminePricesAndSlots()
 		ChangeBackground(5);
 	else if (mTank == 5)
 		ChangeBackground(6);
+}
+
+void Sexy::Board::DeterminePricesAndSlots()
+{
+	LevelConfig aCfg;
+	LevelSettingsManager::GetDefaultConfig(LevelData(mTank, mLevel), mApp->mRelaxMode, aCfg);
+	ApplyLevelConfig(aCfg);
+	SetBackground();
 }
 
 void Sexy::Board::HandleBuySlotPressed(int theSlotId)
@@ -3980,7 +3997,7 @@ void Sexy::Board::HandleBuySlotPressed(int theSlotId)
 		SpawnBreederBought();
 		break;
 	case SLOT_FOODLVL:
-		if (gFoodType < 2 && Buy(aPrice, true))
+		if (gFoodType < mMaxFoodQuality && Buy(aPrice, true))
 		{
 			if (mMessageShown[15])
 				mMessageShown[15] = false;
@@ -3999,7 +4016,7 @@ void Sexy::Board::HandleBuySlotPressed(int theSlotId)
 		}
 		break;
 	case SLOT_FOODLIMIT:
-		if (gFoodLimit < 9 && Buy(aPrice, true))
+		if (gFoodLimit < mMaxFoodLimit && Buy(aPrice, true))
 		{
 			if(mTank == 1 && gFoodLimit == 1 && !mApp->mCurrentProfile->mFinishedGame)
 				ShowText("Hold down mouse button to Auto-Feed!", false, -1);
@@ -4081,7 +4098,7 @@ void Sexy::Board::HandleBuySlotPressed(int theSlotId)
 		PlaySample(SOUND_SPLASHBIG_ID, 3, 1.0);
 		break;
 	case SLOT_WEAPON:
-		if (m0x3e4 < 12 && Buy(aPrice, true))
+		if (m0x3e4 < mMaxWeaponUpgrade && Buy(aPrice, true))
 		{
 			m0x3e4++;
 			MenuButtonSetupNoVT(SLOT_WEAPON, true);
@@ -4455,6 +4472,8 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 	if (!aBtn)
 		return;
 
+	aBtn->mMouseVisible = true;
+	aBtn->mDoFinger = true;
 	aBtn->SetSlotPrice(mSlotPrices[theBtnId]);
 	Image* aSlotImg = nullptr;
 	int aSlotImgX = 0;
@@ -4479,18 +4498,18 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 		aSlotImgCol = -1;
 		break;
 	case 2:
-		if (gFoodType == 0)
+		if (gFoodType >= mMaxFoodQuality)
+		{
+			aBtn->SetMaxedOut();
+			dontConfigure = true;
+		}
+		else if (gFoodType == 0)
 		{
 			aSlotImg = IMAGE_FOOD;
 			aSlotImgX = 9;
 			aSlotImgY = 3;
 			aSlotImgRow = 1;
 			aSlotImgCol = 0;
-		}
-		else if (gFoodType != 1)
-		{
-			aBtn->SetMaxedOut();
-			dontConfigure = true;
 		}
 		else
 		{
@@ -4502,7 +4521,7 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 		}
 		break;
 	case 3:
-		if (gFoodLimit < 9)
+		if (gFoodLimit < mMaxFoodLimit) //
 			aBtn->m0x15c = StrFormat("%d", gFoodLimit+1);
 		else
 			aBtn->SetMaxedOut();
@@ -4551,14 +4570,17 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 		aSlotImgCol = -1;
 		break;
 	case 10:
-		aBtn->Configure(IMAGE_LASERUPGRADES, 7, 3, 0, m0x3e4 - 2);
-		if (m0x3e4 > 11)
+		if (m0x3e4 >= mMaxWeaponUpgrade)
 		{
-			if (flag)
+			if (m0x3e4 >= 12 && flag)
 			{
 				ShowText("Hold down mouse button for Rapid Fire!", false, -1);
 			}
 			aBtn->SetMaxedOut();
+		}
+		else
+		{
+			aBtn->Configure(IMAGE_LASERUPGRADES, 7, 3, 0, m0x3e4 - 2);
 		}
 		dontConfigure = true;
 		break;

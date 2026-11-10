@@ -126,12 +126,6 @@ namespace Sexy
 		}
 
 		size_t aFileSize = static_cast<size_t>(aFile.tellg());
-		if (aFileSize < sizeof(ZipEOCD))
-		{
-			error = "File is too small to be a valid ZIP archive.";
-			return false;
-		}
-
 		aFile.seekg(0, std::ios::beg);
 		std::vector<uint8_t> aBuffer(aFileSize);
 		if (!aFile.read(reinterpret_cast<char*>(aBuffer.data()), aFileSize))
@@ -152,13 +146,6 @@ namespace Sexy
 			}
 			if (i == 0) break;
 		}
-
-		if (anEocdOffset == static_cast<size_t>(-1))
-		{
-			error = "Missing ZIP End of Central Directory record.";
-			return false;
-		}
-
 		ExtractFiles(aBuffer, anEocdOffset, output);
 
 		if (output.mArchipelagoJson.empty())
@@ -186,8 +173,6 @@ namespace Sexy
 		for (int t = 1; t <= 4; ++t)
 			if (aTank.find("Tank " + std::to_string(t)) != std::string::npos || aTank == std::to_string(t))
 				output.mStartingTank = t;
-
-		output.mServer = "archipelago.gg:";
 
 		return true;
 	}

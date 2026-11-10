@@ -143,7 +143,7 @@ void Sexy::FishTypePet::Update()
 	Board* aBoard = mApp->mBoard;
 
 	if (mFishTypePetType == PET_BLIP && mApp->mGameMode != GAMEMODE_VIRTUAL_TANK
-		&& aBoard->m0x2e0 < aBoard->m0x2dc && aBoard->mTank != 5 && aBoard->mGameUpdateCnt > 200
+		&& aBoard->m0x2e0 < aBoard->mTotalActiveSlotsCount && aBoard->mTank != 5 && aBoard->mGameUpdateCnt > 200
 		&& (!m0x230 || mUpdateCnt > 720))
 	{
 		aBoard->PlaySample(SOUND_SONAR_ID, 3, 1.0);

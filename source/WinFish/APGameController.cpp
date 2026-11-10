@@ -5,7 +5,7 @@
 #include "Fish.h"
 #include "Breeder.h"
 #include "ProfileMgr.h"
-#include "Res.h"
+#include "SlotData.h"
 #include <SexyAppFramework/Debug.h>
 
 using namespace Sexy;
@@ -43,15 +43,13 @@ void APGameController::Update()
 		{
 			QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
 		}
-
-		if (!mBridge->IsGoalSent())
-			CheckVictoryCondition();
 	}
 }
 
 void APGameController::OnConnected(const std::string& theSlot, const std::string& theSeed)
 {
-	OutputDebugStringA(StrFormat("APGameController: Connected as '%s' on seed '%s'\n", theSlot.c_str(), theSeed.c_str()).c_str());
+	if (mApp != NULL && mApp->mCurrentProfile != NULL)
+		mApp->mCurrentProfile->m0xb4 = GetPetSlots();
 	QueueNotification("Connected to Archipelago!");
 }
 
@@ -94,7 +92,8 @@ int APGameController::GetPetSlots() const
 	int aStart = 0;
 	if (mBridge != NULL)
 		aStart = mBridge->GetSlotData().mStartPetSlots;
-	return aStart + mPetSlots;
+	int aTotal = aStart + mPetSlots;
+	return aTotal > 24 ? 24 : aTotal;
 }
 
 void APGameController::OnItemReceived(const APReceivedItem& theItem)
@@ -121,8 +120,17 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 			mFoodQuality = 2;
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
-			if (gFoodType < mFoodQuality)
-				gFoodType = mFoodQuality;
+			mApp->mBoard->mMaxFoodQuality = mFoodQuality;
+			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
+			{
+				if (gFoodType < mFoodQuality)
+					gFoodType = mFoodQuality;
+			}
+			else
+			{
+				mApp->mBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, true);
+			}
 		}
 		break;
 
@@ -132,14 +140,24 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 			mFoodQuantity = 8;
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
-			if (gFoodLimit < (1 + mFoodQuantity))
-				gFoodLimit = 1 + mFoodQuantity;
+			mApp->mBoard->mMaxFoodLimit = 1 + mFoodQuantity;
+			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
+			{
+				if (gFoodLimit < (1 + mFoodQuantity))
+					gFoodLimit = 1 + mFoodQuantity;
+			}
+			else
+			{
+				mApp->mBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, true);
+			}
 		}
 		break;
 
 	case APItem::PET_SLOT:
 		mPetSlots++;
-		mApp->mCurrentProfile->m0xb4 = GetPetSlots();
+		if (mApp != NULL && mApp->mCurrentProfile != NULL)
+			mApp->mCurrentProfile->m0xb4 = GetPetSlots();
 		break;
 
 	// TODO: allow this check to be affected by settings (should weapon upgrades give 2 lvls each or just 1)
@@ -147,10 +165,19 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		mWeaponLevel++;
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
-			int aLaser = 1 + mWeaponLevel;
-			if (aLaser > 10)
-				aLaser = 10;
-			mApp->mBoard->m0x3e4 = aLaser;
+			int aLaser = 2 + mWeaponLevel;
+			if (aLaser > 12)
+				aLaser = 12;
+			mApp->mBoard->mMaxWeaponUpgrade = aLaser;
+			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT || mApp->mBoard->mTank == 5)
+			{
+				mApp->mBoard->m0x3e4 = aLaser;
+			}
+			else
+			{
+				mApp->mBoard->MenuButtonSetupNoVT(SLOT_WEAPON, true);
+			}
 		}
 		break;
 
@@ -191,8 +218,6 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 	// Persist updated controller state to the profile
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
 		SaveToProfile(mApp->mCurrentProfile);
-
-	CheckVictoryCondition();
 }
 
 void APGameController::ReportLocation(int64_t theLocationId)
@@ -249,7 +274,7 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 	ReportLocation(aLocId);
 }
 
-// TODO: rework to match new victory condition work
+
 bool APGameController::CheckVictoryCondition()
 {
 	if (mBridge == NULL || mBridge->IsGoalSent())
@@ -287,10 +312,88 @@ bool APGameController::CheckVictoryCondition()
 	return false;
 }
 
+void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
+{
+	if (theBoard == NULL || mBridge == NULL)
+		return;
+
+	// Set max upgrade limits based on items received from Archipelago
+	theBoard->mMaxFoodLimit = 1 + mFoodQuantity;
+	theBoard->mMaxFoodQuality = mFoodQuality;
+	theBoard->mMaxWeaponUpgrade = (2 + mWeaponLevel > 12) ? 12 : (2 + mWeaponLevel);
+
+	// int aUpgradeAvailability = UPGRADE_AVAILABILITY_SHOP_BUY;
+	int aUpgradeAvailability = mBridge->GetSlotData().mUpgradeAvailability;
+
+	switch (aUpgradeAvailability)
+	{
+	case UPGRADE_AVAILABILITY_INSTANT:
+		// Apply weapon upgrade level (base is 2, laser level = 2 + mWeaponLevel, max 12)
+		if (mWeaponLevel > 0)
+		{
+			int aLaser = 2 + mWeaponLevel;
+			if (aLaser > 12)
+				aLaser = 12;
+			theBoard->m0x3e4 = aLaser;
+		}
+		
+		// Apply food quality & quantity upgrades if received
+		if (mFoodQuality > 0 && gFoodType < mFoodQuality)
+			gFoodType = mFoodQuality;
+
+		if (mFoodQuantity > 0 && gFoodLimit < (1 + mFoodQuantity))
+			gFoodLimit = 1 + mFoodQuantity;
+
+		// Disable food and weapon slots from the shop
+		for (int i = 0; i < SLOT_END; i++)
+		{
+			if (i == SLOT_WEAPON || i == SLOT_FOODLIMIT || i == SLOT_FOODLVL)
+			{
+				theBoard->mSlotNumber[i] = -1;
+				theBoard->mSlotPrices[i] = 0;
+				theBoard->m0x374[i] = -1;
+				theBoard->mSlotUnlocked[i] = false;
+			}
+		}
+		break;
+		
+	case UPGRADE_AVAILABILITY_FREE_IN_SHOP:
+		// Boss tank (Tank 5) has no shop, grant weapon directly
+		if (theBoard->mTank == 5 && mWeaponLevel > 0)
+		{
+			int aLaser = 2 + mWeaponLevel;
+			if (aLaser > 12)
+				aLaser = 12;
+			theBoard->m0x3e4 = aLaser;
+		}
+
+		if (theBoard->mSlotNumber[SLOT_WEAPON] > -1)
+			theBoard->mSlotPrices[SLOT_WEAPON] = 0;
+		if (theBoard->mSlotNumber[SLOT_FOODLIMIT] > -1)
+			theBoard->mSlotPrices[SLOT_FOODLIMIT] = 0;
+		if (theBoard->mSlotNumber[SLOT_FOODLVL] > -1)
+			theBoard->mSlotPrices[SLOT_FOODLVL] = 0;					
+		break;
+		
+	case UPGRADE_AVAILABILITY_SHOP_BUY:
+		// Boss tank (Tank 5) has no shop, grant weapon directly
+		if (theBoard->mTank == 5 && mWeaponLevel > 0)
+		{
+			int aLaser = 2 + mWeaponLevel;
+			if (aLaser > 12)
+				aLaser = 12;
+			theBoard->m0x3e4 = aLaser;
+		}
+		// Normal prices from LevelConfig are kept
+		break;
+	}
+}
+
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
 	if (theBoard == NULL)
 		return;
+	
 
 	// Apply starting money bonus
 	if (mStartingMoneyBonus > 0)
@@ -298,22 +401,8 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 		theBoard->mMoney += mStartingMoneyBonus;
 		theBoard->UpdateMoneyLabelText();
 	}
-
-	// Apply weapon upgrade level (base is 2, laser level = 2 + mWeaponLevel, max 12)
-	if (mWeaponLevel > 0)
-	{
-		int aLaser = 2 + mWeaponLevel;
-		if (aLaser > 12)
-			aLaser = 12;
-		theBoard->m0x3e4 = aLaser;
-	}
 	
-	// Apply food quality & quantity upgrades if received
-	if (mFoodQuality > 0 && gFoodType < mFoodQuality)
-		gFoodType = mFoodQuality;
-
-	if (mFoodQuantity > 0 && gFoodLimit < (1 + mFoodQuantity))
-		gFoodLimit = 1 + mFoodQuantity;
+	ApplyUpgradeAvailabilities(theBoard);
 }
 
 void APGameController::UpdateBoard(Board* theBoard)

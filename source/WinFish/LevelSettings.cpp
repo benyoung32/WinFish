@@ -60,24 +60,35 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 	{
 		if (theTank == 1)
 		{
-			theConfig.mSlotPrices[SLOT_OSCAR] = 1000;
 			theConfig.mSlotNumber[SLOT_GUPPY] = 0;
+			theConfig.mSlotNumber[SLOT_FOODLVL] = 1;
+			theConfig.mSlotNumber[SLOT_FOODLIMIT] = 2;
 			theConfig.mSlotNumber[SLOT_OSCAR] = 3;
+			theConfig.mSlotNumber[SLOT_WEAPON] = 5;
 			theConfig.mSlotNumber[SLOT_EGG] = 6;
+
 			theConfig.mSlotPrices[SLOT_GUPPY] = 100;
+			theConfig.mSlotPrices[SLOT_FOODLVL] = 200;
+			theConfig.mSlotPrices[SLOT_FOODLIMIT] = 300;
+			theConfig.mSlotPrices[SLOT_OSCAR] = 1000;
+			theConfig.mSlotPrices[SLOT_WEAPON] = 1000;
 
 			switch (theLevel)
 			{
 			case 1:
 				theConfig.mAlienExpect = ALIEN_NONE;
 				theConfig.mSlotPrices[SLOT_EGG] = 150;
+				theConfig.mSlotNumber[SLOT_FOODLVL] = -1;
+				theConfig.mSlotNumber[SLOT_FOODLIMIT] = -1;
 				theConfig.mSlotNumber[SLOT_OSCAR] = -1;
+				theConfig.mSlotNumber[SLOT_WEAPON] = -1;
 				break;
 			case 2:
 				theConfig.mAlienExpect = ALIEN_WEAK_SYLV;
 				theConfig.mSlotPrices[SLOT_EGG] = 500;
 				theConfig.mAlienTimer = 1750;
 				theConfig.mSlotNumber[SLOT_OSCAR] = -1;
+				theConfig.mSlotNumber[SLOT_WEAPON] = -1;
 				break;
 			case 3:
 				theConfig.mAlienExpect = ALIEN_STRONG_SYLV;
@@ -96,12 +107,19 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 		else if (theTank == 2)
 		{
 			theConfig.mSlotNumber[SLOT_GUPPY] = 0;
+			theConfig.mSlotNumber[SLOT_FOODLVL] = 1;
+			theConfig.mSlotNumber[SLOT_FOODLIMIT] = 2;
 			theConfig.mSlotNumber[SLOT_POTION] = 3;
 			theConfig.mSlotNumber[SLOT_STARCATCHER] = 4;
+			theConfig.mSlotNumber[SLOT_WEAPON] = 5;
 			theConfig.mSlotNumber[SLOT_EGG] = 6;
+
 			theConfig.mSlotPrices[SLOT_GUPPY] = 100;
+			theConfig.mSlotPrices[SLOT_FOODLVL] = 200;
+			theConfig.mSlotPrices[SLOT_FOODLIMIT] = 300;
 			theConfig.mSlotPrices[SLOT_POTION] = 250;
 			theConfig.mSlotPrices[SLOT_STARCATCHER] = 750;
+			theConfig.mSlotPrices[SLOT_WEAPON] = 1000;
 
 			switch (theLevel)
 			{
@@ -109,6 +127,7 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 				theConfig.mAlienExpect = ALIEN_STRONG_SYLV;
 				theConfig.mSlotPrices[SLOT_EGG] = 750;
 				theConfig.mSlotNumber[SLOT_STARCATCHER] = -1;
+				theConfig.mSlotNumber[SLOT_WEAPON] = -1;
 				break;
 			case 2:
 				theConfig.mAlienExpect = ALIEN_BALROG;
@@ -131,12 +150,19 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 		else if (theTank == 3)
 		{
 			theConfig.mSlotNumber[SLOT_GUPPY] = 0;
-			theConfig.mSlotPrices[SLOT_GEKKO] = 2000;
+			theConfig.mSlotNumber[SLOT_FOODLVL] = 1;
+			theConfig.mSlotNumber[SLOT_FOODLIMIT] = 2;
 			theConfig.mSlotNumber[SLOT_GRUBBER] = 3;
 			theConfig.mSlotNumber[SLOT_GEKKO] = 4;
+			theConfig.mSlotNumber[SLOT_WEAPON] = 5;
 			theConfig.mSlotNumber[SLOT_EGG] = 6;
+
 			theConfig.mSlotPrices[SLOT_GUPPY] = 100;
+			theConfig.mSlotPrices[SLOT_FOODLVL] = 200;
+			theConfig.mSlotPrices[SLOT_FOODLIMIT] = 300;
 			theConfig.mSlotPrices[SLOT_GRUBBER] = 750;
+			theConfig.mSlotPrices[SLOT_GEKKO] = 2000;
+			theConfig.mSlotPrices[SLOT_WEAPON] = 2000;
 
 			switch (theLevel)
 			{
@@ -144,6 +170,7 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 				theConfig.mAlienExpect = ALIEN_BALROG;
 				theConfig.mSlotPrices[SLOT_EGG] = 1000;
 				theConfig.mSlotNumber[SLOT_GEKKO] = -1;
+				theConfig.mSlotNumber[SLOT_WEAPON] = -1;
 				break;
 			case 2:
 				theConfig.mAlienExpect = ALIEN_GUS;
@@ -166,12 +193,19 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 		else if (theTank == 4)
 		{
 			theConfig.mSlotNumber[SLOT_BREEDER] = 0;
-			theConfig.mSlotPrices[SLOT_BREEDER] = 200;
+			theConfig.mSlotNumber[SLOT_FOODLVL] = 1;
+			theConfig.mSlotNumber[SLOT_FOODLIMIT] = 2;
 			theConfig.mSlotNumber[SLOT_OSCAR] = 3;
 			theConfig.mSlotNumber[SLOT_ULTRA] = 4;
+			theConfig.mSlotNumber[SLOT_WEAPON] = 5;
 			theConfig.mSlotNumber[SLOT_EGG] = 6;
+
+			theConfig.mSlotPrices[SLOT_BREEDER] = 200;
+			theConfig.mSlotPrices[SLOT_FOODLVL] = 200;
+			theConfig.mSlotPrices[SLOT_FOODLIMIT] = 300;
 			theConfig.mSlotPrices[SLOT_OSCAR] = 1000;
 			theConfig.mSlotPrices[SLOT_ULTRA] = 10000;
+			theConfig.mSlotPrices[SLOT_WEAPON] = 5000;
 
 			switch (theLevel)
 			{
@@ -179,6 +213,7 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 				theConfig.mAlienExpect = ALIEN_BALROG;
 				theConfig.mSlotPrices[SLOT_EGG] = 3000;
 				theConfig.mSlotNumber[SLOT_ULTRA] = -1;
+				theConfig.mSlotNumber[SLOT_WEAPON] = -1;
 				break;
 			case 2:
 				theConfig.mAlienExpect = ALIEN_BILATERUS;
@@ -208,13 +243,21 @@ void LevelSettingsManager::GetDefaultConfig(const LevelData& theLevelData, bool 
 	else
 	{
 		// Relax Mode
+		theConfig.mSlotNumber[SLOT_GUPPY] = 0;
+		theConfig.mSlotNumber[SLOT_FOODLVL] = 1;
+		theConfig.mSlotNumber[SLOT_FOODLIMIT] = 2;
+		theConfig.mSlotNumber[SLOT_WEAPON] = 5;
+		theConfig.mSlotNumber[SLOT_EGG] = 6;
+
 		theConfig.mSlotPrices[SLOT_GUPPY] = 100;
+		theConfig.mSlotPrices[SLOT_FOODLVL] = 200;
+		theConfig.mSlotPrices[SLOT_FOODLIMIT] = 300;
 		theConfig.mSlotPrices[SLOT_OSCAR] = 1000;
 		theConfig.mSlotPrices[SLOT_ULTRA] = 10000;
 		theConfig.mSlotPrices[SLOT_STARCATCHER] = 750;
 		theConfig.mSlotPrices[SLOT_GRUBBER] = 750;
 		theConfig.mSlotPrices[SLOT_GEKKO] = 2000;
-		theConfig.mSlotNumber[SLOT_EGG] = 6;
+		theConfig.mSlotPrices[SLOT_WEAPON] = 1000;
 
 		switch (theTank)
 		{

@@ -11,8 +11,8 @@ namespace Sexy
 	{
 		std::string mArchipelagoJson;
 		std::string mSlotDataJson;
-
 		std::string mSlotName;
+		
 		int mPlayerId;
 		int mStartingTank;
 

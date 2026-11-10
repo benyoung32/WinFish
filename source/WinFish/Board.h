@@ -1,6 +1,7 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
+#include "LevelSettings.h"
 #include "SexyAppFramework/Widget.h"
 #include "SexyAppFramework/ButtonListener.h"
 #include "SexyAppFramework/Color.h"
@@ -162,13 +163,16 @@ namespace Sexy
 		int									mCrosshair1Y;
 		int									mCrosshair2X;
 		int									mCrosshair2Y;
-		int									m0x2dc;
+		int									mTotalActiveSlotsCount;
 		int									m0x2e0;
 		int									mSlotNumber[SLOT_END];
 		int									mSlotPrices[SLOT_END];
 		int									m0x344[SLOT_END];
 		int									m0x374[SLOT_END];
 		bool								mSlotUnlocked[SLOT_END];
+		int									mMaxFoodLimit;
+		int									mMaxFoodQuality;
+		int 								mMaxWeaponUpgrade;
 		int									m0x3b0;
 		int									m0x3b4;
 		int									m0x3b8;
@@ -281,7 +285,6 @@ namespace Sexy
 		void					InitLevel();
 		void					InitBonusLevel();
 		void					StartMusic();
-		void					CheckVictoryCondition();
 		int						Unk01();
 		int						Unk02();
 		void					Unk03();
@@ -318,6 +321,8 @@ namespace Sexy
 
 		void					RemoveWidgetHelper(Widget* theWidget);
 		void					ResetLevel(WidgetManager* theWidgetManager);
+		void					ApplyLevelConfig(LevelConfig aCfg);
+		void 					SetBackground();
 		void					DeterminePricesAndSlots();
 		void					HandleBuySlotPressed(int theSlotId);
 		void					RelaxModeConfig();

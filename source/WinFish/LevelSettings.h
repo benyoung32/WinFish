@@ -2,15 +2,31 @@
 #define __LEVELSETTINGS_H__
 
 #include <map>
-#include "Board.h"
 #include "LevelData.h"
+enum SlotTypes
+	{
+		SLOT_GUPPY,
+		SLOT_BREEDER,
+		SLOT_FOODLVL,
+		SLOT_FOODLIMIT,
+		SLOT_OSCAR,
+		SLOT_POTION,
+		SLOT_STARCATCHER,
+		SLOT_GRUBBER,
+		SLOT_GEKKO,
+		SLOT_ULTRA,
+		SLOT_WEAPON,
+		SLOT_EGG,
+		SLOT_END
+	};
 
 namespace Sexy
-{
+{	
+
 	struct LevelConfig
 	{
-		int mSlotNumber[SLOT_END];
-		int mSlotPrices[SLOT_END];
+		int mSlotNumber[12]; // SLOT_END
+		int mSlotPrices[12];
 		int mAlienExpect;
 		int mAlienTimer;
 
@@ -32,7 +48,7 @@ namespace Sexy
 
 	private:
 		LevelSettingsManager();
-		std::map<LevelData, LevelConfig> mOverrides;
+		std::map<LevelData, LevelConfig> mOverrides; // TODO: remove this map, it is deprecated 
 	};
 }
 
