@@ -21,8 +21,6 @@ namespace Sexy
 	{
 	public:
 		APGameController(WinFishApp* theApp, APBridge* theBridge);
-		virtual ~APGameController();
-
 		void						Update();
 
 		// Connection & Session Lifecycle

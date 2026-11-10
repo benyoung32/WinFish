@@ -9,15 +9,10 @@ namespace Sexy
 {
 	struct APArchiveContents
 	{
-		std::vector<uint8_t> mUsersDat;
-		std::vector<uint8_t> mUser1Dat;
 		std::string mArchipelagoJson;
 		std::string mSlotDataJson;
 
 		std::string mSlotName;
-		std::string mServer;
-		std::string mPassword;
-		std::string mSeed;
 		int mPlayerId;
 		int mStartingTank;
 
@@ -31,7 +26,7 @@ namespace Sexy
 	class APSaveImporter
 	{
 	public:
-		// Reads and extracts users.dat, user1.dat, archipelago.json, and slot_data.json
+		// Reads and extracts archipelago.json and slot_data.json
 		// from a .apinsani / .zip archive into memory, and parses slot metadata.
 		static bool ExtractArchive(const std::string& theZipFilePath, APArchiveContents& theOutContents, std::string& theOutError);
 	};

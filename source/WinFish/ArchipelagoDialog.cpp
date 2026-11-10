@@ -147,5 +147,4 @@ void Sexy::ArchipelagoDialog::ApplyTo(UserProfile* theProfile)
 	theProfile->mAPServer = GetServer();
 	theProfile->mAPSlot = GetSlot();
 	theProfile->mAPPassword = mEditWidgets[EDIT_PASSWORD]->mString;
-	theProfile->mIsAPProfile = true;
 }

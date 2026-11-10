@@ -98,12 +98,6 @@ UserProfile* Sexy::ProfileMgr::GetFirstAPProfile()
         UserProfile* aProf = &it->second;
         if (aProf != aCurrentProfile)
             aProf->LoadFromMemory();
-        if (aProf->IsAPProfile())
-        {
-            aProf->m0x40 = m0x14;
-            m0x14++;
-            return aProf;
-        }
     }
     return nullptr;
 }
@@ -472,7 +466,6 @@ void Sexy::UserProfile::Init()
     mAPSeed.clear();
     mAPItemIndex = 0;
     mAPPendingChecks.clear();
-    mAPSlotData.clear();
     mAPFoodQuality = 0;
     mAPFoodQuantity = 0;
     mAPPetSlots = 0;
@@ -483,7 +476,6 @@ void Sexy::UserProfile::Init()
         mAPUnlockedTanks[i] = false;
         mAPTankLevels[i] = 1;
     }
-    mIsAPProfile = false;
 }
 
 void Sexy::UserProfile::SetCheatFlag(char thePos, bool theFlag)
@@ -529,10 +521,6 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    // 0x80000000 is the original game's format; 0x80000001 is Fishapelago's first release, which appends
-    // the Archipelago fields below.
-    // 0x80000000 is original; 0x80000001 is Fishapelago v1; 0x80000002 adds embedded slot data & AP state (Option C)
-    // 0x80000003 adds per-tank adventure levels (mAPTankLevels)
     uint aVer = 0x80000003;
     theDataSync.SyncLong(aVer);
 
@@ -543,9 +531,6 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
         unkFlag = true;
         theReader->RollbackBytes(4);
     }
-
-    if (theReader)
-        mIsAPProfile = (aVer >= 0x80000001);
 
     theDataSync.SyncLong(mShells);
     theDataSync.SyncLong(mTank);
@@ -630,7 +615,6 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
 
     if (aVer >= 0x80000002)
     {
-        theDataSync.SyncString(mAPSlotData);
         theDataSync.SyncLong(mAPFoodQuality);
         theDataSync.SyncLong(mAPFoodQuantity);
         theDataSync.SyncLong(mAPPetSlots);
@@ -648,17 +632,6 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
 
     if (theReader)
     {
-        if (!IsAPProfile())
-        {
-            int anArrLvl = mTank * 5 - 6 + mLevel;
-            if (mTank > 4)
-                anArrLvl--;
-            if (mFinishedGame)
-                anArrLvl = 20;
-            for (int i = 0; i < anArrLvl; i++)
-                UnlockPet(i, true);
-        }
-
         mNumOfUnlockedPets = 0;
         for (int i = 0; i < PET_END; i++)
             if (mUnlockedPets[i])

@@ -2205,13 +2205,11 @@ void Sexy::WinFishApp::UpdateArchipelago()
 	// Reconnect whenever the current profile or its AP settings change; this covers profile
 	// switch, rename and delete without hooking every place that assigns mCurrentProfile.
 	std::string aServer, aSlot, aPassword;
-	bool aHasConnection = false;
 	if (mCurrentProfile != NULL)
 	{
 		aServer = mCurrentProfile->mAPServer;
 		aSlot = mCurrentProfile->mAPSlot;
 		aPassword = mCurrentProfile->mAPPassword;
-		aHasConnection = mCurrentProfile->HasAPConnection();
 	}
 
 	if (mCurrentProfile != mAPProfile || aServer != mAPServer || aSlot != mAPSlot || aPassword != mAPPassword)
@@ -2225,17 +2223,12 @@ void Sexy::WinFishApp::UpdateArchipelago()
 		KillDialog(DIALOG_AP_NEW_SEED);
 		mAPSeedPromptOpen = false;
 
-		if (!aHasConnection)
-			mAPBridge->Disconnect();
-		else
-			mAPBridge->Connect(aServer, aSlot, aPassword);
+		mAPBridge->Connect(aServer, aSlot, aPassword);
 
-		if (mAPController != NULL)
-		{
-			mAPController->ResetSession();
-			if (mCurrentProfile != NULL)
-				mAPController->LoadFromProfile(mCurrentProfile);
-		}
+		mAPController->ResetSession();
+		if (mCurrentProfile != NULL)
+			mAPController->LoadFromProfile(mCurrentProfile);
+	
 	}
 
 	mAPBridge->Update();
@@ -2313,8 +2306,7 @@ void Sexy::WinFishApp::CheckArchipelagoLocation(int theLocationId)
 
 	// Kept in the outbox until the server confirms it, in case the game saves and closes before then.
 	mCurrentProfile->mAPPendingChecks.insert(theLocationId);
-	if (mAPBridge != NULL)
-		mAPBridge->SendChecks({ theLocationId });
+	mAPBridge->SendChecks({ theLocationId });
 }
 
 void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
@@ -2354,9 +2346,6 @@ void Sexy::WinFishApp::ApplyArchipelagoItem(const APReceivedItem& theItem)
 {
 	if (mAPController != NULL)
 		mAPController->OnItemReceived(theItem);
-	// No item has an effect yet; real effects will be dispatched from here.
-	OutputDebugStringA(StrFormat("Fishapelago: received item '%s' [%lld] (index %d, from player %d, location %lld)\n",
-		APItemName(theItem.mItem), theItem.mItem, theItem.mIndex, theItem.mPlayer, theItem.mLocation).c_str());
 }
 
 void Sexy::WinFishApp::TitleScreenIsFinished()
@@ -2800,7 +2789,6 @@ UserProfile* Sexy::WinFishApp::EnsureActiveProfile()
 	UserProfile* aFallback = mProfileMgr->MakeNewUser(&aDefaultName);
 	if (aFallback != NULL)
 	{
-		aFallback->mIsAPProfile = true;
 		aFallback->Save();
 		mProfileMgr->SaveUsersDat();
 		mCurrentProfile = aFallback;
@@ -2919,7 +2907,6 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 				"OK", Dialog::BUTTONS_FOOTER);
 			return;
 		}
-		aProf->mIsAPProfile = true;
 		mCurrentProfile = aProf;
 		KillDialog(DIALOG_USER_DIALOG);
 	}
@@ -2945,14 +2932,12 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 			return;
 		}
 		aProf = &anIt->second;
-		aProf->mIsAPProfile = true;
 		mCurrentProfile = aProf;
 		KillDialog(DIALOG_USER_DIALOG);
 	}
 
 	// UpdateArchipelago notices the new settings and reconnects if this is the current profile.
 	aDia->ApplyTo(aProf);
-	aProf->mIsAPProfile = true;
 	aProf->Save();
 	mProfileMgr->SaveUsersDat();
 	KillDialog(DIALOG_ARCHIPELAGO);
@@ -3018,48 +3003,17 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 		return false;
 	}
 
-	if (anArchive.mUser1Dat.empty())
-	{
-		DoDialog(DIALOG_INFO, true, "Import Error", "The file does not contain valid user save data.", "OK", Dialog::BUTTONS_FOOTER);
-		return false;
-	}
-
 	UserProfile newProf;
 
-	DataReader aDR;
-	aDR.OpenMemory(anArchive.mUser1Dat.data(), static_cast<unsigned long>(anArchive.mUser1Dat.size()), false);
-	DataSync aDS(aDR);
-	newProf.SyncData(aDS);
-
-	// In Archipelago, all pets must be awarded as items from the server, not pre-unlocked from save templates
-	for (int i = 0; i < PET_END; i++)
-		newProf.mUnlockedPets[i] = false;
-	newProf.mNumOfUnlockedPets = 0;
-	newProf.mFinishedGame = false;
-	newProf.mFinishedGameCount = 0;
-
-	if (!anArchive.mSlotDataJson.empty())
-		newProf.mAPSlotData = anArchive.mSlotDataJson;
-
-	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : (int)newProf.mTank;
-	if (aTank < 1 || aTank > 4)
-		aTank = 1;
+	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : 1;
 	newProf.mAPUnlockedTanks[aTank - 1] = true;
 	newProf.mTank = aTank;
-	int aInitLvl = (int)newProf.mLevel;
-	newProf.mAPTankLevels[aTank - 1] = (aInitLvl > 1) ? aInitLvl : 1;
-
-	newProf.mIsAPProfile = true;
+	newProf.mAPTankLevels[aTank - 1] = 1;
 	
-	newProf.mAPSlot = "";
-		
+	newProf.mAPSlot = anArchive.mSlotName;
 	newProf.mAPServer = "archipelago.gg:";
-	
 	newProf.mAPPassword = "";
-	
-	newProf.mAPSeed = anArchive.mSeed;
-
-	// Determine profile name. If slot and server are already present, use "Slot @ Server".
+	newProf.mAPSeed = "";
 
 	SexyString aBaseName = "AP Save";
 	SexyString aCandidateName = aBaseName;
@@ -3103,7 +3057,7 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 	}
 
 	DoDialog(DIALOG_INFO, true, "Profile Imported",
-		StrFormat("Successfully imported profile'!\nSelect it and click Edit to enter your server and slot."),
+		StrFormat("Successfully imported profile'!\n Click Edit to enter your server and slot."),
 		"OK", Dialog::BUTTONS_FOOTER);
 
 	mWidgetManager->MarkAllDirty();

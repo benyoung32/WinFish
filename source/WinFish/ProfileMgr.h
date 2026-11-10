@@ -56,8 +56,6 @@ namespace Sexy
 		// which can't be replayed). Resent on connect; entries leave once the server reports them checked.
 		std::set<int> mAPPendingChecks;
 
-		// Embedded Slot Data and AP Game Controller State (Option C)
-		std::string mAPSlotData;
 		int mAPFoodQuality;
 		int mAPFoodQuantity;
 		int mAPPetSlots;
@@ -65,7 +63,6 @@ namespace Sexy
 		int mAPStartingMoneyBonus;
 		bool mAPUnlockedTanks[4];
 		int mAPTankLevels[4];
-		bool mIsAPProfile;
 
 	public:
 		UserProfile();
@@ -95,7 +92,6 @@ namespace Sexy
 		int							GetChallengeScore(int theTank);
 		int							GetMaxPetSlots() const;
 
-		bool						IsAPProfile() const { return mIsAPProfile || !mAPSlot.empty() || !mAPSlotData.empty(); }
 		bool						HasAPConnection() const { return !mAPServer.empty() && mAPServer != "archipelago.gg:" && !mAPSlot.empty(); }
 
 		static SexyString			MakeAPProfileKey(const std::string& theSlot, const std::string& theServer);
