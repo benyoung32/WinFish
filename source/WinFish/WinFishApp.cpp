@@ -3018,7 +3018,7 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 		return false;
 	}
 
-	if (!anArchive.mHasUser1Dat || anArchive.mUser1Dat.empty())
+	if (anArchive.mUser1Dat.empty())
 	{
 		DoDialog(DIALOG_INFO, true, "Import Error", "The file does not contain valid user save data.", "OK", Dialog::BUTTONS_FOOTER);
 		return false;
@@ -3038,7 +3038,7 @@ bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
 	newProf.mFinishedGame = false;
 	newProf.mFinishedGameCount = 0;
 
-	if (anArchive.mHasSlotDataJson && !anArchive.mSlotDataJson.empty())
+	if (!anArchive.mSlotDataJson.empty())
 		newProf.mAPSlotData = anArchive.mSlotDataJson;
 
 	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : (int)newProf.mTank;

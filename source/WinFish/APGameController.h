@@ -38,11 +38,10 @@ namespace Sexy
 		int							GetReceivedPetSlots() const { return mPetSlots; }
 		int							GetWeaponLevel() const { return mWeaponLevel; }
 		int							GetStartingMoneyBonus() const { return mStartingMoneyBonus; }
-		bool						IsPetUnlocked(int thePetIndex) const;
 		bool						IsTankUnlocked(const LevelData& theLevel) const;
 
 		// Location Check Dispatch
-		void						ReportLocation(int64_t theLocationId, const std::string& theLocationName = "");
+		void						ReportLocation(int64_t theLocationId);
 		void						ReportEggPiece(const LevelData& theLevel, int thePiece);
 		void						ReportTankComplete(const LevelData& theLevel);
 		void						ReportTimeTrialComplete(const LevelData& theLevel);
@@ -51,7 +50,6 @@ namespace Sexy
 
 		// Goal & Victory Conditions
 		bool						CheckVictoryCondition();
-		bool						AreAllTanksCompleted() const;
 
 		// Board / Gameplay Session Hooks
 		void						ApplyLevelStart(Board* theBoard);

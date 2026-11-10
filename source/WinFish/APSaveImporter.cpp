@@ -4,130 +4,42 @@
 #include <cstring>
 #include <cctype>
 #include <fstream>
+#include <nlohmann/json.hpp>
 
 #include "apclientpp/zlib/include/zlib.h"
 
 namespace Sexy
 {
-	static bool ExtractJsonString(const std::string& theJson, const std::string& theKey, std::string& theOutValue)
-	{
-		std::string aTarget = "\"" + theKey + "\"";
-		size_t aKeyPos = theJson.find(aTarget);
-		if (aKeyPos == std::string::npos)
-			return false;
-
-		size_t aColon = theJson.find(':', aKeyPos + aTarget.size());
-		if (aColon == std::string::npos)
-			return false;
-
-		size_t aStart = theJson.find_first_not_of(" \t\r\n", aColon + 1);
-		if (aStart == std::string::npos)
-			return false;
-
-		if (theJson[aStart] == '\"')
-		{
-			size_t aEnd = theJson.find('\"', aStart + 1);
-			if (aEnd != std::string::npos)
-			{
-				theOutValue = theJson.substr(aStart + 1, aEnd - aStart - 1);
-				return true;
-			}
-		}
-		else if (theJson.compare(aStart, 4, "null") == 0)
-		{
-			theOutValue.clear();
-			return true;
-		}
-		return false;
-	}
-
-	static bool ExtractJsonInt(const std::string& theJson, const std::string& theKey, int& theOutValue)
-	{
-		std::string aTarget = "\"" + theKey + "\"";
-		size_t aKeyPos = theJson.find(aTarget);
-		if (aKeyPos == std::string::npos)
-			return false;
-
-		size_t aColon = theJson.find(':', aKeyPos + aTarget.size());
-		if (aColon == std::string::npos)
-			return false;
-
-		size_t aStart = theJson.find_first_not_of(" \t\r\n", aColon + 1);
-		if (aStart == std::string::npos)
-			return false;
-
-		if (isdigit(static_cast<unsigned char>(theJson[aStart])) || theJson[aStart] == '-')
-		{
-			theOutValue = atoi(&theJson[aStart]);
-			return true;
-		}
-		return false;
-	}
 #pragma pack(push, 1)
 	struct ZipLocalHeader
 	{
-		uint32_t mSignature;			// 0x04034b50
-		uint16_t mVersionNeeded;
-		uint16_t mFlags;
-		uint16_t mCompressionMethod;	// 0 = store, 8 = deflate
-		uint16_t mModTime;
-		uint16_t mModDate;
-		uint32_t mCrc32;
-		uint32_t mCompressedSize;
-		uint32_t mUncompressedSize;
-		uint16_t mFilenameLength;
-		uint16_t mExtraFieldLength;
+		uint32_t mSignature;
+		uint16_t mVersionNeeded, mFlags, mCompressionMethod, mModTime, mModDate;
+		uint32_t mCrc32, mCompressedSize, mUncompressedSize;
+		uint16_t mFilenameLength, mExtraFieldLength;
 	};
 
 	struct ZipCentralDirHeader
 	{
-		uint32_t mSignature;			// 0x02014b50
-		uint16_t mVersionMadeBy;
-		uint16_t mVersionNeeded;
-		uint16_t mFlags;
-		uint16_t mCompressionMethod;
-		uint16_t mModTime;
-		uint16_t mModDate;
-		uint32_t mCrc32;
-		uint32_t mCompressedSize;
-		uint32_t mUncompressedSize;
-		uint16_t mFilenameLength;
-		uint16_t mExtraFieldLength;
-		uint16_t mCommentLength;
-		uint16_t mDiskNumberStart;
-		uint16_t mInternalAttrs;
-		uint32_t mExternalAttrs;
-		uint32_t mLocalHeaderOffset;
+		uint32_t mSignature;
+		uint16_t mVersionMadeBy, mVersionNeeded, mFlags, mCompressionMethod, mModTime, mModDate;
+		uint32_t mCrc32, mCompressedSize, mUncompressedSize;
+		uint16_t mFilenameLength, mExtraFieldLength, mCommentLength, mDiskNumberStart, mInternalAttrs;
+		uint32_t mExternalAttrs, mLocalHeaderOffset;
 	};
 
 	struct ZipEOCD
 	{
-		uint32_t mSignature;			// 0x06054b50
-		uint16_t mDiskNumber;
-		uint16_t mStartDiskNumber;
-		uint16_t mEntriesOnDisk;
-		uint16_t mTotalEntries;
-		uint32_t mCentralDirSize;
-		uint32_t mCentralDirOffset;
+		uint32_t mSignature;
+		uint16_t mDiskNumber, mStartDiskNumber, mEntriesOnDisk, mTotalEntries;
+		uint32_t mCentralDirSize, mCentralDirOffset;
 		uint16_t mCommentLength;
 	};
 #pragma pack(pop)
 
-	bool APSaveImporter::ExtractArchive(const std::string& theZipFilePath, APArchiveContents& output, std::string& theOutError)
+	bool APSaveImporter::ExtractArchive(const std::string& theZipFilePath, APArchiveContents& theOutContents, std::string& theOutError)
 	{
-		output.mHasUsersDat = false;
-		output.mHasUser1Dat = false;
-		output.mHasArchipelagoJson = false;
-		output.mHasSlotDataJson = false;
-		output.mUsersDat.clear();
-		output.mUser1Dat.clear();
-		output.mArchipelagoJson.clear();
-		output.mSlotDataJson.clear();
-		output.mSlotName.clear();
-		output.mServer.clear();
-		output.mPassword.clear();
-		output.mSeed.clear();
-		output.mPlayerId = 0;
+		theOutContents = APArchiveContents();
 		theOutError.clear();
 
 		std::ifstream aFile(theZipFilePath, std::ios::binary | std::ios::ate);
@@ -137,15 +49,15 @@ namespace Sexy
 			return false;
 		}
 
-		std::streamsize aFileSize = aFile.tellg();
-		if (aFileSize < (std::streamsize)sizeof(ZipEOCD))
+		size_t aFileSize = static_cast<size_t>(aFile.tellg());
+		if (aFileSize < sizeof(ZipEOCD))
 		{
 			theOutError = "File is too small to be a valid ZIP archive.";
 			return false;
 		}
 
 		aFile.seekg(0, std::ios::beg);
-		std::vector<uint8_t> aBuffer(static_cast<size_t>(aFileSize));
+		std::vector<uint8_t> aBuffer(aFileSize);
 		if (!aFile.read(reinterpret_cast<char*>(aBuffer.data()), aFileSize))
 		{
 			theOutError = "Failed to read file data.";
@@ -154,67 +66,42 @@ namespace Sexy
 
 		// Locate End of Central Directory (EOCD) signature backwards from end
 		size_t aMaxSearch = (aBuffer.size() > 65535 + sizeof(ZipEOCD)) ? 65535 + sizeof(ZipEOCD) : aBuffer.size();
-		size_t aSearchStart = aBuffer.size() - sizeof(ZipEOCD);
-		size_t aSearchEnd = aBuffer.size() - aMaxSearch;
 		size_t anEocdOffset = static_cast<size_t>(-1);
-
-		for (size_t i = aSearchStart;; --i)
+		for (size_t i = aBuffer.size() - sizeof(ZipEOCD); i >= aBuffer.size() - aMaxSearch; --i)
 		{
 			if (aBuffer[i] == 0x50 && aBuffer[i + 1] == 0x4b && aBuffer[i + 2] == 0x05 && aBuffer[i + 3] == 0x06)
 			{
 				anEocdOffset = i;
 				break;
 			}
-			if (i == aSearchEnd || i == 0)
-				break;
-		}
-
-		if (anEocdOffset == static_cast<size_t>(-1) || anEocdOffset + sizeof(ZipEOCD) > aBuffer.size())
-		{
-			theOutError = "Missing ZIP End of Central Directory record.";
-			return false;
+			if (i == 0) break;
 		}
 
 		const ZipEOCD* anEocd = reinterpret_cast<const ZipEOCD*>(&aBuffer[anEocdOffset]);
-		uint32_t aCdOffset = anEocd->mCentralDirOffset;
-		uint16_t anEntryCount = anEocd->mTotalEntries;
 
-		if (aCdOffset >= aBuffer.size())
-		{
-			theOutError = "Corrupted ZIP Central Directory offset.";
-			return false;
-		}
-
-		size_t aCurr = aCdOffset;
-		for (uint16_t i = 0; i < anEntryCount && aCurr + sizeof(ZipCentralDirHeader) <= aBuffer.size(); ++i)
+		size_t aCurr = anEocd->mCentralDirOffset;
+		for (uint16_t i = 0; i < anEocd->mTotalEntries && aCurr + sizeof(ZipCentralDirHeader) <= aBuffer.size(); ++i)
 		{
 			const ZipCentralDirHeader* aCd = reinterpret_cast<const ZipCentralDirHeader*>(&aBuffer[aCurr]);
 			if (aCd->mSignature != 0x02014b50)
 				break;
 
-			size_t aNameLen = aCd->mFilenameLength;
-			size_t anExtraLen = aCd->mExtraFieldLength;
-			size_t aCommentLen = aCd->mCommentLength;
-			size_t aNextEntry = aCurr + sizeof(ZipCentralDirHeader) + aNameLen + anExtraLen + aCommentLen;
+			size_t aNextEntry = aCurr + sizeof(ZipCentralDirHeader) + aCd->mFilenameLength + aCd->mExtraFieldLength + aCd->mCommentLength;
 			if (aNextEntry > aBuffer.size())
 				break;
 
-			std::string aFilename(reinterpret_cast<const char*>(&aBuffer[aCurr + sizeof(ZipCentralDirHeader)]), aNameLen);
+			std::string aName(reinterpret_cast<const char*>(&aBuffer[aCurr + sizeof(ZipCentralDirHeader)]), aCd->mFilenameLength);
+			for (char& c : aName)
+				c = (c == '\\') ? '/' : static_cast<char>(tolower(static_cast<unsigned char>(c)));
 
-			// Normalize filename to lowercase and forward slashes
-			std::string aNormName = aFilename;
-			for (size_t c = 0; c < aNormName.size(); ++c)
-			{
-				if (aNormName[c] == '\\')
-					aNormName[c] = '/';
-				aNormName[c] = static_cast<char>(tolower(static_cast<unsigned char>(aNormName[c])));
-			}
+			size_t aSlash = aName.find_last_of('/');
+			std::string aBase = (aSlash != std::string::npos) ? aName.substr(aSlash + 1) : aName;
 
-			bool isUsersDat = (aNormName == "users.dat" || (aNormName.size() >= 10 && aNormName.compare(aNormName.size() - 10, 10, "/users.dat") == 0));
-			bool isUser1Dat = (aNormName == "user1.dat" || (aNormName.size() >= 10 && aNormName.compare(aNormName.size() - 10, 10, "/user1.dat") == 0));
-			bool isAnyUserDat = !isUsersDat && (aNormName.find("user") != std::string::npos && aNormName.size() >= 4 && aNormName.compare(aNormName.size() - 4, 4, ".dat") == 0);
-			bool isArchipelagoJson = (aNormName == "archipelago.json" || (aNormName.size() >= 17 && aNormName.compare(aNormName.size() - 17, 17, "/archipelago.json") == 0));
-			bool isSlotDataJson = (aNormName == "slot_data.json" || (aNormName.size() >= 15 && aNormName.compare(aNormName.size() - 15, 15, "/slot_data.json") == 0));
+			bool isUsersDat = (aBase == "users.dat");
+			bool isUser1Dat = (aBase == "user1.dat");
+			bool isAnyUserDat = !isUsersDat && (aBase.find("user") != std::string::npos && aBase.size() >= 4 && aBase.rfind(".dat") == aBase.size() - 4);
+			bool isArchipelagoJson = (aBase == "archipelago.json");
+			bool isSlotDataJson = (aBase == "slot_data.json");
 
 			if (isUsersDat || isUser1Dat || isAnyUserDat || isArchipelagoJson || isSlotDataJson)
 			{
@@ -222,68 +109,39 @@ namespace Sexy
 				if (aLocOffset + sizeof(ZipLocalHeader) <= aBuffer.size())
 				{
 					const ZipLocalHeader* aLoc = reinterpret_cast<const ZipLocalHeader*>(&aBuffer[aLocOffset]);
-					if (aLoc->mSignature == 0x04034b50)
+					size_t aDataStart = aLocOffset + sizeof(ZipLocalHeader) + aLoc->mFilenameLength + aLoc->mExtraFieldLength;
+					if (aLoc->mSignature == 0x04034b50 && aDataStart + aCd->mCompressedSize <= aBuffer.size())
 					{
-						size_t aDataStart = aLocOffset + sizeof(ZipLocalHeader) + aLoc->mFilenameLength + aLoc->mExtraFieldLength;
-						size_t aCompSize = aCd->mCompressedSize;
-						size_t anUncompSize = aCd->mUncompressedSize;
-						uint16_t aMethod = aCd->mCompressionMethod;
+						std::vector<uint8_t> anUncomp(aCd->mUncompressedSize);
+						bool anOk = false;
 
-						if (aDataStart + aCompSize <= aBuffer.size())
+						if (aCd->mCompressionMethod == 0 && aCd->mCompressedSize == aCd->mUncompressedSize)
 						{
-							std::vector<uint8_t> anUncompressed(anUncompSize);
-							bool anOk = false;
-
-							if (aMethod == 0) // Stored (no compression)
+							if (!anUncomp.empty())
+								memcpy(anUncomp.data(), &aBuffer[aDataStart], anUncomp.size());
+							anOk = true;
+						}
+						else if (aCd->mCompressionMethod == 8)
+						{
+							z_stream aStrm = {};
+							aStrm.next_in = const_cast<Bytef*>(&aBuffer[aDataStart]);
+							aStrm.avail_in = aCd->mCompressedSize;
+							aStrm.next_out = anUncomp.data();
+							aStrm.avail_out = aCd->mUncompressedSize;
+							if (inflateInit2(&aStrm, -MAX_WBITS) == Z_OK)
 							{
-								if (aCompSize == anUncompSize)
-								{
-									if (anUncompSize > 0)
-										memcpy(anUncompressed.data(), &aBuffer[aDataStart], anUncompSize);
-									anOk = true;
-								}
+								int aRet = inflate(&aStrm, Z_FINISH);
+								inflateEnd(&aStrm);
+								anOk = (aRet == Z_STREAM_END || aRet == Z_OK || (aRet == Z_BUF_ERROR && aStrm.total_out == aCd->mUncompressedSize));
 							}
-							else if (aMethod == 8) // Deflate
-							{
-								z_stream aStrm;
-								memset(&aStrm, 0, sizeof(aStrm));
-								aStrm.next_in = const_cast<Bytef*>(&aBuffer[aDataStart]);
-								aStrm.avail_in = static_cast<uInt>(aCompSize);
-								aStrm.next_out = reinterpret_cast<Bytef*>(anUncompressed.data());
-								aStrm.avail_out = static_cast<uInt>(anUncompSize);
+						}
 
-								// -MAX_WBITS tells zlib to decode raw deflate without zlib/gzip headers
-								if (inflateInit2(&aStrm, -MAX_WBITS) == Z_OK)
-								{
-									int aRet = inflate(&aStrm, Z_FINISH);
-									inflateEnd(&aStrm);
-									anOk = (aRet == Z_STREAM_END || aRet == Z_OK || (aRet == Z_BUF_ERROR && aStrm.total_out == anUncompSize));
-								}
-							}
-
-							if (anOk)
-							{
-								if (isUsersDat)
-								{
-									output.mUsersDat = anUncompressed;
-									output.mHasUsersDat = true;
-								}
-								if (isUser1Dat || (!output.mHasUser1Dat && isAnyUserDat))
-								{
-									output.mUser1Dat = anUncompressed;
-									output.mHasUser1Dat = true;
-								}
-								if (isArchipelagoJson)
-								{
-									output.mArchipelagoJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
-									output.mHasArchipelagoJson = true;
-								}
-								if (isSlotDataJson)
-								{
-									output.mSlotDataJson.assign(reinterpret_cast<const char*>(anUncompressed.data()), anUncompressed.size());
-									output.mHasSlotDataJson = true;
-								}
-							}
+						if (anOk)
+						{
+							if (isUsersDat) { theOutContents.mUsersDat = anUncomp; }
+							if (isUser1Dat || (theOutContents.mUser1Dat.empty() && isAnyUserDat)) { theOutContents.mUser1Dat = anUncomp; }
+							if (isArchipelagoJson) { theOutContents.mArchipelagoJson.assign(reinterpret_cast<char*>(anUncomp.data()), anUncomp.size()); }
+							if (isSlotDataJson) { theOutContents.mSlotDataJson.assign(reinterpret_cast<char*>(anUncomp.data()), anUncomp.size()); }
 						}
 					}
 				}
@@ -292,98 +150,58 @@ namespace Sexy
 			aCurr = aNextEntry;
 		}
 
-		if (!output.mHasUser1Dat)
+		if (theOutContents.mUsersDat.empty())
 		{
-			theOutError = "The file does not contain user save data (user1.dat).";
+			theOutError = "The archive is missing users.dat.";
+			return false;
+		}
+		if (theOutContents.mUser1Dat.empty())
+		{
+			theOutError = "The archive is missing user save data (user1.dat).";
+			return false;
+		}
+		if (theOutContents.mArchipelagoJson.empty())
+		{
+			theOutError = "The archive is missing archipelago.json.";
+			return false;
+		}
+		if (theOutContents.mSlotDataJson.empty())
+		{
+			theOutError = "The archive is missing slot_data.json.";
 			return false;
 		}
 
-		// Parse archipelago.json if present
-		if (output.mHasArchipelagoJson && !output.mArchipelagoJson.empty())
+		// Parse archipelago.json
+		auto j = nlohmann::json::parse(theOutContents.mArchipelagoJson, nullptr, false);
+		if (j.is_object())
 		{
-			ExtractJsonString(output.mArchipelagoJson, "player_name", output.mSlotName);
-			if (output.mSlotName.empty())
-				ExtractJsonString(output.mArchipelagoJson, "slot_name", output.mSlotName);
-			if (output.mSlotName.empty())
-				ExtractJsonString(output.mArchipelagoJson, "slot", output.mSlotName);
-			if (output.mSlotName.empty())
-				ExtractJsonString(output.mArchipelagoJson, "name", output.mSlotName);
+			for (const char* k : { "player_name", "slot_name", "slot", "name" })
+				if (j.contains(k) && j[k].is_string() && !(theOutContents.mSlotName = j[k]).empty()) break;
 
-			ExtractJsonInt(output.mArchipelagoJson, "player", output.mPlayerId);
+			for (const char* k : { "player", "player_id", "id" })
+				if (j.contains(k) && j[k].is_number()) { theOutContents.mPlayerId = j[k]; break; }
 
-			ExtractJsonString(output.mArchipelagoJson, "server", output.mServer);
-			if (output.mServer.empty())
-				ExtractJsonString(output.mArchipelagoJson, "host", output.mServer);
-			if (output.mServer.empty())
-				ExtractJsonString(output.mArchipelagoJson, "url", output.mServer);
-			if (output.mServer.empty())
-				ExtractJsonString(output.mArchipelagoJson, "address", output.mServer);
+			for (const char* k : { "server", "host", "url", "address" })
+				if (j.contains(k) && j[k].is_string() && !(theOutContents.mServer = j[k]).empty()) break;
 
-			ExtractJsonString(output.mArchipelagoJson, "password", output.mPassword);
+			if (j.contains("port") && !theOutContents.mServer.empty() && theOutContents.mServer.find(':') == std::string::npos)
+				theOutContents.mServer += ":" + j["port"].dump();
 
-			ExtractJsonString(output.mArchipelagoJson, "seed_name", output.mSeed);
-			if (output.mSeed.empty())
-				ExtractJsonString(output.mArchipelagoJson, "seed", output.mSeed);
+			theOutContents.mPassword = j.value("password", "");
+
+			for (const char* k : { "seed_name", "seed" })
+				if (j.contains(k) && j[k].is_string() && !(theOutContents.mSeed = j[k]).empty()) break;
 		}
 
-		// Parse slot_data.json if present (e.g. starting_tank_unlock)
-		output.mStartingTank = 1;
-		if (output.mHasSlotDataJson && !output.mSlotDataJson.empty())
-		{
-			std::string aStartingTankStr;
-			if (ExtractJsonString(output.mSlotDataJson, "starting_tank_unlock", aStartingTankStr))
-			{
-				if (aStartingTankStr.find("Tank 2") != std::string::npos)
-					output.mStartingTank = 2;
-				else if (aStartingTankStr.find("Tank 3") != std::string::npos)
-					output.mStartingTank = 3;
-				else if (aStartingTankStr.find("Tank 4") != std::string::npos)
-					output.mStartingTank = 4;
-			}
-		}
+		// Parse slot_data.json
+		auto aSlotJson = nlohmann::json::parse(theOutContents.mSlotDataJson, nullptr, false);
+		std::string aTank = aSlotJson.value("starting_tank_unlock", "");
+		for (int t = 2; t <= 4; ++t)
+			if (aTank.find("Tank " + std::to_string(t)) != std::string::npos || aTank == std::to_string(t))
+				theOutContents.mStartingTank = t;
 
-		// Fallback for slot name from users.dat if not found in archipelago.json
-		if (output.mSlotName.empty() && output.mHasUsersDat && output.mUsersDat.size() >= 8)
-		{
-			const uint8_t* p = output.mUsersDat.data();
-			uint16_t aNameLen = *reinterpret_cast<const uint16_t*>(p + 6);
-			if (aNameLen > 0 && 8 + aNameLen <= output.mUsersDat.size())
-			{
-				output.mSlotName.assign(reinterpret_cast<const char*>(p + 8), aNameLen);
-			}
-		}
-
-		// Fallback for slot name from archive filename (e.g. "P1_Player1_5BNvm3JeQtW6CrcD9ATMbA.apinsani")
-		if (output.mSlotName.empty())
-		{
-			std::string aBase = theZipFilePath;
-			size_t aSlash = aBase.find_last_of("/\\");
-			if (aSlash != std::string::npos)
-				aBase = aBase.substr(aSlash + 1);
-			size_t aDot = aBase.rfind('.');
-			if (aDot != std::string::npos)
-				aBase = aBase.substr(0, aDot);
-
-			if (aBase.size() > 3 && aBase[0] == 'P' && isdigit(static_cast<unsigned char>(aBase[1])))
-			{
-				size_t aFirstUnder = aBase.find('_');
-				size_t aSecondUnder = (aFirstUnder != std::string::npos) ? aBase.find('_', aFirstUnder + 1) : std::string::npos;
-				if (aFirstUnder != std::string::npos && aSecondUnder != std::string::npos && aSecondUnder > aFirstUnder + 1)
-				{
-					output.mSlotName = aBase.substr(aFirstUnder + 1, aSecondUnder - aFirstUnder - 1);
-				}
-			}
-			if (output.mSlotName.empty())
-				output.mSlotName = aBase;
-		}
-
-		// Prefill default server if none was in archipelago.json
-		if (output.mServer.empty())
-		{
-			output.mServer = "archipelago.gg:";
-		}
+		theOutContents.mServer = "archipelago.gg:";
 
 		return true;
 	}
 }
-

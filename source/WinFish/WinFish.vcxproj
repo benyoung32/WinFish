@@ -179,7 +179,9 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)" /Y</Command>
     </ClCompile>
     <ClCompile Include="ArchipelagoDialog.cpp" />
     <ClCompile Include="APGameController.cpp" />
-    <ClCompile Include="APSaveImporter.cpp" />
+    <ClCompile Include="APSaveImporter.cpp">
+      <AdditionalIncludeDirectories>$(SolutionDir)source\apclientpp\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="SlotData.cpp">
       <AdditionalIncludeDirectories>$(SolutionDir)source\apclientpp\json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

@@ -14,11 +14,6 @@ namespace Sexy
 		std::string mArchipelagoJson;
 		std::string mSlotDataJson;
 
-		bool mHasUsersDat;
-		bool mHasUser1Dat;
-		bool mHasArchipelagoJson;
-		bool mHasSlotDataJson;
-
 		std::string mSlotName;
 		std::string mServer;
 		std::string mPassword;
@@ -27,10 +22,6 @@ namespace Sexy
 		int mStartingTank;
 
 		APArchiveContents() :
-			mHasUsersDat(false),
-			mHasUser1Dat(false),
-			mHasArchipelagoJson(false),
-			mHasSlotDataJson(false),
 			mPlayerId(0),
 			mStartingTank(1)
 		{

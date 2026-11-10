@@ -16,7 +16,6 @@ borderless fullscreen
 ~~fix: cyrax unreachable. A boss battle option should be added to the tank select after all 4 tanks have been completed~~ (DONE)
 ~~fix: pet slot items are non-functional. see todos related to the built in 3 pet slot limit.~~ (DONE) 
 
-TODO: integrate new victory conditions 
 TODO: integrate upgrade availibity choice
 TODO: implement aliensanity
 

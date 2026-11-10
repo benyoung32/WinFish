@@ -29,10 +29,6 @@ APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 		mUnlockedPets[i] = false;
 }
 
-APGameController::~APGameController()
-{
-}
-
 void APGameController::Update()
 {
 	// Process non-board specific timer updates if needed
@@ -92,12 +88,6 @@ bool APGameController::IsTankUnlocked(const LevelData& theLevel) const
 	return false;
 }
 
-bool APGameController::IsPetUnlocked(int thePetIndex) const
-{
-	if (thePetIndex >= 0 && thePetIndex < 24)
-		return mUnlockedPets[thePetIndex];
-	return false;
-}
 
 int APGameController::GetPetSlots() const
 {
@@ -149,8 +139,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	case APItem::PET_SLOT:
 		mPetSlots++;
-		if (mApp != NULL && mApp->mCurrentProfile != NULL)
-			mApp->mCurrentProfile->m0xb4 = GetPetSlots();
+		mApp->mCurrentProfile->m0xb4 = GetPetSlots();
 		break;
 
 	// TODO: allow this check to be affected by settings (should weapon upgrades give 2 lvls each or just 1)
@@ -206,9 +195,8 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 	CheckVictoryCondition();
 }
 
-void APGameController::ReportLocation(int64_t theLocationId, const std::string& theLocationName)
+void APGameController::ReportLocation(int64_t theLocationId)
 {
-	(void)theLocationName;
 	if (mApp != NULL)
 	{
 		mApp->CheckArchipelagoLocation(static_cast<int>(theLocationId));
@@ -223,9 +211,9 @@ void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 	// Formula matching APDefinitions.h:
 	// Tank 1 starts at 2 (Tank 1 Complete is 1, then Tank 1-1 Piece 1 is 2)
 	// Each tank block is 17 locations (1 Tank Complete + 15 Egg Pieces + 1 Time Trial Complete)
+	// TODO: make this formula more robust
 	int64_t aLocId = static_cast<int64_t>((theLevel.mTank - 1) * 17 + 2 + (theLevel.mLevel - 1) * 3 + (thePiece - 1));
-	std::string aLocName = StrFormat("Tank %d-%d Egg Piece %d", theLevel.mTank, theLevel.mLevel, thePiece);
-	ReportLocation(aLocId, aLocName);
+	ReportLocation(aLocId);
 }
 
 void APGameController::ReportTankComplete(const LevelData& theLevel)
@@ -233,8 +221,7 @@ void APGameController::ReportTankComplete(const LevelData& theLevel)
 	int aTank = theLevel.mTank;
 	// Tank 1 Complete = 1, Tank 2 = 18, Tank 3 = 35, Tank 4 = 52
 	int64_t aLocId = static_cast<int64_t>(1 + (aTank - 1) * 17);
-	std::string aLocName = StrFormat("Tank %d Complete", aTank);
-	ReportLocation(aLocId, aLocName);
+	ReportLocation(aLocId);
 }
 
 void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
@@ -245,13 +232,12 @@ void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
 
 	// Time Trial 1 = 17, Time Trial 2 = 34, Time Trial 3 = 51, Time Trial 4 = 68
 	int64_t aLocId = static_cast<int64_t>(aTank * 17);
-	std::string aLocName = StrFormat("Time Trial %d Complete", aTank);
-	ReportLocation(aLocId, aLocName);
+	ReportLocation(aLocId);
 }
 
 void APGameController::ReportCyrax()
 {
-	ReportLocation(static_cast<int64_t>(APLocation::CYRAX), "Cyrax");
+	ReportLocation(static_cast<int64_t>(APLocation::CYRAX));
 }
 
 void APGameController::ReportBonusPet(int theBonusPetIndex)
@@ -260,20 +246,7 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 		return;
 
 	int64_t aLocId = static_cast<int64_t>(APLocation::BONUS_PET_1) + theBonusPetIndex;
-	ReportLocation(aLocId, StrFormat("Bonus Pet %d", theBonusPetIndex + 1));
-}
-
-bool APGameController::AreAllTanksCompleted() const
-{
-	if (mBridge == NULL)
-		return false;
-
-	bool aTank1 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_1_COMPLETE));
-	bool aTank2 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_2_COMPLETE));
-	bool aTank3 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_3_COMPLETE));
-	bool aTank4 = mBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_4_COMPLETE));
-
-	return aTank1 && aTank2 && aTank3 && aTank4;
+	ReportLocation(aLocId);
 }
 
 // TODO: rework to match new victory condition work

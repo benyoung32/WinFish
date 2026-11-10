@@ -322,12 +322,6 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 
 bool Sexy::TankScreen::AreAllTanksCompleted() const
 {
-	if (mApp != NULL && mApp->mAPController != NULL)
-		return mApp->mAPController->AreAllTanksCompleted();
-
-	if (mApp == NULL || mApp->mAPBridge == NULL)
-		return false;
-
 	return mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_1_COMPLETE)) &&
 	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_2_COMPLETE)) &&
 	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_3_COMPLETE)) &&
