@@ -2325,9 +2325,13 @@ void Sexy::WinFishApp::CheckArchipelagoLocation(int theLocationId)
 	if (mAPBridge != NULL && mAPBridge->IsLocationChecked(theLocationId))
 		return;
 
+	if (mCurrentProfile->mAPPendingChecks.count(theLocationId) > 0)
+		return;
+
 	// Kept in the outbox until the server confirms it, in case the game saves and closes before then.
 	mCurrentProfile->mAPPendingChecks.insert(theLocationId);
-	mAPBridge->SendChecks({ theLocationId });
+	if (mAPBridge != NULL)
+		mAPBridge->SendChecks({ theLocationId });
 }
 
 void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)

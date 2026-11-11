@@ -2,6 +2,7 @@
 #include "APDefinitions.h"
 #include "WinFishApp.h"
 #include "Board.h"
+#include "Alien.h"
 #include "Fish.h"
 #include "Breeder.h"
 #include "ProfileMgr.h"
@@ -231,22 +232,21 @@ void APGameController::ReportLocation(int64_t theLocationId)
 void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 {
 	if (thePiece < 1 || thePiece > 3)
+	{
 		return;
+	}
 
-	// Formula matching APDefinitions.h:
-	// Tank 1 starts at 2 (Tank 1 Complete is 1, then Tank 1-1 Piece 1 is 2)
-	// Each tank block is 17 locations (1 Tank Complete + 15 Egg Pieces + 1 Time Trial Complete)
-	// TODO: make this formula more robust
-	int64_t aLocId = static_cast<int64_t>((theLevel.mTank - 1) * 17 + 2 + (theLevel.mLevel - 1) * 3 + (thePiece - 1));
-	ReportLocation(aLocId);
+	APLocation aLoc = gEggPieceLocations[theLevel.mTank - 1][theLevel.mLevel - 1][thePiece - 1];
+	ReportLocation(static_cast<int64_t>(aLoc));
 }
 
 void APGameController::ReportTankComplete(const LevelData& theLevel)
 {
 	int aTank = theLevel.mTank;
-	// Tank 1 Complete = 1, Tank 2 = 18, Tank 3 = 35, Tank 4 = 52
-	int64_t aLocId = static_cast<int64_t>(1 + (aTank - 1) * 17);
-	ReportLocation(aLocId);
+	if (aTank < 1 || aTank > 4)
+		return;
+
+	ReportLocation(static_cast<int64_t>(gTankCompleteLocations[aTank - 1]));
 }
 
 void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
@@ -255,9 +255,16 @@ void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
 	if (aTank < 1 || aTank > 4)
 		return;
 
-	// Time Trial 1 = 17, Time Trial 2 = 34, Time Trial 3 = 51, Time Trial 4 = 68
-	int64_t aLocId = static_cast<int64_t>(aTank * 17);
-	ReportLocation(aLocId);
+	ReportLocation(static_cast<int64_t>(gTimeTrialLocations[aTank - 1]));
+}
+
+void APGameController::ReportChallengeComplete(const LevelData& theLevel)
+{
+	int aTank = theLevel.mTank;
+	if (aTank < 1 || aTank > 4)
+		return;
+
+	ReportLocation(static_cast<int64_t>(gChallengeLocations[aTank - 1]));
 }
 
 void APGameController::ReportCyrax()
@@ -270,8 +277,44 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 	if (theBonusPetIndex < 0 || theBonusPetIndex > 3)
 		return;
 
-	int64_t aLocId = static_cast<int64_t>(APLocation::BONUS_PET_1) + theBonusPetIndex;
-	ReportLocation(aLocId);
+	ReportLocation(static_cast<int64_t>(gBonusPetLocations[theBonusPetIndex]));
+}
+
+void APGameController::ReportAlienDefeated(int theAlienType)
+{
+	if (mBridge == NULL || !mBridge->GetSlotData().mAliensanity)
+		return;
+
+	APLocation aLoc = APLocation::NONE;
+	switch (theAlienType)
+	{
+	case ALIEN_WEAK_SYLV:
+	case ALIEN_STRONG_SYLV:
+		aLoc = APLocation::DEFEAT_SYLVESTER;
+		break;
+	case ALIEN_BALROG:
+		aLoc = APLocation::DEFEAT_BALROG;
+		break;
+	case ALIEN_GUS:
+		aLoc = APLocation::DEFEAT_GUS;
+		break;
+	case ALIEN_DESTRUCTOR:
+		aLoc = APLocation::DEFEAT_DESTRUCTOR;
+		break;
+	case ALIEN_PSYCHOSQUID:
+		aLoc = APLocation::DEFEAT_PSYCHOSQUID;
+		break;
+	case ALIEN_ULYSEES:
+		aLoc = APLocation::DEFEAT_ULYSSES;
+		break;
+	case ALIEN_BILATERUS:
+		aLoc = APLocation::DEFEAT_BILATERUS;
+		break;
+	default:
+		return;
+	}
+
+	ReportLocation(static_cast<int>(aLoc));
 }
 
 
@@ -391,7 +434,7 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
-	if (theBoard == NULL)
+	if (theBoard == NULL || (theBoard->mApp != NULL && theBoard->mApp->IsBonusLevel()))
 		return;
 	
 
@@ -423,8 +466,8 @@ void APGameController::UpdateBoard(Board* theBoard)
 		mNotificationCooldown = 180; // ~3 seconds at 60fps
 	}
 	// TODO: traps should be dispensed according to some timer or cooldown
-	// Service traps during active gameplay
-	if (!mPendingTraps.empty())
+	// Service traps during active gameplay (not during bonus rounds)
+	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound)
 	{
 		APItem trap = mPendingTraps.front();
 		mPendingTraps.pop_front();

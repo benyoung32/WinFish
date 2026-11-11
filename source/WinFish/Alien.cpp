@@ -2,6 +2,7 @@
 
 #include "Alien.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "ProfileMgr.h"
 #include "Missle.h"
@@ -1284,6 +1285,11 @@ void Sexy::Alien::Remove(bool removeShadow)
 	mApp->mBoard->Unk12();
 	if (removeShadow)
 	{
+		if (mApp != NULL && mApp->mAPController != NULL)
+		{
+			mApp->mAPController->ReportAlienDefeated(mAlienType);
+		}
+
 		if (mAlienType == ALIEN_GUS)
 		{
 			for (int i = (mApp->mSeed->Next() & 1) + 2; i > 0; i--)

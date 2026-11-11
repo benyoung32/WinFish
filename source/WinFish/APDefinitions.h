@@ -1,4 +1,4 @@
-﻿#ifndef __APDEFINITIONS_H__
+#ifndef __APDEFINITIONS_H__
 #define __APDEFINITIONS_H__
 
 // ===========================================================================
@@ -133,6 +133,13 @@ namespace Sexy
 		BONUS_PET_2 = 75LL, // Bonus Pet 2
 		BONUS_PET_3 = 76LL, // Bonus Pet 3
 		BONUS_PET_4 = 77LL, // Bonus Pet 4
+		DEFEAT_SYLVESTER = 78LL, // Defeat Sylvester
+		DEFEAT_BALROG = 79LL, // Defeat Balrog
+		DEFEAT_GUS = 80LL, // Defeat Gus
+		DEFEAT_DESTRUCTOR = 81LL, // Defeat Destructor
+		DEFEAT_PSYCHOSQUID = 82LL, // Defeat Psychosquid
+		DEFEAT_ULYSSES = 83LL, // Defeat Ulysses
+		DEFEAT_BILATERUS = 84LL, // Defeat Bilaterus
 	};
 
 	// -----------------------------------------------------------------------
@@ -252,6 +259,13 @@ namespace Sexy
 	static const int64_t AP_LOCATION_BONUS_PET_2 = 75LL;
 	static const int64_t AP_LOCATION_BONUS_PET_3 = 76LL;
 	static const int64_t AP_LOCATION_BONUS_PET_4 = 77LL;
+	static const int64_t AP_LOCATION_DEFEAT_SYLVESTER = 78LL;
+	static const int64_t AP_LOCATION_DEFEAT_BALROG = 79LL;
+	static const int64_t AP_LOCATION_DEFEAT_GUS = 80LL;
+	static const int64_t AP_LOCATION_DEFEAT_DESTRUCTOR = 81LL;
+	static const int64_t AP_LOCATION_DEFEAT_PSYCHOSQUID = 82LL;
+	static const int64_t AP_LOCATION_DEFEAT_ULYSSES = 83LL;
+	static const int64_t AP_LOCATION_DEFEAT_BILATERUS = 84LL;
 
 	// -----------------------------------------------------------------------
 	// Helper String Conversion Functions
@@ -386,6 +400,13 @@ namespace Sexy
 		case APLocation::BONUS_PET_2: return "Bonus Pet 2";
 		case APLocation::BONUS_PET_3: return "Bonus Pet 3";
 		case APLocation::BONUS_PET_4: return "Bonus Pet 4";
+		case APLocation::DEFEAT_SYLVESTER: return "Defeat Sylvester";
+		case APLocation::DEFEAT_BALROG: return "Defeat Balrog";
+		case APLocation::DEFEAT_GUS: return "Defeat Gus";
+		case APLocation::DEFEAT_DESTRUCTOR: return "Defeat Destructor";
+		case APLocation::DEFEAT_PSYCHOSQUID: return "Defeat Psychosquid";
+		case APLocation::DEFEAT_ULYSSES: return "Defeat Ulysses";
+		case APLocation::DEFEAT_BILATERUS: return "Defeat Bilaterus";
 		default: return "Unknown Location";
 		}
 	}

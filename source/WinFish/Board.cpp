@@ -3374,6 +3374,8 @@ void Sexy::Board::HandleBuyEgg()
 	{
 		if (mTank > 0 && mTank < 5)
 			mApp->mCurrentProfile->m0x78[mTank-1] = true;
+		if (mApp->mAPController != NULL)
+			mApp->mAPController->ReportChallengeComplete(LevelData(mTank, 1));
 		mApp->mHighScoreMgr->RecordChallengeHighScore(mTank, mApp->mCurrentProfile, m0x3fc);
 		mApp->SwitchToBonusScreen();
 		return;
@@ -3962,9 +3964,12 @@ void Sexy::Board::SetBackground()
 
 void Sexy::Board::DeterminePricesAndSlots()
 {
-	LevelConfig aCfg;
-	LevelSettingsManager::GetDefaultConfig(LevelData(mTank, mLevel), mApp->mRelaxMode, aCfg);
-	ApplyLevelConfig(aCfg);
+	if (LevelData::IsValid(mTank, mLevel))
+	{
+		LevelConfig aCfg;
+		LevelSettingsManager::GetDefaultConfig(LevelData(mTank, mLevel), mApp->mRelaxMode, aCfg);
+		ApplyLevelConfig(aCfg);
+	}
 	SetBackground();
 }
 

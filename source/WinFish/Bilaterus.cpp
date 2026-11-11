@@ -4,6 +4,7 @@
 #include "BilaterusHead.h"
 #include "BilaterusBone.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "Warp.h"
 #include "Missle.h"
@@ -319,6 +320,11 @@ void Sexy::Bilaterus::Remove(bool flag)
 	mApp->mBoard->Unk12();
 	if (flag)
 	{
+		if (mApp != NULL && mApp->mAPController != NULL)
+		{
+			mApp->mAPController->ReportAlienDefeated(ALIEN_BILATERUS);
+		}
+
 		for (int i = (mApp->mSeed->Next() & 1) + 2; i > 0; i--)
 		{
 			mApp->mBoard->SpawnBubble(mApp->mSeed->Next() % 40 + 10 + mX, mApp->mSeed->Next() % 40 + 10 + mY);

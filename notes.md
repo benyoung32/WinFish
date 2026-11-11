@@ -16,9 +16,9 @@ borderless fullscreen
 ~~fix: cyrax unreachable. A boss battle option should be added to the tank select after all 4 tanks have been completed~~ (DONE)
 ~~fix: pet slot items are non-functional. see todos related to the built in 3 pet slot limit.~~ (DONE) 
 
-TODO: implement aliensanity
+~~TODO: implement aliensanity~~ (DONE)
 TODO: rework end of level screen 
-TODO: time trial and challenge mode send checks (somehow timetrial 3 was sent)
+TODO: time trial and challenge mode send checks
 
 ## INVESTIGATE:
 
