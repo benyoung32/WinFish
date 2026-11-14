@@ -779,7 +779,7 @@ void Board::Update()
 			mShouldSave = false;
 			Unk04();
 			mApp->mHighScoreMgr->RecordTimeTrialHighScore(mTank, mApp->mCurrentProfile, mMoney);
-			if (mApp->mAPController != NULL && LevelData::IsValid(mTank, 1))
+			if (mApp->mAPController != NULL  && mMoney >= TIME_TRIAL_GOALS[mTank-1])
 				mApp->mAPController->ReportTimeTrialComplete(LevelData(mTank, 1));
 			mApp->DoTimesUpDialog();
 			return;

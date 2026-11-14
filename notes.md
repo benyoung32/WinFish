@@ -32,7 +32,7 @@ challenge mode
 alien-randomizer: each attack wave contains random enemies
 alien-difficulty: how many aliens each wave has
 bomb-trap: spawn 5-10 of shrapnels bombs
-death link? the death link could be triggered when 'n' number of fish die. a received death link should kill all fish in the tank (and not trigger additional death links)
+death link? the death link could be triggered when 'n' number of fish die. a received death link should kill all fish in the tank (and not trigger additional death links). fish killed by pets like gash and amp should not count towards the death link. 
 
 create a AP status screen that lists the total received items (pets 10/20, etc. etc.) 
     bonus money

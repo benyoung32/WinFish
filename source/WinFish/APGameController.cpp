@@ -39,6 +39,9 @@ void APGameController::Update()
 	if (mNotificationCooldown > 0)
 		mNotificationCooldown--;
 
+	if (mTrapCooldown > 0)
+		mTrapCooldown--;
+
 	if (mBridge != NULL)
 	{
 		std::vector<APSentItem> aSentItems;
@@ -273,6 +276,7 @@ void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
 		return;
 
 	ReportLocation(static_cast<int64_t>(gTimeTrialLocations[aTank - 1]));
+	CheckVictoryCondition();
 }
 
 void APGameController::ReportChallengeComplete(const LevelData& theLevel)
@@ -282,11 +286,13 @@ void APGameController::ReportChallengeComplete(const LevelData& theLevel)
 		return;
 
 	ReportLocation(static_cast<int64_t>(gChallengeLocations[aTank - 1]));
+	CheckVictoryCondition();
 }
 
 void APGameController::ReportCyrax()
 {
 	ReportLocation(static_cast<int64_t>(APLocation::CYRAX));
+	CheckVictoryCondition();
 }
 
 void APGameController::ReportBonusPet(int theBonusPetIndex)
@@ -333,7 +339,6 @@ void APGameController::ReportAlienDefeated(int theAlienType)
 
 	mApp->CheckArchipelagoLocation(static_cast<int>(aLoc));
 }
-
 
 bool APGameController::CheckVictoryCondition()
 {
@@ -467,6 +472,9 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
+	// set trap cooldown to 60-180 seconds (1-3 minutes)
+	mTrapCooldown = (rand() % 60 + 120) * 60;
+
 	if (theBoard == NULL || (theBoard->mApp != NULL && theBoard->mApp->IsBonusLevel()))
 		return;
 	
@@ -487,17 +495,18 @@ void APGameController::UpdateBoard(Board* theBoard)
 		return;
 
 	// Service notification queue: push notifications as long as the board's 3 notification slots have any room, waiting otherwise
-	while (!mNotificationQueue.empty() && theBoard->HasNotificationRoom())
+	if (!mNotificationQueue.empty() && theBoard->HasNotificationRoom() && mNotificationCooldown == 0)
 	{
 		std::string aMsg = mNotificationQueue.front();
 		mNotificationQueue.pop_front();
 
 		// Show non-blocking green notification on board
 		theBoard->ShowNotification(aMsg, false, -1);
+		mNotificationCooldown += 30;
 	}
 	// TODO: traps should be dispensed according to some timer or cooldown
 	// Service traps during active gameplay (not during bonus rounds)
-	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound)
+	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound && mTrapCooldown == 0)
 	{
 		APItem trap = mPendingTraps.front();
 		mPendingTraps.pop_front();

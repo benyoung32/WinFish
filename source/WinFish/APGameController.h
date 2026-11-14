@@ -83,6 +83,13 @@ namespace Sexy
 		APLocation::BONUS_PET_4
 	};
 
+	static const int TIME_TRIAL_GOALS[4] = {
+		5000,
+		10000,
+		15000,
+		20000
+	};
+
 	class APGameController
 	{
 	public:
@@ -147,6 +154,7 @@ namespace Sexy
 		std::deque<APItem>			mPendingTraps;
 		std::deque<std::string>		mNotificationQueue;
 		int							mNotificationCooldown; // ticks between ShowText popups
+		int 						mTrapCooldown;
 
 		// History of received items
 		std::vector<APReceivedItem>	mReceivedHistory;
