@@ -164,6 +164,8 @@ Board::Board(WinFishApp* theApp)
 	mMenuButtons[SLOT_STARCATCHER] = NULL;
 	mMenuButton = NULL;
 	mMessageWidget = NULL;
+	for (int i = 0; i < 3; i++)
+		mNotificationWidgets[i] = NULL;
 	mMenuButtons[SLOT_GRUBBER] = NULL;
 	mMenuButtons[SLOT_GEKKO] = NULL;
 	mMenuButtons[SLOT_ULTRA] = NULL;
@@ -210,6 +212,15 @@ Board::Board(WinFishApp* theApp)
 	mMoneyLabel->mLabelColor = aMoneyLabelColor;
 
 	mMessageWidget = new MessageWidget(mApp, "");
+	for (int i = 0; i < 3; i++)
+	{
+		mNotificationWidgets[i] = new MessageWidget(mApp, "");
+		mNotificationWidgets[i]->mMessageTimer = 0;
+		mNotificationWidgets[i]->mX = 20;
+		mNotificationWidgets[i]->mWidth = 600;
+		int aHeight = mNotificationWidgets[i]->mHeight;
+		mNotificationWidgets[i]->mY = 445 - (3 - i) * aHeight;
+	}
 
 	mShouldSave = false;
 	mTank = 0;
@@ -245,6 +256,11 @@ Board::~Board()
 		delete mMenuButton;
 	if (mMessageWidget)
 		delete mMessageWidget;
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i])
+			delete mNotificationWidgets[i];
+	}
 
 	delete mDeadFishList;
 	delete mDeadAlienList;
@@ -314,6 +330,51 @@ void Board::ShowText(std::string aText, bool aFlag, int anID)
 	}
 	mMessageWidget->mColor1 = Color(0xb4, 0xfa, 0x5a);
 	mMessageWidget->mColor2 = Color(0, 0x4b, 0);
+}
+
+int Board::GetActiveNotificationCount() const
+{
+	int aCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i] != NULL && mNotificationWidgets[i]->mMessageTimer > 0)
+			aCount++;
+	}
+	return aCount;
+}
+
+bool Board::HasNotificationRoom() const
+{
+	return GetActiveNotificationCount() < 3;
+}
+
+bool Board::ShowNotification(std::string aText, bool aFlag, int anID)
+{
+	if (!HasNotificationRoom())
+		return false;
+
+	// Shift existing active notifications up
+	for (int i = 0; i < 2; i++)
+	{
+		if (mNotificationWidgets[i] && mNotificationWidgets[i + 1])
+		{
+			mNotificationWidgets[i]->mMessage = mNotificationWidgets[i + 1]->mMessage;
+			mNotificationWidgets[i]->mMessageTimer = mNotificationWidgets[i + 1]->mMessageTimer;
+			mNotificationWidgets[i]->mMessageId = mNotificationWidgets[i + 1]->mMessageId;
+		}
+	}
+
+	// Insert new message into bottom slot (index 2)
+	if (mNotificationWidgets[2])
+	{
+		mNotificationWidgets[2]->mMessageId = anID;
+		mNotificationWidgets[2]->mMessage = aText;
+		mNotificationWidgets[2]->mMessageTimer = 120;
+		mNotificationWidgets[2]->mColor1 = Color(0xb4, 0xfa, 0x5a);
+		mNotificationWidgets[2]->mColor2 = Color(0, 0x4b, 0);
+	}
+
+	return true;
 }
 
 bool Sexy::Board::AliensInTank()
@@ -591,6 +652,11 @@ void Board::RemovedFromManager(WidgetManager* theWidgetManager)
 	mMoneyLabel = 0;
 	RemoveWidgetHelper(mMessageWidget);
 	mMessageWidget = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		RemoveWidgetHelper(mNotificationWidgets[i]);
+		mNotificationWidgets[i] = 0;
+	}
 	RemoveWidgetHelper(mMenuButtons[SLOT_GRUBBER]);
 	mMenuButtons[SLOT_GRUBBER] = 0;
 	RemoveWidgetHelper(mMenuButtons[SLOT_GEKKO]);
@@ -2151,6 +2217,11 @@ void Board::SortGameObjects()
 
 	if(mMessageWidget)
 		mWidgetManager->BringToFront(mMessageWidget);
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i])
+			mWidgetManager->BringToFront(mNotificationWidgets[i]);
+	}
 	mWidgetManager->BringToFront(mBoardOverlay2);
 
 	std::list<Dialog*>& aDiaList = mApp->mDialogList;
@@ -2676,6 +2747,11 @@ bool Sexy::Board::LoadGame(SexyString theSavePath)
 			mWidgetManager->AddWidget(mMenuButton);
 			mWidgetManager->AddWidget(mMoneyLabel);
 			mWidgetManager->AddWidget(mMessageWidget);
+			for (int i = 0; i < 3; i++)
+			{
+				if (mNotificationWidgets[i])
+					mWidgetManager->AddWidget(mNotificationWidgets[i]);
+			}
 			UpdateMoneyLabelText();
 			ApplyShadowsIf3D();
 			mApp->ClearUpdateBacklog();
@@ -2699,6 +2775,10 @@ bool Sexy::Board::LoadGame(SexyString theSavePath)
 				Unk14(m0x2a6);
 				DetermineAlienSpawnCoordsVT();
 				DoVirtualTankDialog();
+			}
+			else if (mApp->mAPController != NULL)
+			{
+				mApp->mAPController->ApplyUpgradeAvailabilities(this);
 			}
 			return true;
 		}
@@ -2790,6 +2870,11 @@ void Sexy::Board::InitLevel()
 	mWidgetManager->AddWidget(mMenuButton);
 	mWidgetManager->AddWidget(mMoneyLabel);
 	mWidgetManager->AddWidget(mMessageWidget);
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i])
+			mWidgetManager->AddWidget(mNotificationWidgets[i]);
+	}
 	UpdateMoneyLabelText();
 	memset(mMessageShown, 0, 54);
 	DeterminePricesAndSlots();
@@ -2820,6 +2905,11 @@ void Sexy::Board::InitLevel()
 void Sexy::Board::InitBonusLevel()
 {
 	mMessageWidget->mMessageTimer = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i])
+			mNotificationWidgets[i]->mMessageTimer = 0;
+	}
 	m0x2a8 = mGameUpdateCnt;
 	mAlienExpect = ALIEN_NONE;
 	mPause = false;
@@ -4152,6 +4242,17 @@ void Sexy::Board::MakeVirtualTankButtons()
 		mMessageWidget->mWidth = 600;
 		if (mApp->IsScreenSaver())
 			mMessageWidget->mY = 60;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (mNotificationWidgets[i])
+		{
+			mNotificationWidgets[i]->mX = 20;
+			mNotificationWidgets[i]->mWidth = 600;
+			if (mApp->IsScreenSaver())
+				mNotificationWidgets[i]->mY = 60 + i * mNotificationWidgets[i]->mHeight;
+		}
 	}
 
 	mMenuButtons[SLOT_GRUBBER] = new MenuButtonWidget(mWidgetManager, 10, this, "Visit Store");

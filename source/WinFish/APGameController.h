@@ -122,7 +122,7 @@ namespace Sexy
 		void						ApplyLevelStart(Board* theBoard);
 		void						UpdateBoard(Board* theBoard);
 
-		// Notification Queue (displayed via Board::ShowText)
+		// Notification Queue (displayed via Board::ShowNotification)
 		void						QueueNotification(const std::string& theMessage);
 
 		// Persistence / Profile Synchronization (Option C)
@@ -139,6 +139,7 @@ namespace Sexy
 		int							mPetSlots;
 		int							mWeaponLevel;
 		int							mStartingMoneyBonus;
+		int							mUpgradeAvailability;
 		bool						mUnlockedTanks[5];
 		bool						mUnlockedPets[24];
 

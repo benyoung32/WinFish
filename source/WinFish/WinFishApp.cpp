@@ -1160,10 +1160,9 @@ void Sexy::WinFishApp::Shutdown()
 {
 	if (mShutdown)
 		return;
-
+	SaveCurrentUserData();
 	if (mBoard != NULL)
 	{
-		SaveCurrentUserData();
 		RemoveBoard();
 	}
 
@@ -1988,8 +1987,7 @@ void Sexy::WinFishApp::RestartLevel()
 	SexyString aSavePath = mCurrentProfile->GetSaveGameFilePath(mGameMode, mCurrentProfile->mId);
 	EraseFile(aSavePath);
 	StopMusic();
-	PlayMusic(2, 0);
-	SwitchToTankScreen();
+	SwitchToBoard(false, true);
 }
 
 void Sexy::WinFishApp::RemoveGameSelector()

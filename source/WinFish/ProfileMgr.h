@@ -63,6 +63,7 @@ namespace Sexy
 		int mAPStartingMoneyBonus;
 		bool mAPUnlockedTanks[4];
 		int mAPTankLevels[4];
+		int mAPUpgradeAvailability;
 
 	public:
 		UserProfile();

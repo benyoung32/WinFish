@@ -7,6 +7,8 @@
 #include "Breeder.h"
 #include "ProfileMgr.h"
 #include "SlotData.h"
+#include "MenuButtonWidget.h"
+#include <SexyAppFramework/WidgetManager.h>
 #include <SexyAppFramework/Debug.h>
 
 using namespace Sexy;
@@ -22,6 +24,7 @@ APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 	mPetSlots(0),
 	mWeaponLevel(0),
 	mStartingMoneyBonus(0),
+	mUpgradeAvailability(0),
 	mNotificationCooldown(0)
 {
 	for (int i = 0; i < 5; i++)
@@ -49,8 +52,21 @@ void APGameController::Update()
 
 void APGameController::OnConnected(const std::string& theSlot, const std::string& theSeed)
 {
+	if (mBridge != NULL)
+		mUpgradeAvailability = mBridge->GetSlotData().mUpgradeAvailability;
+
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
+	{
 		mApp->mCurrentProfile->m0xb4 = GetPetSlots();
+		mApp->mCurrentProfile->mAPUpgradeAvailability = mUpgradeAvailability;
+		mApp->SaveCurrentUserData();
+	}
+
+	if (mApp != NULL && mApp->mBoard != NULL)
+	{
+		ApplyUpgradeAvailabilities(mApp->mBoard);
+	}
+
 	QueueNotification("Connected to Archipelago!");
 }
 
@@ -66,6 +82,7 @@ void APGameController::ResetSession()
 	mPetSlots = 0;
 	mWeaponLevel = 0;
 	mStartingMoneyBonus = 0;
+	mUpgradeAvailability = 0;
 	for (int i = 0; i < 5; i++)
 		mUnlockedTanks[i] = false;
 	for (int i = 0; i < 24; i++)
@@ -122,7 +139,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
 			mApp->mBoard->mMaxFoodQuality = mFoodQuality;
-			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			int aUpgradeAvail = mUpgradeAvailability;
 			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
 			{
 				if (gFoodType < mFoodQuality)
@@ -142,7 +159,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		if (mApp != NULL && mApp->mBoard != NULL)
 		{
 			mApp->mBoard->mMaxFoodLimit = 1 + mFoodQuantity;
-			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			int aUpgradeAvail = mUpgradeAvailability;
 			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
 			{
 				if (gFoodLimit < (1 + mFoodQuantity))
@@ -170,7 +187,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 			if (aLaser > 12)
 				aLaser = 12;
 			mApp->mBoard->mMaxWeaponUpgrade = aLaser;
-			int aUpgradeAvail = (mBridge != NULL) ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT;
+			int aUpgradeAvail = mUpgradeAvailability;
 			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT || mApp->mBoard->mTank == 5)
 			{
 				mApp->mBoard->m0x3e4 = aLaser;
@@ -218,15 +235,15 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	// Persist updated controller state to the profile
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
+	{
 		SaveToProfile(mApp->mCurrentProfile);
+		mApp->SaveCurrentUserData();
+	}
 }
 
 void APGameController::ReportLocation(int64_t theLocationId)
 {
-	if (mApp != NULL)
-	{
-		mApp->CheckArchipelagoLocation(static_cast<int>(theLocationId));
-	}
+	mApp->CheckArchipelagoLocation(static_cast<int>(theLocationId));
 }
 
 void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
@@ -314,7 +331,7 @@ void APGameController::ReportAlienDefeated(int theAlienType)
 		return;
 	}
 
-	ReportLocation(static_cast<int>(aLoc));
+	mApp->CheckArchipelagoLocation(static_cast<int>(aLoc));
 }
 
 
@@ -357,7 +374,7 @@ bool APGameController::CheckVictoryCondition()
 
 void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 {
-	if (theBoard == NULL || mBridge == NULL)
+	if (theBoard == NULL)
 		return;
 
 	// Set max upgrade limits based on items received from Archipelago
@@ -415,7 +432,14 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 		if (theBoard->mSlotNumber[SLOT_FOODLIMIT] > -1)
 			theBoard->mSlotPrices[SLOT_FOODLIMIT] = 0;
 		if (theBoard->mSlotNumber[SLOT_FOODLVL] > -1)
-			theBoard->mSlotPrices[SLOT_FOODLVL] = 0;					
+			theBoard->mSlotPrices[SLOT_FOODLVL] = 0;
+
+		if (theBoard->mSlotUnlocked[SLOT_WEAPON])
+			theBoard->MenuButtonSetupNoVT(SLOT_WEAPON, false);
+		if (theBoard->mSlotUnlocked[SLOT_FOODLIMIT])
+			theBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, false);
+		if (theBoard->mSlotUnlocked[SLOT_FOODLVL])
+			theBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, false);
 		break;
 		
 	case UPGRADE_AVAILABILITY_SHOP_BUY:
@@ -428,8 +452,17 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 			theBoard->m0x3e4 = aLaser;
 		}
 		// Normal prices from LevelConfig are kept
+		if (theBoard->mSlotUnlocked[SLOT_WEAPON])
+			theBoard->MenuButtonSetupNoVT(SLOT_WEAPON, false);
+		if (theBoard->mSlotUnlocked[SLOT_FOODLIMIT])
+			theBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, false);
+		if (theBoard->mSlotUnlocked[SLOT_FOODLVL])
+			theBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, false);
 		break;
 	}
+
+	if (theBoard->mWidgetManager != nullptr)
+		theBoard->mWidgetManager->MarkAllDirty();
 }
 
 void APGameController::ApplyLevelStart(Board* theBoard)
@@ -453,17 +486,14 @@ void APGameController::UpdateBoard(Board* theBoard)
 	if (theBoard == NULL)
 		return;
 
-	// Service notification queue via non-blocking ShowText
-	if (mNotificationCooldown <= 0 && !mNotificationQueue.empty())
+	// Service notification queue: push notifications as long as the board's 3 notification slots have any room, waiting otherwise
+	while (!mNotificationQueue.empty() && theBoard->HasNotificationRoom())
 	{
 		std::string aMsg = mNotificationQueue.front();
 		mNotificationQueue.pop_front();
 
 		// Show non-blocking green notification on board
-		// TODO: allow multiple notifications to play at once (3)
-		// would require reworking the show text function
-		theBoard->ShowText(aMsg, false, -1);
-		mNotificationCooldown = 180; // ~3 seconds at 60fps
+		theBoard->ShowNotification(aMsg, false, -1);
 	}
 	// TODO: traps should be dispensed according to some timer or cooldown
 	// Service traps during active gameplay (not during bonus rounds)
@@ -481,7 +511,7 @@ void APGameController::UpdateBoard(Board* theBoard)
 		else if (trap == APItem::TRAP_FAMINE)
 		{
 			// TODO: check that newHunger is the correct value. fish die at -500
-			int newHunger = -1;
+			int newHunger = 50;
 			theBoard->ShowText("FAMINE TRAP ACTIVATED!", true, -1);
 			if (theBoard->mFishList != NULL)
 			{
@@ -525,6 +555,7 @@ void APGameController::LoadFromProfile(UserProfile* theProfile)
 	theProfile->m0xb4 = GetPetSlots();
 	mWeaponLevel = theProfile->mAPWeaponLevel;
 	mStartingMoneyBonus = theProfile->mAPStartingMoneyBonus;
+	mUpgradeAvailability = theProfile->mAPUpgradeAvailability;
 
 	for (int i = 0; i < 4; i++)
 		mUnlockedTanks[i + 1] = theProfile->mAPUnlockedTanks[i];
@@ -544,6 +575,7 @@ void APGameController::SaveToProfile(UserProfile* theProfile)
 	theProfile->m0xb4 = GetPetSlots();
 	theProfile->mAPWeaponLevel = mWeaponLevel;
 	theProfile->mAPStartingMoneyBonus = mStartingMoneyBonus;
+	theProfile->mAPUpgradeAvailability = mUpgradeAvailability;
 
 	for (int i = 0; i < 4; i++)
 		theProfile->mAPUnlockedTanks[i] = mUnlockedTanks[i + 1];

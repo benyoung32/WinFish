@@ -471,6 +471,7 @@ void Sexy::UserProfile::Init()
     mAPPetSlots = 0;
     mAPWeaponLevel = 0;
     mAPStartingMoneyBonus = 0;
+    mAPUpgradeAvailability = 0;
     for (int i = 0; i < 4; i++)
     {
         mAPUnlockedTanks[i] = false;
@@ -521,7 +522,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    uint aVer = 0x80000003;
+    uint aVer = 0x80000004;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -628,6 +629,11 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     {
         for (int i = 0; i < 4; i++)
             theDataSync.SyncLong(mAPTankLevels[i]);
+    }
+
+    if (aVer >= 0x80000004)
+    {
+        theDataSync.SyncLong(mAPUpgradeAvailability);
     }
 
     if (theReader)

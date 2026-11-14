@@ -141,6 +141,7 @@ namespace Sexy
 		Alien*								mCyraxPtr;
 		ButtonWidget*						mMenuButton;
 		MessageWidget*						mMessageWidget;
+		MessageWidget*						mNotificationWidgets[3];
 		BubbleMgr*							mBubbleMgr;
 		CheatCode*							mCheatCodes[8];
 		StarField*							mStarField;
@@ -268,6 +269,9 @@ namespace Sexy
 
 		bool					IsFirstLevel();
 		void					ShowText(std::string aText, bool aFlag, int anID);
+		bool					ShowNotification(std::string aText, bool aFlag = false, int anID = -1);
+		bool					HasNotificationRoom() const;
+		int						GetActiveNotificationCount() const;
 		bool					AliensInTank();
 		bool					RemoveGameObjectFromLists(GameObject* theObject, bool aFlag);
 		void					SpawnBubble(int theX, int theY);
