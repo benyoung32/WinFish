@@ -463,6 +463,7 @@ void Sexy::UserProfile::Init()
     mAPServer.clear();
     mAPSlot.clear();
     mAPPassword.clear();
+    mAPSlotData.clear();
     mAPSeed.clear();
     mAPItemIndex = 0;
     mAPPendingChecks.clear();
@@ -522,7 +523,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    uint aVer = 0x80000004;
+    uint aVer = 0x80000005;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -634,6 +635,11 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (aVer >= 0x80000004)
     {
         theDataSync.SyncLong(mAPUpgradeAvailability);
+    }
+
+    if (aVer >= 0x80000005)
+    {
+        theDataSync.SyncString(mAPSlotData);
     }
 
     if (theReader)

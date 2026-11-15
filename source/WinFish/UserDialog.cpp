@@ -35,7 +35,6 @@ Sexy::UserDialog::UserDialog(WinFishApp* theApp, bool transferShells)
 
 	mRenameButton = MakeDialogButton(0, this, "Edit", FONT_JUNGLEFEVER12OUTLINE); // edits the connection
 	mDeleteButton = MakeDialogButton(1, this, "Delete", FONT_JUNGLEFEVER12OUTLINE);
-	mImportButton = MakeDialogButton(2, this, "Import", FONT_JUNGLEFEVER12OUTLINE);
 	mEditWidget = MakeEditWidget(0, this);
 	mEditWidget->SetText("", true);
 	mEditWidget->mCursorPos = mEditWidget->mString.size();
@@ -49,7 +48,6 @@ Sexy::UserDialog::UserDialog(WinFishApp* theApp, bool transferShells)
 	{
 		mRenameButton->SetVisible(false);
 		mDeleteButton->SetVisible(false);
-		mImportButton->SetVisible(false);
 	}
 }
 
@@ -93,7 +91,6 @@ Sexy::UserDialog::~UserDialog()
 	delete mScrollbarWidget;
 	delete mRenameButton;
 	delete mDeleteButton;
-	delete mImportButton;
 	delete mEditWidget;
 }
 
@@ -122,7 +119,6 @@ void Sexy::UserDialog::AddedToManager(WidgetManager* theWidgetManager)
 	theWidgetManager->AddWidget(mScrollbarWidget);
 	theWidgetManager->AddWidget(mDeleteButton);
 	theWidgetManager->AddWidget(mRenameButton);
-	theWidgetManager->AddWidget(mImportButton);
 	theWidgetManager->AddWidget(mEditWidget);
 	if (mTransferShells)
 		theWidgetManager->SetFocus(mEditWidget);
@@ -135,7 +131,6 @@ void Sexy::UserDialog::RemovedFromManager(WidgetManager* theWidgetManager)
 	theWidgetManager->RemoveWidget(mScrollbarWidget);
 	theWidgetManager->RemoveWidget(mDeleteButton);
 	theWidgetManager->RemoveWidget(mRenameButton);
-	theWidgetManager->RemoveWidget(mImportButton);
 	theWidgetManager->RemoveWidget(mEditWidget);
 }
 
@@ -160,11 +155,10 @@ void Sexy::UserDialog::Resize(int theX, int theY, int theWidth, int theHeight)
 		int aRowY = mYesButton->mY - mYesButton->mHeight - 6;
 		int aTotalW = (mNoButton->mX + mNoButton->mWidth) - aRowX;
 		int aSpacing = 8;
-		int aBtnW = (aTotalW - 2 * aSpacing) / 3;
+		int aBtnW = (aTotalW - aSpacing) / 2;
 
 		mRenameButton->Resize(aRowX, aRowY, aBtnW, mYesButton->mHeight);
 		mDeleteButton->Resize(aRowX + aBtnW + aSpacing, aRowY, aBtnW, mYesButton->mHeight);
-		mImportButton->Resize(aRowX + 2 * (aBtnW + aSpacing), aRowY, aBtnW, mYesButton->mHeight);
 	}
 	mEditWidget->Layout(464, mYesButton, aXPos + 180, -10, aWidth - 190, 24);
 }
@@ -180,12 +174,6 @@ void Sexy::UserDialog::ButtonPress(int theId)
 
 void Sexy::UserDialog::ButtonDepress(int theId)
 {
-	if (theId == 2)
-	{
-		mApp->PromptImportAPSave();
-		return;
-	}
-
 	SexyString aStr = GetSelectedUserName();
 
 	if (aStr.size() > 0)

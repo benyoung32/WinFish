@@ -10,19 +10,23 @@ borderless fullscreen
 
 ## TODO:
 
-~~TODO: rework end of level screen. replace the image of the pet with archibald from the archipelago folder. the text should say found an Archipelago Item!~~ (DONE)
-TODO: remove the need to import files. get the slotdata from the connection packet directly.
+TODO: integrate death link. there are three new fields to add to slot data:
+            "death_link": bool(self.options.death_link.value),
+            "death_link_amnesty": int(self.options.death_link_amnesty.value),
+            "death_link_effect": int(self.options.death_link_effect.value),
 
+TODO: create some sort of UI element that displays if trap queue has contents. could be in faint text at the bottom
+
+TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines. 
+
+TODO: edit or display archibald such that the sprite grows as more egg pieces are purchased 
 ## INVESTIGATE:
 
+TODO: instead of bonus shells on their own being a bonus item, there could be a bonus minigame ticket option that allows playing a round of the bonus minigame for shells. the timer could be random or even progressively increase.
+
+TODO: accesibility options; auto collect coins when moused over. laser rapid fire always enabled 
 TODO: deleting a profile should not open the AP edit dialogue 
 ~~TODO: replace the egg icon with the archipelago asset~~ (DONE)
-TODO: pressing F12 crashes the game 
-
-"include bonus pets" always acts as true, even if false
-universal tracker currently crashes out, even with the yaml present
-bonus pets logic is also a bit off, my tank 4 unlock generated on bonus pet 2 when I only have like 100 shells + bonus pet 1, I think I'd have to do all the story levels over again + some extra to be able to afford it lul
-cyrax goal doesn't seem to work, I have all the levels beat but there is no way to get to cyrax's level. it just booted me back to the level select, and it said 2nd final boss on the "continue" button, but there was no dedicated button for it and clicking Tank 4 just took me to 4-1
 
 time trial - no required threshold, could choose threshold for check or have several thresholds. 
 challenge mode

@@ -47,6 +47,7 @@ namespace Sexy
 		std::string mAPServer;
 		std::string mAPSlot;
 		std::string mAPPassword;
+		std::string mAPSlotData;
 
 		// Received-item tracking. It is saved with the rest of the profile at the game's normal save points,
 		// so it always matches the item effects in the save. Checked locations aren't stored: the server has them.

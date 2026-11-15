@@ -38,7 +38,6 @@
 #include "WorkerThread.h"
 #include "APBridge.h"
 #include "APGameController.h"
-#include "APSaveImporter.h"
 #include "ArchipelagoDialog.h"
 #include "HighScoreMgr.h"
 #include "ProfileMgr.h"
@@ -2361,7 +2360,10 @@ void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
 		mCurrentProfile->mUnlockedPets[i] = false;
 	mCurrentProfile->mNumOfUnlockedPets = 0;
 	if (mAPController != NULL)
+	{
 		mAPController->ResetSession();
+		mAPController->OnConnected(mCurrentProfile->mAPSlot, mCurrentProfile->mAPSeed);
+	}
 }
 
 void Sexy::WinFishApp::ApplyArchipelagoItem(const APReceivedItem& theItem)
@@ -2964,126 +2966,6 @@ void Sexy::WinFishApp::ApplyArchipelagoDialog(bool doApply)
 	mProfileMgr->SaveUsersDat();
 	KillDialog(DIALOG_ARCHIPELAGO);
 	mWidgetManager->MarkAllDirty();
-}
-
-bool Sexy::WinFishApp::PromptImportAPSave()
-{
-	char aCurrentDir[MAX_PATH] = "";
-	::GetCurrentDirectoryA(MAX_PATH, aCurrentDir);
-
-	char aFileName[MAX_PATH] = "";
-	OPENFILENAMEA anOfn;
-	memset(&anOfn, 0, sizeof(anOfn));
-	anOfn.lStructSize = sizeof(anOfn);
-	anOfn.hwndOwner = mHWnd;
-	anOfn.lpstrFilter = "Archipelago Insaniquarium Save (*.apinsani;)\0*.apinsani;\0All Files (*.*)\0*.*\0";
-	anOfn.lpstrFile = aFileName;
-	anOfn.nMaxFile = MAX_PATH;
-	anOfn.lpstrTitle = "Select Archipelago Save (.apinsani)";
-	anOfn.lpstrDefExt = "apinsani";
-	anOfn.nFilterIndex = 1;
-	anOfn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-
-	BOOL aResult = ::GetOpenFileNameA(&anOfn);
-	if (!aResult && ::CommDlgExtendedError() == CDERR_STRUCTSIZE)
-	{
-		// Fallback for environments requiring legacy struct size
-		anOfn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
-		aResult = ::GetOpenFileNameA(&anOfn);
-	}
-
-	// Restore current working directory since GetOpenFileName can change it
-	if (aCurrentDir[0] != '\0')
-		::SetCurrentDirectoryA(aCurrentDir);
-
-	// Explicitly restore foreground and input focus to the game window
-	::SetForegroundWindow(mHWnd);
-	::SetActiveWindow(mHWnd);
-	::SetFocus(mHWnd);
-
-	if (mWidgetManager != NULL)
-	{
-		mWidgetManager->GotFocus();
-		mWidgetManager->MarkAllDirty();
-	}
-
-	if (aResult)
-	{
-		return ImportAPSaveFile(aFileName);
-	}
-	return false;
-}
-
-bool Sexy::WinFishApp::ImportAPSaveFile(const std::string& theFilePath)
-{
-	APArchiveContents anArchive;
-	std::string anErr;
-	if (!APSaveImporter::ExtractArchive(theFilePath, anArchive, anErr))
-	{
-		SexyString aMsg = "Failed to extract save archive: " + anErr;
-		DoDialog(DIALOG_INFO, true, "Import Error", aMsg, "OK", Dialog::BUTTONS_FOOTER);
-		return false;
-	}
-
-	UserProfile newProf;
-
-	int aTank = (anArchive.mStartingTank >= 1 && anArchive.mStartingTank <= 4) ? anArchive.mStartingTank : 1;
-	newProf.mAPUnlockedTanks[aTank - 1] = true;
-	newProf.mTank = aTank;
-	newProf.mAPTankLevels[aTank - 1] = 1;
-	
-	newProf.mAPSlot = anArchive.mSlotName;
-	newProf.mAPServer = "archipelago.gg:";
-	newProf.mAPPassword = "";
-	newProf.mAPSeed = "";
-
-	SexyString aBaseName = "AP Save";
-	SexyString aCandidateName = aBaseName;
-	int aSuffix = 1;
-	while (mProfileMgr->GetUserProfile(aCandidateName) != NULL)
-	{
-		aSuffix++;
-		aCandidateName = StrFormat("%s %d", aBaseName.c_str(), aSuffix);
-	}
-	newProf.mUserName = aCandidateName;
-
-	while (FileExists(GetAppDataFolder() + StrFormat("userdata/user%d.dat", mProfileMgr->m0x10)))
-	{
-		mProfileMgr->m0x10++;
-	}
-	int aNewId = mProfileMgr->m0x10++;
-	newProf.mId = aNewId;
-	newProf.m0x40 = mProfileMgr->m0x14++;
-	UserProfile* anInserted = mProfileMgr->InsertProfile(&newProf);
-	if (anInserted != NULL)
-	{
-		anInserted->Save();
-		mCurrentProfile = anInserted;
-		mProfileMgr->CapMaxUserCount();
-	}
-
-	mProfileMgr->SaveUsersDat();
-
-	KillDialog(DIALOG_ARCHIPELAGO);
-
-	UserDialog* aUserDia = (UserDialog*)GetDialog(DIALOG_USER_DIALOG);
-	if (aUserDia != NULL)
-	{
-		aUserDia->PopulateList();
-	}
-
-	if (mAPController != NULL && mCurrentProfile != NULL)
-	{
-		mAPController->ResetSession();
-		mAPController->LoadFromProfile(mCurrentProfile);
-	}
-
-	DoDialog(DIALOG_INFO, true, "Profile Imported",
-		StrFormat("Successfully imported profile'!\n Click Edit to enter your server and slot."),
-		"OK", Dialog::BUTTONS_FOOTER);
-
-	mWidgetManager->MarkAllDirty();
-	return true;
 }
 
 void Sexy::WinFishApp::UserDialogOkPressed(bool applyChanges)

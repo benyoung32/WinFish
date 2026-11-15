@@ -4707,10 +4707,10 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 			aBtn->SetMaxedOut();
 			break;
 		}
-		aSlotImg = IMAGE_SCL_ARCHIBALD;
+		aSlotImg = IMAGE_SCL_ARCHIBALD_SLOT;
 		aSlotImgX = -1;
 		aSlotImgY = -8;
-		aSlotImgRow = 1;
+		aSlotImgRow = m0x43c-1;
 		aSlotImgCol = -1;
 		if (mApp->mGameMode != GAMEMODE_SANDBOX)
 		{

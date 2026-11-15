@@ -6,8 +6,9 @@
 <SetDefaults path="archipelago/images" idprefix="IMAGE_" />
 
 <Image id="MERYLSHIRT"						path="merylshirt" />
-<Image id="ARCHIBALD"						path="archibald"		cols="10"	rows="2" anim="loop" framedelay="2" />
-<Image id="SCL_ARCHIBALD"					path="scl_archibald"	cols="10"	rows="2" anim="loop" framedelay="2" />
+<Image id="ARCHIBALD"						path="archibald"		    cols="10"	rows="2" anim="loop" framedelay="2" />
+<Image id="SCL_ARCHIBALD"					path="scl_archibald"	    cols="10"	rows="2" anim="loop" framedelay="2" />
+<Image id="SCL_ARCHIBALD_SLOT"				path="scl_archibald_slot"   cols="10"   rows="3" anim="loop" framedelay="2" />
 
 </Resources>
 

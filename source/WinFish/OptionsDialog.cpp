@@ -18,6 +18,8 @@ Sexy::OptionsDialog::OptionsDialog(WinFishApp* theApp, bool theFlag)
 	SetColor(3, Color(0xff, 0xff, 100));
 	mFlag = theFlag;
 	mHelpButton = MakeDialogButton(1, this, "Help", NULL);
+	mScaleButton = MakeDialogButton(10, this, "", NULL);
+	UpdateScaleButtonText();
 	SexyString aWebLinkStr = mApp->GetString("weblinktext", "");
 	mWebLinkButton = MakeDialogButton(2, this, aWebLinkStr, NULL);
 
@@ -58,6 +60,8 @@ Sexy::OptionsDialog::~OptionsDialog()
 		delete m3DCB;
 	if (mHelpButton)
 		delete mHelpButton;
+	if (mScaleButton)
+		delete mScaleButton;
 	if (mBackButton)
 		delete mBackButton;
 }
@@ -66,6 +70,7 @@ void Sexy::OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 {
 	MoneyDialog::AddedToManager(theWidgetManager);
 	theWidgetManager->AddWidget(mHelpButton);
+	theWidgetManager->AddWidget(mScaleButton);
 	theWidgetManager->AddWidget(mMusicSlider);
 	theWidgetManager->AddWidget(mSFXSlider);
 	theWidgetManager->AddWidget(mCustomCursorsCB);
@@ -79,6 +84,7 @@ void Sexy::OptionsDialog::RemovedFromManager(WidgetManager* theWidgetManager)
 {
 	MoneyDialog::RemovedFromManager(theWidgetManager);
 	theWidgetManager->RemoveWidget(mHelpButton);
+	theWidgetManager->RemoveWidget(mScaleButton);
 	theWidgetManager->RemoveWidget(mMusicSlider);
 	theWidgetManager->RemoveWidget(mSFXSlider);
 	theWidgetManager->RemoveWidget(mCustomCursorsCB);
@@ -127,6 +133,7 @@ void Sexy::OptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight
 
 	std::vector<ButtonWidget*> aBottomButtons;
 	if (mHelpButton->mVisible) aBottomButtons.push_back(mHelpButton);
+	if (mScaleButton->mVisible) aBottomButtons.push_back(mScaleButton);
 
 	if (aBottomButtons.size() == 1 || aBottomButtons.size() == 3)
 	{
@@ -178,6 +185,7 @@ void Sexy::OptionsDialog::WidgetClicked(int theId, bool theFlag)
 				"OK", BUTTONS_FOOTER);
 			mFullscreenCB->SetChecked(true);
 		}
+		
 	}
 	else if (theId == 9 && theFlag)
 	{
@@ -231,6 +239,22 @@ void Sexy::OptionsDialog::ButtonDepress(int theId)
 		return;
 	case 3:
 		break;
+	case 10:
+	{
+		if (mFullscreenCB->IsChecked())
+		{
+			return;
+		}
+
+		int aScale = mApp2->GetWindowScale();
+		aScale++;
+		if (aScale > 2)
+			aScale = 1;
+		mApp2->SetWindowScale(aScale);
+		UpdateScaleButtonText();
+
+		return;
+	}
 	default:
 		return;
 	}
@@ -242,4 +266,11 @@ void Sexy::OptionsDialog::ButtonDepress(int theId)
 		return;
 	}
 	mApp->LeaveGameBoard();
+}
+
+void Sexy::OptionsDialog::UpdateScaleButtonText()
+{
+	int aScale = mApp2->GetWindowScale();
+	mScaleButton->mLabel = StrFormat("Scale: %dx", aScale);
+	mScaleButton->MarkDirty();
 }

@@ -331,6 +331,7 @@ namespace Sexy
 	extern Image* IMAGE_MERYLSHIRT;
 	extern Image* IMAGE_ARCHIBALD;
 	extern Image* IMAGE_SCL_ARCHIBALD;
+	extern Image* IMAGE_SCL_ARCHIBALD_SLOT;
 
 	// Register Resources
 	bool ExtractRegisterResources(ResourceManager* theMgr);
@@ -618,6 +619,7 @@ namespace Sexy
 		IMAGE_MERYLSHIRT_ID,
 		IMAGE_ARCHIBALD_ID,
 		IMAGE_SCL_ARCHIBALD_ID,
+		IMAGE_SCL_ARCHIBALD_SLOT_ID,
 		SOUND_AWOOGA_ID,
 		SOUND_START_ID = SOUND_AWOOGA_ID,
 		SOUND_APPLAUSE_ID,

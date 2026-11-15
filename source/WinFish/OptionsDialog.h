@@ -23,6 +23,7 @@ namespace Sexy
 		Checkbox* m3DCB;
 		DialogButton* mRegisterButton;
 		DialogButton* mHelpButton;
+		DialogButton* mScaleButton;
 		DialogButton* mWebLinkButton;
 		DialogButton* mBackButton;
 		bool mFlag;
@@ -30,6 +31,8 @@ namespace Sexy
 	public:
 		OptionsDialog(WinFishApp* theApp, bool theFlag);
 		virtual ~OptionsDialog();
+
+		void					UpdateScaleButtonText();
 
 		virtual void			AddedToManager(WidgetManager* theWidgetManager);
 		virtual void			RemovedFromManager(WidgetManager* theWidgetManager);

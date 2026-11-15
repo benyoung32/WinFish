@@ -61,8 +61,48 @@ void APGameController::OnConnected(const std::string& theSlot, const std::string
 
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
 	{
-		mApp->mCurrentProfile->m0xb4 = GetPetSlots();
-		mApp->mCurrentProfile->mAPUpgradeAvailability = mUpgradeAvailability;
+		UserProfile* aProf = mApp->mCurrentProfile;
+		if (mBridge != NULL)
+		{
+			const SlotData& aSlotData = mBridge->GetSlotData();
+			aProf->mAPSlotData = aSlotData.mRawJson;
+
+			bool aHasAnyTank = false;
+			for (int i = 0; i < 4; i++)
+			{
+				if (aProf->mAPUnlockedTanks[i])
+				{
+					aHasAnyTank = true;
+					break;
+				}
+			}
+
+			if (!aHasAnyTank)
+			{
+				int aStartTank = aSlotData.GetStartingTank();
+				if (aStartTank < 1 || aStartTank > 4)
+					aStartTank = 1;
+
+				aProf->mAPUnlockedTanks[aStartTank - 1] = true;
+				aProf->mTank = aStartTank;
+				aProf->mAPTankLevels[aStartTank - 1] = 1;
+				mUnlockedTanks[aStartTank] = true;
+			}
+			else if (aProf->mTank < 1 || aProf->mTank > 4 || !aProf->mAPUnlockedTanks[aProf->mTank - 1])
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					if (aProf->mAPUnlockedTanks[i])
+					{
+						aProf->mTank = i + 1;
+						break;
+					}
+				}
+			}
+		}
+
+		aProf->m0xb4 = GetPetSlots();
+		aProf->mAPUpgradeAvailability = mUpgradeAvailability;
 		mApp->SaveCurrentUserData();
 	}
 
@@ -487,9 +527,13 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 	
 
 	// Apply starting money bonus
-	if (mStartingMoneyBonus > 0)
+	int aTotalStartingMoney = mStartingMoneyBonus;
+	if (mBridge != NULL)
+		aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
+
+	if (aTotalStartingMoney > 0)
 	{
-		theBoard->mMoney += mStartingMoneyBonus;
+		theBoard->mMoney += aTotalStartingMoney;
 		theBoard->UpdateMoneyLabelText();
 	}
 	
@@ -564,6 +608,11 @@ void APGameController::LoadFromProfile(UserProfile* theProfile)
 {
 	if (theProfile == NULL)
 		return;
+
+	if (mBridge != NULL && !theProfile->mAPSlotData.empty())
+	{
+		mBridge->GetSlotData().ParseJson(theProfile->mAPSlotData);
+	}
 
 	mFoodQuality = theProfile->mAPFoodQuality;
 	mFoodQuantity = theProfile->mAPFoodQuantity;

@@ -740,6 +740,7 @@ bool Sexy::ExtractRegisterResources(ResourceManager* theManager)
 Image* Sexy::IMAGE_MERYLSHIRT;
 Image* Sexy::IMAGE_ARCHIBALD;
 Image* Sexy::IMAGE_SCL_ARCHIBALD;
+Image* Sexy::IMAGE_SCL_ARCHIBALD_SLOT;
 
 bool Sexy::ExtractArchipelagoResources(ResourceManager* theManager)
 {
@@ -751,6 +752,7 @@ bool Sexy::ExtractArchipelagoResources(ResourceManager* theManager)
 		IMAGE_MERYLSHIRT = aMgr.GetImageThrow("IMAGE_MERYLSHIRT");
 		IMAGE_ARCHIBALD = aMgr.GetImageThrow("IMAGE_ARCHIBALD");
 		IMAGE_SCL_ARCHIBALD = aMgr.GetImageThrow("IMAGE_SCL_ARCHIBALD");
+		IMAGE_SCL_ARCHIBALD_SLOT = aMgr.GetImageThrow("IMAGE_SCL_ARCHIBALD_SLOT");
 	}
 	catch (ResourceManagerException&)
 	{
@@ -1026,6 +1028,7 @@ static void* gResources[] =
 	&IMAGE_MERYLSHIRT,
 	&IMAGE_ARCHIBALD,
 	&IMAGE_SCL_ARCHIBALD,
+	&IMAGE_SCL_ARCHIBALD_SLOT,
 	&SOUND_AWOOGA,
 	&SOUND_APPLAUSE,
 	&SOUND_BABY,
@@ -1437,6 +1440,7 @@ const char* Sexy::GetStringIdById(int theId)
 	case IMAGE_MERYLSHIRT_ID: return "IMAGE_MERYLSHIRT";
 	case IMAGE_ARCHIBALD_ID: return "IMAGE_ARCHIBALD";
 	case IMAGE_SCL_ARCHIBALD_ID: return "IMAGE_SCL_ARCHIBALD";
+	case IMAGE_SCL_ARCHIBALD_SLOT_ID: return "IMAGE_SCL_ARCHIBALD_SLOT"; 
 	case SOUND_AWOOGA_ID: return "SOUND_AWOOGA";
 	case SOUND_APPLAUSE_ID: return "SOUND_APPLAUSE";
 	case SOUND_BABY_ID: return "SOUND_BABY";

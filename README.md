@@ -6,8 +6,7 @@ This is an implementation of the Archipelago client for Insaniquarium Deluxe bui
 
 # Features:
 
-- AP Save file import. The APWorld will generate a zip file containing a save profile with all the seeded information needed for the archipelago game. An import button in the profile can be used to load this save into the games save folder automatically.
-- Food quality, quantity, pets, tank unlocks, and more all are all items in the archipelago. Completing levels gives locations.
+- Food quality, quantity, pets, tank unlocks, and more all are items in the archipelago. Completing levels gives locations.
 
 
 See WinFish readme below for info on building the project:

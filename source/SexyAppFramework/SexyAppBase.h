@@ -312,6 +312,7 @@ public:
 	Rect					mScreenBounds;
 	bool					mEnableWindowAspect;
 	Ratio					mWindowAspect;
+	int						mWindowScale;
 
 	StringWStringMap		mStringProperties;
 	StringBoolMap			mBoolProperties;
@@ -464,6 +465,8 @@ public:
 	virtual void			SwitchScreenMode();
 	virtual void			SwitchScreenMode(bool wantWindowed);
 	virtual void			SwitchScreenMode(bool wantWindowed, bool is3d, bool force = false);
+	virtual void			SetWindowScale(int theScale);
+	virtual int				GetWindowScale() const { return mWindowScale; }
 	virtual void			SetAlphaDisabled(bool isDisabled);
 	
 	virtual Dialog*			DoDialog(int theDialogId, bool isModal, const SexyString& theDialogHeader, const SexyString& theDialogLines, const SexyString& theDialogFooter, int theButtonMode);

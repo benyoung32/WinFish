@@ -20,7 +20,6 @@ namespace Sexy
 		ScrollbarWidget*		mScrollbarWidget;
 		DialogButton*			mRenameButton;
 		DialogButton*			mDeleteButton;
-		DialogButton*			mImportButton;
 		bool					mTransferShells;
 
 	public:

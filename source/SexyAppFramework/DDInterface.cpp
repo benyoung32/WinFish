@@ -297,6 +297,29 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 	mFullscreenBits = mApp->mFullscreenBits;
 	mIsWindowed = IsWindowed;
 	mHasOldCursorArea = false;
+	mIsWidescreen = false;
+
+	if (IsWindowed)
+	{
+		RECT rc;
+		::GetClientRect(theWindow, &rc);
+		int aClientW = rc.right - rc.left;
+		int aClientH = rc.bottom - rc.top;
+
+		if (aClientW > 0 && aClientH > 0 && (aClientW != mWidth || aClientH != mHeight))
+		{
+			mDisplayWidth = aClientW;
+			mDisplayHeight = aClientH;
+		}
+		else
+		{
+			int aScale = (mApp != NULL && mApp->mWindowScale > 0) ? mApp->mWindowScale : 1;
+			mDisplayWidth = mWidth * aScale;
+			mDisplayHeight = mHeight * aScale;
+		}
+
+		mPresentationRect = Rect( 0, 0, mDisplayWidth, mDisplayHeight );
+	}
 
 	OutputDebug(_S("Application requests %4lu x %4lu [%2d:%2d]\n"), mWidth, mHeight, mAspect.mNumerator, mAspect.mDenominator);
 
@@ -908,10 +931,10 @@ bool DDInterface::Redraw(Rect* theClipRect)
 
 	RECT aDestRect;
 	RECT aSrcRect;
-	if (NULL == theClipRect || mIsWidescreen)
+	if (NULL == theClipRect || mIsWidescreen || mPresentationRect.mWidth != mWidth || mPresentationRect.mHeight != mHeight)
 	{
 		// ClipRect cannot be supported when the draw surface and
-		// primary surface are not the same size in widescreen mode.
+		// primary surface are not the same size in widescreen mode or scaled window mode.
 		aDestRect = mPresentationRect.ToRECT();
 		aSrcRect = Rect(0, 0, mWidth, mHeight).ToRECT();
 	}
@@ -921,7 +944,7 @@ bool DDInterface::Redraw(Rect* theClipRect)
 		aSrcRect = theClipRect->ToRECT();
 	}
 	
-	if ( mIsWidescreen )
+	if ( mIsWidescreen || mPresentationRect.mWidth != mWidth || mPresentationRect.mHeight != mHeight )
 	{
 		aBltFX.dwDDFX = DDBLTFX_ARITHSTRETCHY;
 	}
@@ -963,8 +986,8 @@ bool DDInterface::Redraw(Rect* theClipRect)
 				if (!scanLineFail)
 				{
 					int aHalfMarkClient = mApp->mHeight / 2;
-					int aHalfMarkScreen = aDestRect.top + aHalfMarkClient;					
-					int aBotMarkScreen = aDestRect.top + mHeight;
+					int aHalfMarkScreen = aDestRect.top + (aDestRect.bottom - aDestRect.top) / 2;					
+					int aBotMarkScreen = aDestRect.bottom;
 
 					DWORD aScanLine = 0x7FFFFFFF;
 					
@@ -1114,13 +1137,27 @@ void DDInterface::RestoreOldCursorAreaFrom(LPDIRECTDRAWSURFACE theSurface, bool 
 {
 	if ((mHasOldCursorArea) && (mPrimarySurface != NULL))
 	{
+		int aCurX = mCursorX;
+		int aCurY = mCursorY;
+		Rect aBoundsRect = Rect(0, 0, mWidth, mHeight);
+
+		if (theSurface != mDrawSurface)
+		{
+			aBoundsRect = mPresentationRect;
+		}
+		else if (mPresentationRect.mWidth > 0 && mPresentationRect.mHeight > 0)
+		{
+			aCurX = (mCursorX - mPresentationRect.mX) * mWidth / mPresentationRect.mWidth;
+			aCurY = (mCursorY - mPresentationRect.mY) * mHeight / mPresentationRect.mHeight;
+		}
+
 		Rect aSexyScreenRect(
-			mCursorX - (mCursorWidth / 2),
-			mCursorY - (mCursorHeight / 2),
+			aCurX - (mCursorWidth / 2),
+			aCurY - (mCursorHeight / 2),
 			mCursorWidth,
 			mCursorHeight);
 
-		Rect aClippedScreenRect = aSexyScreenRect.Intersection(Rect(0, 0, mWidth, mHeight));						
+		Rect aClippedScreenRect = aSexyScreenRect.Intersection(aBoundsRect);						
 		
 		Rect aSexyLocalRect(
 			aClippedScreenRect.mX - aSexyScreenRect.mX, 
@@ -1160,13 +1197,27 @@ void DDInterface::DrawCursorTo(LPDIRECTDRAWSURFACE theSurface, bool adjust)
 		HRESULT aResult = mPrimarySurface->GetSurfaceDesc(&aDesc);
 		Rect aDestSurfaceRect(0, 0, aDesc.dwWidth, aDesc.dwHeight);
 
+		int aCurX = mCursorX;
+		int aCurY = mCursorY;
+		Rect aBoundsRect = mPresentationRect;
+
+		if (theSurface == mDrawSurface)
+		{
+			if (mPresentationRect.mWidth > 0 && mPresentationRect.mHeight > 0)
+			{
+				aCurX = (mCursorX - mPresentationRect.mX) * mWidth / mPresentationRect.mWidth;
+				aCurY = (mCursorY - mPresentationRect.mY) * mHeight / mPresentationRect.mHeight;
+			}
+			aBoundsRect = Rect(0, 0, mWidth, mHeight);
+		}
+
 		Rect aSexyScreenRect(
-			mCursorX - (mCursorWidth / 2),
-			mCursorY - (mCursorHeight / 2),
+			aCurX - (mCursorWidth / 2),
+			aCurY - (mCursorHeight / 2),
 			mCursorWidth,
 			mCursorHeight);
 
-		Rect aClippedScreenRect = aSexyScreenRect.Intersection(mPresentationRect);
+		Rect aClippedScreenRect = aSexyScreenRect.Intersection(aBoundsRect);
 						
 		Rect aSexyLocalRect(
 			aClippedScreenRect.mX - aSexyScreenRect.mX, 

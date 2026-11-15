@@ -36,9 +36,6 @@ APBridge::APBridge(const std::string& theDataFolder, const std::string& theCertF
 	mDataFolder = theDataFolder;
 	mCertFile = theCertFile;
 	mGoalSent = false;
-
-	if (!mSlotData.LoadFromFile("slot_data.json"))
-		mSlotData.LoadFromFile(mDataFolder + "slot_data.json");
 }
 
 APBridge::~APBridge()
@@ -161,8 +158,6 @@ void APBridge::Disconnect()
 	mSentItems.clear();
 	mGoalSent = false;
 	mSlotData = SlotData();
-	if (!mSlotData.LoadFromFile("slot_data.json"))
-		mSlotData.LoadFromFile(mDataFolder + "slot_data.json");
 }
 
 void APBridge::StopForWrongSeed()

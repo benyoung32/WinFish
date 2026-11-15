@@ -283,6 +283,7 @@ SexyAppBase::SexyAppBase()
 	mEnableWindowAspect = false;
 	mWindowAspect.Set(4, 3);
 	mIsWideWindow = false;
+	mWindowScale = 1;
 
 	int i;
 
@@ -1574,6 +1575,7 @@ void SexyAppBase::WriteToRegistry()
 	RegistryWriteInteger("SfxVolume", (int) (mSfxVolume * 100));
 	RegistryWriteInteger("Muted", (mMuteCount - mAutoMuteCount > 0) ? 1 : 0);
 	RegistryWriteInteger("ScreenMode", mIsWindowed ? 0 : 1);
+	RegistryWriteInteger("WindowScale", mWindowScale);
 	RegistryWriteInteger("PreferredX", mPreferredX);
 	RegistryWriteInteger("PreferredY", mPreferredY);
 	RegistryWriteInteger("CustomCursors", mCustomCursorsEnabled ? 1 : 0);		
@@ -1907,6 +1909,12 @@ void SexyAppBase::ReadFromRegistry()
 
 	if (RegistryReadInteger("ScreenMode", &anInt))
 		mIsWindowed = anInt == 0;
+
+	if (RegistryReadInteger("WindowScale", &anInt))
+	{
+		if (anInt >= 1 && anInt <= 3)
+			mWindowScale = anInt;
+	}
 
 	RegistryReadInteger("PreferredX", &mPreferredX);
 	RegistryReadInteger("PreferredY", &mPreferredY);	
@@ -2346,6 +2354,21 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 				
 				return;
 			}						
+
+			if (mIsWindowed && mDDInterface != NULL)
+			{
+				int aScale = mWindowScale >= 1 ? mWindowScale : 1;
+				int aClientW = mWidth * aScale;
+				int aClientH = mHeight * aScale;
+				mDDInterface->mDisplayWidth = aClientW;
+				mDDInterface->mDisplayHeight = aClientH;
+				mDDInterface->mPresentationRect = Rect(0, 0, aClientW, aClientH);
+				mScreenBounds = Rect(0, 0, mWidth, mHeight);
+				if (mWidgetManager != NULL)
+				{
+					mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
+				}
+			}
 
 			ReInitImages();
 
@@ -4633,8 +4656,8 @@ void SexyAppBase::MakeWindow()
 		RECT aRect;
 		aRect.left = 0;
 		aRect.top = 0;
-		aRect.right = mWidth;
-		aRect.bottom = mHeight;
+		aRect.right = mWidth * mWindowScale;
+		aRect.bottom = mHeight * mWindowScale;
 		
 		BOOL worked = AdjustWindowRect(&aRect, aWindowStyle, FALSE);
 
@@ -4703,10 +4726,14 @@ void SexyAppBase::MakeWindow()
 		
 		if (mPreferredX == -1)
 		{				
-			::MoveWindow(mHWnd, 
-				aDesktopRect.left + ((aDesktopRect.right - aDesktopRect.left) - aWidth)/2, 
-				aDesktopRect.top + (int) (((aDesktopRect.bottom - aDesktopRect.top) - aHeight)*0.382), 
-				aWidth, aHeight, FALSE);
+			int aLeft = aDesktopRect.left + ((aDesktopRect.right - aDesktopRect.left) - aWidth)/2;
+			int aTop = aDesktopRect.top + (int) (((aDesktopRect.bottom - aDesktopRect.top) - aHeight)*0.382);
+			if (aLeft < aDesktopRect.left)
+				aLeft = aDesktopRect.left;
+			if (aTop < aDesktopRect.top)
+				aTop = aDesktopRect.top;
+
+			::MoveWindow(mHWnd, aLeft, aTop, aWidth, aHeight, FALSE);
 		}
 
 		mIsPhysWindowed = true;
@@ -4838,6 +4865,21 @@ void SexyAppBase::MakeWindow()
 	
 	if (isActive != mActive)
 		RehupFocus();
+
+	if (mIsWindowed && mDDInterface != NULL)
+	{
+		int aScale = mWindowScale >= 1 ? mWindowScale : 1;
+		int aClientW = mWidth * aScale;
+		int aClientH = mHeight * aScale;
+		mDDInterface->mDisplayWidth = aClientW;
+		mDDInterface->mDisplayHeight = aClientH;
+		mDDInterface->mPresentationRect = Rect(0, 0, aClientW, aClientH);
+		mScreenBounds = Rect(0, 0, mWidth, mHeight);
+		if (mWidgetManager != NULL)
+		{
+			mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
+		}
+	}
 
 	ReInitImages();
 
@@ -5039,6 +5081,60 @@ void SexyAppBase::SwitchScreenMode(bool wantWindowed)
 void SexyAppBase::SwitchScreenMode()
 {
 	SwitchScreenMode(mIsWindowed, Is3DAccelerated(), true);
+}
+
+void SexyAppBase::SetWindowScale(int theScale)
+{
+	if (theScale < 1) theScale = 1;
+	if (theScale > 3) theScale = 3;
+
+	mWindowScale = theScale;
+	RegistryWriteInteger("WindowScale", mWindowScale);
+
+	if (mHWnd != NULL && mIsWindowed)
+	{
+		DWORD aWindowStyle = WS_CLIPCHILDREN | WS_POPUP | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+		if (mEnableMaximizeButton)
+			aWindowStyle |= WS_MAXIMIZEBOX;
+
+		int aClientW = mWidth * mWindowScale;
+		int aClientH = mHeight * mWindowScale;
+
+		RECT aRect;
+		aRect.left = 0;
+		aRect.top = 0;
+		aRect.right = aClientW;
+		aRect.bottom = aClientH;
+		AdjustWindowRect(&aRect, aWindowStyle, FALSE);
+
+		int aWinW = aRect.right - aRect.left;
+		int aWinH = aRect.bottom - aRect.top;
+
+		RECT aDesktopRect;
+		::SystemParametersInfo(SPI_GETWORKAREA, NULL, &aDesktopRect, NULL);
+
+		int aPlaceX = aDesktopRect.left + ((aDesktopRect.right - aDesktopRect.left) - aWinW) / 2;
+		int aPlaceY = aDesktopRect.top + (int)(((aDesktopRect.bottom - aDesktopRect.top) - aWinH) * 0.382);
+		if (aPlaceY < aDesktopRect.top)
+			aPlaceY = aDesktopRect.top;
+		if (aPlaceX < aDesktopRect.left)
+			aPlaceX = aDesktopRect.left;
+
+		::SetWindowPos(mHWnd, NULL, aPlaceX, aPlaceY, aWinW, aWinH, SWP_NOZORDER | SWP_NOACTIVATE);
+
+		if (mDDInterface != NULL)
+		{
+			mDDInterface->mDisplayWidth = aClientW;
+			mDDInterface->mDisplayHeight = aClientH;
+			mDDInterface->mPresentationRect = Rect(0, 0, aClientW, aClientH);
+			mScreenBounds = Rect(0, 0, mWidth, mHeight);
+			if (mWidgetManager != NULL)
+			{
+				mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
+				mWidgetManager->MarkAllDirty();
+			}
+		}
+	}
 }
 
 void SexyAppBase::SetAlphaDisabled(bool isDisabled)
@@ -7020,6 +7116,21 @@ void SexyAppBase::Set3DAcclerated(bool is3D, bool reinit)
 		{
 			Popup(GetString("FAILED_INIT_DIRECTDRAW", _S("Failed to initialize DirectDraw: ")) + StringToSexyString(DDInterface::ResultToString(aResult) + " " + mDDInterface->mErrorString));
 			DoExit(1);
+		}
+
+		if (mIsWindowed && mDDInterface != NULL)
+		{
+			int aScale = mWindowScale >= 1 ? mWindowScale : 1;
+			int aClientW = mWidth * aScale;
+			int aClientH = mHeight * aScale;
+			mDDInterface->mDisplayWidth = aClientW;
+			mDDInterface->mDisplayHeight = aClientH;
+			mDDInterface->mPresentationRect = Rect(0, 0, aClientW, aClientH);
+			mScreenBounds = Rect(0, 0, mWidth, mHeight);
+			if (mWidgetManager != NULL)
+			{
+				mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
+			}
 		}
 
 		ReInitImages();
