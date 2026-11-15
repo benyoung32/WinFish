@@ -1,5 +1,5 @@
 
-based on the received check level end screen text change to show what was unlocked
+~~based on the received check level end screen text change to show what was unlocked~~ (DONE)
 
 
 OPTIONAL:
@@ -10,15 +10,13 @@ borderless fullscreen
 
 ## TODO:
 
-TODO: rework end of level screen 
-TODO: time trial and challenge mode send checks
-TODO: speed up notification time 
-TODO: add trap queue that works similarly to alien attack queue. traps should only trigger every few minutes when inside a level 
+~~TODO: rework end of level screen. replace the image of the pet with archibald from the archipelago folder. the text should say found an Archipelago Item!~~ (DONE)
+TODO: remove the need to import files. get the slotdata from the connection packet directly.
 
 ## INVESTIGATE:
 
 TODO: deleting a profile should not open the AP edit dialogue 
-TODO: replace the egg icon with the archipelago asset
+~~TODO: replace the egg icon with the archipelago asset~~ (DONE)
 TODO: pressing F12 crashes the game 
 
 "include bonus pets" always acts as true, even if false

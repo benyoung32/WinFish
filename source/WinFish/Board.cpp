@@ -4551,7 +4551,7 @@ MenuButtonWidget* Sexy::Board::MakeAndUnlockMenuButton(int theBtnId, bool flag)
 		else if (mApp->mGameMode == GAMEMODE_SANDBOX)
 			aToolTipStr = "end level";
 		else
-			aToolTipStr = "buy egg piece";
+			aToolTipStr = "buy archipelago item";
 		break;
 	}
 
@@ -4707,21 +4707,18 @@ void Sexy::Board::MenuButtonSetupNoVT(int theBtnId, bool flag)
 			aBtn->SetMaxedOut();
 			break;
 		}
-		aSlotImg = IMAGE_EGGPIECES;
-		if (mApp->mGameMode == GAMEMODE_SANDBOX)
+		aSlotImg = IMAGE_SCL_ARCHIBALD;
+		aSlotImgX = -1;
+		aSlotImgY = -8;
+		aSlotImgRow = 1;
+		aSlotImgCol = -1;
+		if (mApp->mGameMode != GAMEMODE_SANDBOX)
 		{
-			aSlotImgCol = 2;
-			aSlotImgRow = 0;
-			aSlotImgX = 7;
-			aSlotImgY = 3;
-		}
-		else
-		{
-			if (m0x43c < 1 || m0x43c > 3) { dontConfigure; break; }
-			aSlotImgCol = m0x43c - 1;
-			aSlotImgRow = 0;
-			aSlotImgY = 3;
-			aSlotImgX = 7;
+			if (m0x43c < 1 || m0x43c > 3)
+			{
+				dontConfigure = true;
+				break;
+			}
 		}
 		break;
 	}

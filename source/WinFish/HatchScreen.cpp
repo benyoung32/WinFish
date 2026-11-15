@@ -7,6 +7,7 @@
 #include "WinFishCommon.h"
 #include "ProfileMgr.h"
 #include "BubbleMgr.h"
+#include "APGameController.h"
 #include "Res.h"
 
 Sexy::HatchScreen::HatchScreen(WinFishApp* theApp, int thePetId)
@@ -63,7 +64,6 @@ Sexy::HatchScreen::~HatchScreen()
 		delete mOverlay;
 }
 
-
 void Sexy::HatchScreen::AddedToManager(WidgetManager* theWidgetManager)
 {
 	Widget::AddedToManager(theWidgetManager);
@@ -91,10 +91,7 @@ void Sexy::HatchScreen::Update()
 	{
 		if (m0x94 == 141)
 		{
-			if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 1)
-				mApp->PlaySample(SOUND_EVILLAFF);
-			else
-				mApp->PlaySample(SOUND_HATCH);
+			mApp->PlaySample(SOUND_HATCH);
 		}
 	}
 	else
@@ -106,30 +103,8 @@ void Sexy::HatchScreen::Update()
 	{
 		if (m0x94 == 28 || m0x94 == 48 || m0x94 == 68)
 			mApp->PlaySample(SOUND_BUY);
-		if(m0x94 == 88)
+		if (m0x94 == 88)
 			mApp->PlaySample(SOUND_GROW);
-	}
-
-	if (m0x94 >= 220 && mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 1)
-	{
-		int aVal = m0x94 % 16;
-		if (aVal <= 3)
-			m0xa4--;
-		else if (aVal > 7 && aVal < 12)
-			m0xa4++;
-	}
-	else if(m0x94 >= 140 && mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 1)
-	{
-		if (m0x94 < 161)
-			m0xa4 -= 12;
-		else if (m0x94 < 171)
-			m0xa4 -= 8;
-		else if (m0x94 < 181)
-			m0xa4 -= 5;
-		else if (m0x94 < 191)
-			m0xa4 -= 2;
-		else
-			m0xa4--;
 	}
 
 	if (m0x94 == 170)
@@ -152,7 +127,7 @@ void Sexy::HatchScreen::Draw(Graphics* g)
 	g->SetFont(FONT_JUNGLEFEVER17OUTLINE);
 	g->SetColor(Color(0xff, 200, 0, 0xff));
 
-	g->DrawString("You have found:", 215, 25);
+	WriteCenteredLine(g, 25, "Found an Archipelago Item!");
 
 	int aShakeTimer = m0x94 % 32;
 	int anYOffset = 0;
@@ -181,418 +156,65 @@ void Sexy::HatchScreen::Draw(Graphics* g)
 			aCel = (m0x94 - 56) / 2;
 		g->DrawImageCel(IMAGE_EGGCRACK1, 258, anYOffset + 60, aCel);
 	}
-	else // 136 - 364
+	else if (m0x94 < 141)
 	{
-		if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 1)
-		{
-			int aCel = 0;
-			if (m0x94 >= 140)
-				aCel = 9;
-			else if (m0x94 > 119)
-				aCel = (m0x94 - 120) / 2;
-
-			if (m0x94 > 160)
-			{
-				m0x9c = 0;
-				m0xa0 = 0;
-			}
-			g->DrawImageCel(IMAGE_EGGCRACK2, m0x9c + 258, m0xa0 + 60 + anYOffset, aCel);
-		}
-		else if (m0x94 < 141)
-		{
-			int aCel = 0;
-			if (m0x94 >	 119)
-				aCel = (m0x94 - 120) / 2;
-			g->DrawImageCel(IMAGE_EGGCRACK2, m0x9c + 258, m0xa0 + 60 + anYOffset, aCel);
-		}
-		else // 166
-		{
-			if (mPetId == PET_AMP)
-			{
-				g2.ClipRect(236, 100, 160, 60);
-			}
-			else
-			{
-				int anYClip = 0;
-				if (mPetId == PET_CLYDE || mPetId == PET_STINKY)
-					anYClip = 100;
-				else if (mPetId == PET_NIKO)
-					anYClip = 70;
-				else
-					anYClip = 90;
-				g2.ClipRect(278, anYClip, 80, 80);
-			}
-			int aXOffset = (m0x94 % 20) / 2;
-			if (mPetId == PET_SEYMOUR || mPetId == PET_SHRAPNEL ||
-				mPetId == PET_CLYDE || mPetId == PET_RHUBARB || mPetId == PET_BRINKLEY)
-				aXOffset = (m0x94 % 40) / 4;
-			else if (mPetId == PET_VERT || mPetId == PET_NIKO)
-			{
-				aXOffset = m0x94 % 20;
-				if (aXOffset > 9)
-					aXOffset = 19 - aXOffset;
-			}
-			Image* anImage = IMAGE_STINKY;
-			int aX = 278;
-			int aY = 90;
-			if (mPetId != PET_AMP)
-				aXOffset *= 80;
-			else
-				aXOffset *= 160;
-
-			switch (mPetId)
-			{
-			case PET_STINKY:
-				aY = 100;
-				anImage = IMAGE_STINKY;
-				break;
-			case PET_NIKO:
-				aY = 70;
-				anImage = IMAGE_NIKO;
-				break;
-			case PET_ITCHY:
-				anImage = IMAGE_ITCHY;
-				break;
-			case PET_PREGO:
-				anImage = IMAGE_PREGO;
-				break;
-			case PET_ZORF:
-				anImage = IMAGE_ZORF;
-				break;
-			case PET_CLYDE:
-				aY = 100;
-				anImage = IMAGE_CLYDE;
-				break;
-			case PET_VERT:
-				anImage = IMAGE_VERT;
-				break;
-			case PET_RUFUS:
-				anImage = IMAGE_RUFUS;
-				break;
-			case PET_MERYL:
-				anImage = IMAGE_MERYL;
-				break;
-			case PET_WADSWORTH:
-				anImage = IMAGE_WADSWORTH;
-				break;
-			case PET_SEYMOUR:
-				anImage = IMAGE_SEYMOUR;
-				break;
-			case PET_SHRAPNEL:
-				anImage = IMAGE_SHRAPNEL;
-				break;
-			case PET_GUMBO:
-				anImage = IMAGE_GUMBO;
-				break;
-			case PET_BLIP:
-				anImage = IMAGE_BLIP;
-				break;
-			case PET_RHUBARB:
-				anImage = IMAGE_RHUBARB;
-				break;
-			case PET_NIMBUS:
-				anImage = IMAGE_NIMBUS;
-				break;
-			case PET_AMP:
-				aY = 100;
-				aX = 236;
-				anImage = IMAGE_AMP;
-				break;
-			case PET_GASH:
-				anImage = IMAGE_GASH;
-				break;
-			case PET_ANGIE:
-				anImage = IMAGE_ANGIE;
-				break;
-			case PET_PRESTO:
-				anImage = IMAGE_PRESTO;
-				break;
-			case PET_BRINKLEY:
-				anImage = IMAGE_BRINKLEY;
-				break;
-			case PET_NOSTRADAMUS:
-				anImage = IMAGE_NOSTRADAMUS;
-				break;
-			case PET_STANLEY:
-				anImage = IMAGE_STANLEY;
-				break;
-			case PET_WALTER:
-				anImage = IMAGE_WALTER;
-				break;
-			}
-
-			g2.DrawImage(anImage, aX - aXOffset, aY);
-			g2.SetColorizeImages(false);
-
-			SexyString aPetDesc = "";
-			switch (mPetId)
-			{
-			case PET_STINKY:
-				aPetDesc = "STINKY the Snail";
-				break;
-			case PET_NIKO:
-				aPetDesc = "NIKO the Oyster";
-				break;
-			case PET_ITCHY:
-				aPetDesc = "ITCHY the Swordfish";
-				break;
-			case PET_PREGO:
-				aPetDesc = "PREGO the Momma Fish";
-				break;
-			case PET_ZORF:
-				aPetDesc = "ZORF the Sea Horse";
-				break;
-			case PET_CLYDE:
-				aPetDesc = "CLYDE the Jellyfish";
-				break;
-			case PET_VERT:
-				aPetDesc = "VERT the Skeleton";
-				break;
-			case PET_RUFUS:
-				aPetDesc = "RUFUS the Fiddler Crab";
-				break;
-			case PET_MERYL:
-				aPetDesc = "MERYL the Mermaid";
-				break;
-			case PET_WADSWORTH:
-				aPetDesc = "WADSWORTH the Whale";
-				break;
-			case PET_SEYMOUR:
-				aPetDesc = "SEYMOUR the Turtle";
-				break;
-			case PET_SHRAPNEL:
-				aPetDesc = "SHRAPNEL the Robot Fish";
-				break;
-			case PET_GUMBO:
-				aPetDesc = "GUMBO the Angler";
-				break;
-			case PET_BLIP:
-				aPetDesc = "BLIP the Porpoise";
-				break;
-			case PET_RHUBARB:
-				aPetDesc = "RHUBARB the Hermit Crab";
-				break;
-			case PET_NIMBUS:
-				aPetDesc = "NIMBUS the Manta Ray";
-				break;
-			case PET_AMP:
-				aPetDesc = "AMP the Electric Eel";
-				break;
-			case PET_GASH:
-				aPetDesc = "GASH the Shark";
-				break;
-			case PET_ANGIE:
-				aPetDesc = "ANGIE the Angelfish";
-				break;
-			case PET_PRESTO:
-				aPetDesc = "PRESTO the Tadpole";
-				break;
-			case PET_BRINKLEY: // 20 (0x14)
-				aPetDesc = "BRINKLEY";
-				break;
-			case PET_NOSTRADAMUS:
-				aPetDesc = "NOSTRADAMUS the Nose";
-				break;
-			case PET_STANLEY:
-				aPetDesc = "STANLEY the Startlingly";
-				break;
-			case PET_WALTER:
-				aPetDesc = "WALTER the Penguin";
-				break;
-			case 999:
-				aPetDesc = "Evil Alien Mastermind";
-				break;
-			default:
-				break;
-			}
-			g->SetColor(Color(255, 200, 0));
-			g->SetFont(FONT_JUNGLEFEVER15OUTLINE);
-			int aYDesc = 260;
-			if (mPetId == PET_RHUBARB || mPetId == PET_WADSWORTH ||
-				mPetId == PET_SHRAPNEL || mPetId == PET_NOSTRADAMUS)
-				g->SetFont(FONT_JUNGLEFEVER12OUTLINE);
-			else if (mPetId == PET_BRINKLEY || mPetId == PET_STANLEY)
-			{
-				g->SetFont(FONT_JUNGLEFEVER12OUTLINE);
-				SexyString aMoreDesc = "";
-				if (mPetId == PET_BRINKLEY)
-					aMoreDesc = "the Scuba Diving Elephant";
-				else if (mPetId == PET_STANLEY)
-					aMoreDesc = "Small Sea Serpent";
-
-				int aStrWdth = g->GetFont()->StringWidth(aMoreDesc);
-				g->DrawString(aMoreDesc, (650 - aStrWdth) / 2 - 3, 265);
-				aYDesc = 245;
-			}
-
-			int aStrWdth = g->GetFont()->StringWidth(aPetDesc);
-			g->DrawString(aPetDesc, (650 - aStrWdth) / 2 - 3, aYDesc);
-		}
-	} // 364
-
-	if (m0x94 > 170)
+		int aCel = 0;
+		if (m0x94 > 119)
+			aCel = (m0x94 - 120) / 2;
+		g->DrawImageCel(IMAGE_EGGCRACK2, m0x9c + 258, m0xa0 + 60 + anYOffset, aCel);
+	}
+	else
 	{
-		g->SetColor(Color::White);
-		g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
-
-		SexyString aStr1 = "";
-		SexyString aStr2 = "";
-		SexyString aStr3 = "";
-		SexyString aStr4 = "";
-
-		switch (mPetId)
+		int aX = 278;
+		int aY = 90;
+		g2.ClipRect(aX, aY, 80, 80);
+		if (IMAGE_ARCHIBALD != NULL)
 		{
-		case PET_STINKY:
-			aStr1 = "STINKY roams around the";
-			aStr2 = "bottom of your tank, catching";
-			aStr3 = "any coins you may have missed.";
-			break;
-		case PET_NIKO:
-			aStr1 = "NIKO produces pearls that";
-			aStr2 = "you can click on for a";
-			aStr3 = "hefty sum of money.";
-			break;
-		case PET_ITCHY:
-			aStr1 = "ITCHY helps you by attacking";
-			aStr2 = "aliens when they appear.";
-			break;
-		case PET_PREGO:
-			aStr1 = "PREGO helps populate your";
-			aStr2 = "tank by giving birth to a new";
-			aStr3 = "baby guppy every so often.";
-			break;
-		case PET_ZORF:
-			aStr1 = "ZORF gives you a hand in";
-			aStr2 = "keeping your fish fed.";
-			break;
-		case PET_CLYDE:
-			aStr1 = "CLYDE drifts slowly through";
-			aStr2 = "your tank, collecting any";
-			aStr3 = "coins it passes by.";
-			break;
-		case PET_VERT:
-			aStr1 = "VERT drops gold coins just like";
-			aStr2 = "a large guppy, but doesn't need";
-			aStr3 = "fish food to survive.";
-			break;
-		case PET_RUFUS:
-			aStr1 = "RUFUS does heavy damage to";
-			aStr2 = "enemies you've lured to the";
-			aStr3 = "bottom of the tank.";
-			break;
-		case PET_MERYL:
-			aStr1 = "MERYL's song cheers up all the";
-			aStr2 = "guppies in the tank, making";
-			aStr3 = "them drop coins faster.";
-			break;
-		case PET_WADSWORTH:
-			aStr1 = "WADSWORTH helps by sheltering";
-			aStr2 = "your baby and medium guppies";
-			aStr3 = "from hungry aliens.";
-			break;
-		case PET_SEYMOUR:
-			aStr1 = "SEYMOUR's presence makes all";
-			aStr2 = "coins and diamonds drift";
-			aStr3 = "at a slower rate.";
-			break;
-		case PET_SHRAPNEL:
-			aStr1 = "SHRAPNEL drops bombs that";
-			aStr2 = "blow up fish on contact but";
-			aStr3 = "give lots of cash when clicked.";
-			break;
-		case PET_GUMBO:
-			aStr1 = "GUMBO attracts guppies using";
-			aStr2 = "the lantern on his head,";
-			aStr3 = "luring them away from aliens.";
-			break;
-		case PET_BLIP:
-			aStr1 = "BLIP provides you with info";
-			aStr2 = "that helps you better combat";
-			aStr3 = "aliens and keep your fish fed.";
-			break;
-		case PET_RHUBARB:
-			aStr1 = "RHUBARB snaps his claws at";
-			aStr2 = "fish, keeping them off the";
-			aStr3 = "bottom of your tank.";
-			break;
-		case PET_NIMBUS:
-			aStr1 = "NIMBUS tosses any coins or";
-			aStr2 = "food he catches back up";
-			aStr3 = "toward the top of the tank.";
-			break;
-		case PET_AMP:
-			aStr1 = "AMP can electrocute your";
-			aStr2 = "entire tank, killing your fish";
-			aStr3 = "and turning them into diamonds.";
-			break;
-		case PET_GASH:
-			aStr1 = "GASH viciously attacks aliens,";
-			aStr2 = "but will snack on one of";
-			aStr3 = "your guppies from time to time.";
-			break;
-		case PET_ANGIE:
-			aStr1 = "ANGIE has the ability to";
-			aStr2 = "resurrect dead fish.";
-			break;
-		case PET_PRESTO:
-			aStr1 = "PRESTO has the ability to";
-			aStr2 = "metamorph into any of";
-			aStr3 = "your other pets.";
-			break;
-		case PET_BRINKLEY:
-			aStr1 = "Likes: peach muffins, all";
-			aStr2 = "things brown and sticky";
-			aStr3 = "Dislikes: arugula";
-			break;
-		case PET_NOSTRADAMUS:
-			aStr1 = "Little known fact:  NOSTRADAMUS";
-			aStr2 = "is the long lost nose of ex-president";
-			aStr3 = "Rutherford B. Hayes";
-			break;
-		case PET_STANLEY:
-			aStr1 = "STANLEY knows no fear.. except";
-			aStr2 = "that of badgers, aprons,";
-			aStr3 = "and badgers wearing aprons.";
-			break;
-		case PET_WALTER:
-			aStr1 = "Choosing this pet donates all";
-			aStr2 = "proceeds to the Falafel";
-			aStr3 = "Foundation. Free the falafels!";
-			break;
-		case 999:
-			aStr1 = "EVIL ALIEN MASTERMIND actually";
-			aStr2 = "isn't very helpful at all.  Unless";
-			aStr3 = "you consider devouring the entire";
-			aStr4 = "contents of your fishtank helpful.";
+			int aCol = ((m0x94 - 140) / 2) % 10;
+			if (aCol < 0)
+				aCol = 0;
+			g2.DrawImageCel(IMAGE_ARCHIBALD, aX, aY, aCol, 1);
+		}
+		g2.SetColorizeImages(false);
+
+		SexyString aItemTitle = "Archipelago Item!";
+		SexyString aItemDesc1 = "Location check sent to multiworld!";
+		SexyString aItemDesc2 = "";
+
+		if (mApp != NULL && mApp->mAPController != NULL)
+		{
+			const std::string& aLastTitle = mApp->mAPController->GetLastCheckTitle();
+			const std::string& aLastDetail = mApp->mAPController->GetLastCheckDetail();
+			if (!aLastTitle.empty())
+			{
+				aItemTitle = aLastTitle;
+				aItemDesc1 = aLastDetail;
+			}
+		}
+
+		g->SetColor(Color(255, 200, 0));
+		g->SetFont(FONT_JUNGLEFEVER15OUTLINE);
+		if (g->GetFont()->StringWidth(aItemTitle) > 400)
+			g->SetFont(FONT_JUNGLEFEVER12OUTLINE);
+		WriteCenteredLine(g, 260, aItemTitle);
+
+		if (m0x94 > 170)
+		{
 			g->SetColor(Color::White);
-			g->DrawString(aStr4, (650 - g->GetFont()->StringWidth(aStr4)) / 2 - 3, 360);
-			break;
-		default:
-			break;
-		}
+			g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
+			WriteCenteredLine(g, 305, aItemDesc1);
+			if (!aItemDesc2.empty())
+				WriteCenteredLine(g, 325, aItemDesc2);
 
-		g->DrawString(aStr1, (650 - g->GetFont()->StringWidth(aStr1)) / 2 - 3, 300);
-		g->DrawString(aStr2, (650 - g->GetFont()->StringWidth(aStr2)) / 2 - 3, 320);
-		g->DrawString(aStr3, (650 - g->GetFont()->StringWidth(aStr3)) / 2 - 3, 340);
-
-		g->SetColor(Color(255, 255, 100));
-
-		if (mPetId == PET_PRESTO)
-		{
-			WriteWordWrapped(g, Rect(180, 373, 284, 0), "You have been awarded 5000 shells\nfor defeating the Final Boss!", -1, 0);
-		}
-		else
-		{
-			g->DrawString("Your game has been saved.", 221, 390);
-		}
-
-		if (mPetId == 999)
-		{
-			g->SetColor(Color(255, 200, 0));
-			SexyString aStr = "Evil Alien Mastermind";
-			g->SetFont(FONT_JUNGLEFEVER15OUTLINE);
-			int aStrWdth = g->GetFont()->StringWidth(aStr);
-			g->DrawString(aStr, (650 - aStrWdth) / 2 - 3, 260);
+			g->SetColor(Color(255, 255, 100));
+			if (mPetId == PET_PRESTO)
+			{
+				WriteWordWrapped(g, Rect(180, 373, 284, 0), "You have been awarded 5000 shells\nfor defeating the Final Boss!", -1, 0);
+			}
+			else
+			{
+				WriteCenteredLine(g, 390, "Your game has been saved.");
+			}
 		}
 	}
 }
@@ -600,17 +222,7 @@ void Sexy::HatchScreen::Draw(Graphics* g)
 void Sexy::HatchScreen::DrawOverlay(Graphics* g)
 {
 	g->DrawImage(IMAGE_HATCHREFLECTION, 240, 60);
-	if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 1)
-	{
-		if (m0x94 > 139)
-		{
-			Graphics g2(*g);
-			g2.ClipRect(238, m0xa4, 160, 160);
-			int aFrame = (m0x94 % 20) / 2;
-			g2.DrawImage(IMAGE_BOSS, 238 - (aFrame * 160), m0xa4);
-		}
-	}
-	else if(m0x94 > 139 && m0x94 < 200)
+	if (m0x94 > 139 && m0x94 < 200)
 	{
 		int aShardValues[16] = { -10, -15, 3, -13, 10, 5, 14, 12, 1, -11, -14, 12, -15, 11, 13, -1 };
 
@@ -629,6 +241,9 @@ void Sexy::HatchScreen::ButtonPress(int theId)
 
 void Sexy::HatchScreen::ButtonDepress(int theId)
 {
+	if (mApp != NULL && mApp->mAPController != NULL)
+		mApp->mAPController->ClearLastCheck();
+
 	if (theId == 99)
 	{
 		mApp->RemoveHatchScreen();

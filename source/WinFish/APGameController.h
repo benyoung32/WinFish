@@ -111,6 +111,19 @@ namespace Sexy
 		int							GetStartingMoneyBonus() const { return mStartingMoneyBonus; }
 		bool						IsTankUnlocked(const LevelData& theLevel) const;
 
+		const std::string&			GetLastCheckTitle() const { return mLastCheckTitle; }
+		const std::string&			GetLastCheckDetail() const { return mLastCheckDetail; }
+		void						SetLastCheck(const std::string& theTitle, const std::string& theDetail)
+		{
+			mLastCheckTitle = theTitle;
+			mLastCheckDetail = theDetail;
+		}
+		void						ClearLastCheck()
+		{
+			mLastCheckTitle.clear();
+			mLastCheckDetail.clear();
+		}
+
 		// Location Check Dispatch
 		void						ReportLocation(int64_t theLocationId);
 		void						ReportEggPiece(const LevelData& theLevel, int thePiece);
@@ -158,6 +171,10 @@ namespace Sexy
 
 		// History of received items
 		std::vector<APReceivedItem>	mReceivedHistory;
+
+		// Most recently checked/unlocked item for UI screens (e.g. HatchScreen)
+		std::string					mLastCheckTitle;
+		std::string					mLastCheckDetail;
 	};
 }
 

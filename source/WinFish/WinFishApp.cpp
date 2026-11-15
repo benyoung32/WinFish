@@ -1849,7 +1849,6 @@ bool Sexy::WinFishApp::DoScrCopy(SexyString& theScrSvrPath)
 	bool isOk1 = GetFileLastWriteTime(theScrSvrPath.c_str(), &ft1);
 	bool isOk2 = GetFileLastWriteTime(aDatPath.c_str(), &ft2);
 
-	// TODO
 	return false;
 }
 

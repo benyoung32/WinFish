@@ -49,6 +49,7 @@ void APGameController::Update()
 		for (const APSentItem& aSent : aSentItems)
 		{
 			QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
+			SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
 		}
 	}
 }
@@ -95,6 +96,7 @@ void APGameController::ResetSession()
 	mNotificationQueue.clear();
 	mReceivedHistory.clear();
 	mNotificationCooldown = 0;
+	ClearLastCheck();
 }
 
 bool APGameController::IsTankUnlocked(const LevelData& theLevel) const
@@ -235,6 +237,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	std::string anItemName = APItemToString(anAPItem);
 	QueueNotification(std::string("Received: ") + anItemName + "!");
+	SetLastCheck(anItemName, "Received for yourself!");
 
 	// Persist updated controller state to the profile
 	if (mApp != NULL && mApp->mCurrentProfile != NULL)
@@ -258,6 +261,10 @@ void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 
 	APLocation aLoc = gEggPieceLocations[theLevel.mTank - 1][theLevel.mLevel - 1][thePiece - 1];
 	ReportLocation(static_cast<int64_t>(aLoc));
+	if (thePiece == 3)
+	{
+		SetLastCheck("Archipelago Item!", "Location check sent to multiworld!");
+	}
 }
 
 void APGameController::ReportTankComplete(const LevelData& theLevel)
@@ -504,7 +511,7 @@ void APGameController::UpdateBoard(Board* theBoard)
 		theBoard->ShowNotification(aMsg, false, -1);
 		mNotificationCooldown += 30;
 	}
-	// TODO: traps should be dispensed according to some timer or cooldown
+	// TODO: check that its during adventure, time trial, or challenge mode
 	// Service traps during active gameplay (not during bonus rounds)
 	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound && mTrapCooldown == 0)
 	{
