@@ -16,6 +16,9 @@ namespace Sexy
 		int				mUpgradeAvailability;      // 0 = instant, 1 = free in shop, 2 = shop buy
 		int				mStartingMoneyBonus;       // starting bonus money if set in slot_data
 		int				mStartPetSlots;            // starting pet slots from slot_data (default 0)
+		bool			mDeathLink;                // Archipelago Death Link enabled
+		int				mDeathLinkAmnesty;         // Number of fish that can die before sending Death Link
+		int				mDeathLinkEffect;          // Punishment effect when Death Link is received (0=kill fish, 1=random trap)
 		std::string		mRawJson;                  // raw JSON content from slot_data.json
 
 		SlotData();
@@ -33,6 +36,12 @@ namespace Sexy
 		UPGRADE_AVAILABILITY_INSTANT = 0,
 		UPGRADE_AVAILABILITY_FREE_IN_SHOP = 1,
 		UPGRADE_AVAILABILITY_SHOP_BUY = 2
+	};
+
+	enum DeathLinkEffect
+	{
+		DEATH_LINK_EFFECT_INSTANT_KILL = 0,
+		DEATH_LINK_EFFECT_RANDOM_TRAP = 1
 	};
 }
 

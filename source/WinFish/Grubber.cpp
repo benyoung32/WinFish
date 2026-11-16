@@ -2,6 +2,7 @@
 
 #include "Grubber.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "Fish.h"
 #include "Missle.h"
@@ -361,7 +362,11 @@ bool Sexy::Grubber::HungryBehavior()
 void Sexy::Grubber::Die(bool flag)
 {
 	if (flag)
+	{
 		mApp->mBoard->PlayDieSound(mType);
+		if (mApp->mAPController != NULL)
+			mApp->mAPController->OnFishDied("grubber died");
+	}
 	Remove(false);
 	bool isFacingRight = (mVX >= 0.0);
 	mApp->mBoard->SpawnDeadFish(mXD, mYD, mVX, mVY, mSpeedMod, mType, isFacingRight, mShadowPtr);

@@ -145,6 +145,10 @@ namespace Sexy
 		// Notification Queue (displayed via Board::ShowNotification)
 		void						QueueNotification(const std::string& theMessage);
 
+		// Death Link
+		void						OnFishDied(const std::string& theCause = "fish died");
+		void						ResetDeathLinkAmnesty();
+
 		// Persistence / Profile Synchronization (Option C)
 		void						LoadFromProfile(UserProfile* theProfile);
 		void						SaveToProfile(UserProfile* theProfile);
@@ -165,6 +169,9 @@ namespace Sexy
 
 		// Traps & Queues
 		std::deque<APItem>			mPendingTraps;
+		std::deque<APDeathLink>		mPendingDeathLinks;
+		int							mFishDeathsSinceLastDeathLink;
+		bool						mSuppressDeathLink;
 		std::deque<std::string>		mNotificationQueue;
 		int							mNotificationCooldown; // ticks between ShowText popups
 		int 						mTrapCooldown;

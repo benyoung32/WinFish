@@ -1,4 +1,5 @@
 // apclient.hpp must come before anything that includes windows.h (see APBridge.h).
+#include <chrono>
 #include <apclient.hpp>
 #include <apuuid.hpp>
 
@@ -36,6 +37,7 @@ APBridge::APBridge(const std::string& theDataFolder, const std::string& theCertF
 	mDataFolder = theDataFolder;
 	mCertFile = theCertFile;
 	mGoalSent = false;
+	mLastSentDeathLinkTime = 0.0;
 }
 
 APBridge::~APBridge()
@@ -80,7 +82,10 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 	{
 		mState = AP_SLOT_CONNECTING;
 		mSocketErrors = 0;
-		mClient->ConnectSlot(mSlot, mPassword, AP_ITEMS_HANDLING);
+		std::list<std::string> aTags;
+		if (mSlotData.mDeathLink)
+			aTags.push_back("DeathLink");
+		mClient->ConnectSlot(mSlot, mPassword, AP_ITEMS_HANDLING, aTags);
 	});
 
 	mClient->set_slot_connected_handler([this](const nlohmann::json& theSlotData)
@@ -89,6 +94,48 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 		mLastError.clear();
 		mJustConnected = true;
 		mSlotData.ParseJson(theSlotData.dump());
+		if (mSlotData.mDeathLink)
+			mClient->ConnectUpdate(false, 0, true, {"DeathLink"});
+	});
+
+	mClient->set_bounced_handler([this](const nlohmann::json& thePacket)
+	{
+		if (!mSlotData.mDeathLink)
+			return;
+
+		if (thePacket.contains("tags") && thePacket["tags"].is_array())
+		{
+			bool isDeathLink = false;
+			for (const auto& aTag : thePacket["tags"])
+			{
+				if (aTag == "DeathLink")
+				{
+					isDeathLink = true;
+					break;
+				}
+			}
+			if (!isDeathLink)
+				return;
+		}
+		else
+		{
+			return;
+		}
+
+		if (!thePacket.contains("data") || !thePacket["data"].is_object())
+			return;
+
+		const nlohmann::json& aData = thePacket["data"];
+		std::string aSource = aData.value("source", "");
+		std::string aCause = aData.value("cause", "");
+		double aTime = aData.value("time", 0.0);
+
+		if (aSource == mSlot)
+			return;
+		if (aTime > 0.0 && aTime == mLastSentDeathLinkTime)
+			return;
+
+		mReceivedDeathLinks.push_back({ aTime, aSource, aCause });
 	});
 
 	mClient->set_items_received_handler([this](const std::list<APClient::NetworkItem>& theItems)
@@ -156,6 +203,8 @@ void APBridge::Disconnect()
 	mClient = NULL;
 	mState = AP_DISCONNECTED;
 	mSentItems.clear();
+	mReceivedDeathLinks.clear();
+	mLastSentDeathLinkTime = 0.0;
 	mGoalSent = false;
 	mSlotData = SlotData();
 }
@@ -195,6 +244,31 @@ void APBridge::PopSentItems(std::vector<APSentItem>& theSentItems)
 {
 	theSentItems.swap(mSentItems);
 	mSentItems.clear();
+}
+
+void APBridge::PopReceivedDeathLinks(std::vector<APDeathLink>& theDeathLinks)
+{
+	theDeathLinks.swap(mReceivedDeathLinks);
+	mReceivedDeathLinks.clear();
+}
+
+void APBridge::SendDeathLink(const std::string& theCause)
+{
+	if (mClient == NULL || mState != AP_SLOT_CONNECTED || !mSlotData.mDeathLink)
+		return;
+
+	double aTimestamp = (double)std::chrono::duration_cast<std::chrono::seconds>(
+		std::chrono::system_clock::now().time_since_epoch()).count();
+	mLastSentDeathLinkTime = aTimestamp;
+
+	nlohmann::json aData = {
+		{"time", aTimestamp},
+		{"source", mSlot}
+	};
+	if (!theCause.empty())
+		aData["cause"] = theCause;
+
+	mClient->Bounce(aData, {}, {}, {"DeathLink"});
 }
 
 bool APBridge::IsLocationChecked(int theLocationId) const

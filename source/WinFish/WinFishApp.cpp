@@ -235,6 +235,7 @@ WinFishApp::WinFishApp()
 	mTankScreen = NULL;
 	mHighScoreScreen = NULL;
 	mHelpScreen = NULL;
+	mIsTicketBonusRound = false;
 
 	mProdName = "Insaniquarium";
 	
@@ -1965,6 +1966,7 @@ void Sexy::WinFishApp::SwitchToHelpScreen(bool instructions)
 void Sexy::WinFishApp::RemoveBoard()
 {
 	CleanDialogs();
+	mIsTicketBonusRound = false;
 	if (mBoard)
 	{
 		mBoard->SaveCurrentGame();
@@ -2096,6 +2098,8 @@ void Sexy::WinFishApp::CreateBoard()
 
 bool Sexy::WinFishApp::IsBonusLevel()
 {
+	if (mIsTicketBonusRound)
+		return true;
 	if (mGameMode == GAMEMODE_ADVENTURE && mCurrentProfile->mLevel == 6)
 		return true;
 	if (mBoard)

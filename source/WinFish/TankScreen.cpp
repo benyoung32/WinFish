@@ -45,9 +45,15 @@ Sexy::TankScreen::TankScreen(WinFishApp* theApp)
 
 	mCyraxButton = MakeDialogButton2(BUTTON_CYRAX, this, "Cyrax", IMAGE_MAINBUTTON);
 	mCyraxButton->SetFont(FONT_JUNGLEFEVER12OUTLINE);
-	mCyraxButton->Resize((mWidth - 193) / 2, 442, 193, mCyraxButton->mHeight);
+	mCyraxButton->Resize(117, 442, 193, mCyraxButton->mHeight);
 	mCyraxButton->SetColor(0, Color(255, 240, 0));
 	mCyraxButton->mVisible = false;
+
+	mBonusButton = MakeDialogButton2(BUTTON_BONUS, this, "Bonus Level", IMAGE_MAINBUTTON);
+	mBonusButton->SetFont(FONT_JUNGLEFEVER12OUTLINE);
+	mBonusButton->Resize(330, 442, 193, mBonusButton->mHeight);
+	mBonusButton->SetColor(0, Color(255, 240, 0));
+	mBonusButton->mVisible = false;
 }
 
 Sexy::TankScreen::~TankScreen()
@@ -61,6 +67,8 @@ Sexy::TankScreen::~TankScreen()
 		delete mStoriesButton;
 	if (mCyraxButton)
 		delete mCyraxButton;
+	if (mBonusButton)
+		delete mBonusButton;
 }
 
 void Sexy::TankScreen::UpdateButtonStates()
@@ -155,11 +163,31 @@ void Sexy::TankScreen::UpdateButtonStates()
 			mCyraxButton->mFrameNoDraw = false;
 			mCyraxButton->SetColor(0, Color(160, 160, 160));
 		}
+
+		int aTickets = (mApp->mCurrentProfile != NULL) ? mApp->mCurrentProfile->mBonusLevelTickets : 0;
+		mBonusButton->mVisible = true;
+		mBonusButton->mLabel = StrFormat("Bonus Level (%d)", aTickets);
+		if (aTickets > 0)
+		{
+			mBonusButton->SetDisabled(false);
+			mBonusButton->mComponentImage = IMAGE_MAINBUTTON;
+			mBonusButton->mFrameNoDraw = false;
+			mBonusButton->SetColor(0, Color(255, 240, 0));
+		}
+		else
+		{
+			mBonusButton->SetDisabled(true);
+			mBonusButton->mComponentImage = IMAGE_MAINBUTTON;
+			mBonusButton->mFrameNoDraw = false;
+			mBonusButton->SetColor(0, Color(160, 160, 160));
+		}
 	}
 	else
 	{
 		mCyraxButton->mVisible = false;
 		mCyraxButton->SetDisabled(true);
+		mBonusButton->mVisible = false;
+		mBonusButton->SetDisabled(true);
 	}
 }
 
@@ -175,6 +203,7 @@ void Sexy::TankScreen::AddedToManager(WidgetManager* theWidgetManager)
 
 	theWidgetManager->AddWidget(mStoriesButton);
 	theWidgetManager->AddWidget(mCyraxButton);
+	theWidgetManager->AddWidget(mBonusButton);
 }
 
 void Sexy::TankScreen::RemovedFromManager(WidgetManager* theWidgetManager)
@@ -185,6 +214,7 @@ void Sexy::TankScreen::RemovedFromManager(WidgetManager* theWidgetManager)
 		theWidgetManager->RemoveWidget(mTankButtons[i]);
 	theWidgetManager->RemoveWidget(mStoriesButton);
 	theWidgetManager->RemoveWidget(mCyraxButton);
+	theWidgetManager->RemoveWidget(mBonusButton);
 }
 
 void Sexy::TankScreen::Update()
@@ -301,6 +331,7 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 	}
 	else if (theId == BUTTON_CYRAX)
 	{
+		mApp->mIsTicketBonusRound = false;
 		mApp->RemoveTankScreen();
 		int aSelectedTank = 5;
 		mApp->mTankGameModeChoose = aSelectedTank;
@@ -317,6 +348,44 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		}
 
 		mApp->SwitchToBoard(false, true);
+	}
+	else if (theId == BUTTON_BONUS)
+	{
+		if (mApp->mCurrentProfile == NULL || mApp->mCurrentProfile->mBonusLevelTickets <= 0)
+			return;
+
+		mApp->mCurrentProfile->mBonusLevelTickets--;
+		mApp->SaveCurrentUserData();
+
+		mApp->RemoveTankScreen();
+		int aSelectedTank = mApp->mCurrentProfile->mTank;
+		if (aSelectedTank < 1 || aSelectedTank > 4)
+		{
+			aSelectedTank = 1;
+			for (int i = 4; i >= 1; i--)
+			{
+				if (mApp->mAPController != NULL && mApp->mAPController->IsTankUnlocked(LevelData(i)))
+				{
+					aSelectedTank = i;
+					break;
+				}
+			}
+		}
+		mApp->mTankGameModeChoose = aSelectedTank;
+		mApp->mIsTicketBonusRound = true;
+
+		mApp->SwitchToBoard(false, true);
+	}
+}
+
+void Sexy::TankScreen::KeyDown(KeyCode theKey)
+{
+	if (theKey == KEYCODE_F9 && mApp->mCurrentProfile != NULL)
+	{
+		mApp->mCurrentProfile->mBonusLevelTickets += 5;
+		mApp->SaveCurrentUserData();
+		UpdateButtonStates();
+		mApp->PlaySample(SOUND_POINTS);
 	}
 }
 

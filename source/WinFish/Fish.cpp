@@ -2,6 +2,7 @@
 
 #include "Fish.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "ProfileMgr.h"
 #include "FishTypePet.h"
@@ -1477,7 +1478,11 @@ void Fish::RemoveFromGame(bool aRemoveShadow)
 void Fish::Die(bool flag)
 {
     if (flag)
+    {
         mApp->mBoard->PlayDieSound(mType);
+        if (mApp->mAPController != NULL)
+            mApp->mAPController->OnFishDied("fish died");
+    }
 
     RemoveFromGame(false);
     bool isFacingRight = (mVX >= 0.0);

@@ -2,6 +2,7 @@
 
 #include "Breeder.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "FishTypePet.h"
 #include "Shadow.h"
@@ -760,7 +761,11 @@ bool Sexy::Breeder::HungryLogic()
 void Sexy::Breeder::Die(bool playDieSound)
 {
 	if (playDieSound)
+	{
 		mApp->mBoard->PlayDieSound(mType);
+		if (mApp->mAPController != NULL)
+			mApp->mAPController->OnFishDied("breeder died");
+	}
 
 	RemoveFromGame(false);
 	bool isFacingRight = (mVX >= 0.0);

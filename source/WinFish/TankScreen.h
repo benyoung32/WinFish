@@ -14,7 +14,8 @@ namespace Sexy
 	public:
 		enum
 		{
-			BUTTON_CYRAX = 5
+			BUTTON_CYRAX = 5,
+			BUTTON_BONUS = 6
 		};
 
 		WinFishApp* mApp;
@@ -22,6 +23,7 @@ namespace Sexy
 		DialogButton* mStoriesButton;
 		DialogButton* mTankButtons[4];
 		DialogButton* mCyraxButton;
+		DialogButton* mBonusButton;
 		int m0xa8[8];
 
 	public:
@@ -32,6 +34,7 @@ namespace Sexy
 		virtual void			RemovedFromManager(WidgetManager* theWidgetManager);
 		virtual void			Update();
 		virtual void			Draw(Graphics* g);
+		virtual void			KeyDown(KeyCode theKey);
 
 		virtual void			ButtonPress(int theId);
 		virtual void			ButtonDepress(int theId);

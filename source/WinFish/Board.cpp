@@ -803,6 +803,12 @@ void Board::Update()
 			{
 				if (mCoinList->empty() && m0x3f8++ > 100)
 				{
+					if (mApp->mIsTicketBonusRound)
+					{
+						mApp->mIsTicketBonusRound = false;
+						mApp->SwitchToBonusScreen();
+						return;
+					}
 					mApp->mCurrentProfile->NextLevel();
 					if (mLevel < 6)
 						mApp->mHighScoreMgr->RecordAdventureHighScore(mTank, mLevel, mApp->mCurrentProfile, m0x3fc);

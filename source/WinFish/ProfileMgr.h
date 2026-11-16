@@ -39,6 +39,7 @@ namespace Sexy
 		bool mStoreScreenBought[8];
 		int mBonusItemId;
 		int m0xb4;
+		int mBonusLevelTickets;
 		int mAdventureScores[21];
 		int mTimeTrialScores[4];
 		int mChallengeScores[4];

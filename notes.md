@@ -1,6 +1,4 @@
-
-~~based on the received check level end screen text change to show what was unlocked~~ (DONE)
-
+## TODO:
 
 OPTIONAL:
 
@@ -8,21 +6,20 @@ add auto clicking setting. the gun can only fire every 0.25 settings so this cou
 
 borderless fullscreen
 
-## TODO:
 
-TODO: integrate death link. there are three new fields to add to slot data:
+~~TODO: integrate death link. there are three new fields to add to slot data:
             "death_link": bool(self.options.death_link.value),
             "death_link_amnesty": int(self.options.death_link_amnesty.value),
-            "death_link_effect": int(self.options.death_link_effect.value),
+            "death_link_effect": int(self.options.death_link_effect.value)~~ (DONE)
 
 TODO: create some sort of UI element that displays if trap queue has contents. could be in faint text at the bottom
 
-TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines. 
+TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines.
 
 TODO: edit or display archibald such that the sprite grows as more egg pieces are purchased 
 ## INVESTIGATE:
 
-TODO: instead of bonus shells on their own being a bonus item, there could be a bonus minigame ticket option that allows playing a round of the bonus minigame for shells. the timer could be random or even progressively increase.
+~~TODO: instead of bonus shells on their own being a bonus item, there could be a bonus minigame ticket option that allows playing a round of the bonus minigame for shells.~~ (DONE) 
 
 TODO: accesibility options; auto collect coins when moused over. laser rapid fire always enabled 
 TODO: deleting a profile should not open the AP edit dialogue 
@@ -34,23 +31,21 @@ challenge mode
 alien-randomizer: each attack wave contains random enemies
 alien-difficulty: how many aliens each wave has
 bomb-trap: spawn 5-10 of shrapnels bombs
-death link? the death link could be triggered when 'n' number of fish die. a received death link should kill all fish in the tank (and not trigger additional death links). fish killed by pets like gash and amp should not count towards the death link. 
+death link? the death link could be triggered when 'n' number of fish die. a received death link should kill all fish in the tank (and not trigger additional death links). fish killed by pets like gash and amp should not count towards the death link.
 
-create a AP status screen that lists the total received items (pets 10/20, etc. etc.) 
+create a AP status screen that lists the total received items (pets 10/20, etc. etc.)
     bonus money
     tanks unlocked
 
 Are there other upgrades that could be added out of sequence to the game? Fish in levels they dont belong in?
 
-how should pets be weighted (progression, useful, filler). Should they all be equal or should the be some bias put in to the "best" pets?
+virtual tank: I have no ideas/plans for this, I never really play virtual tank but it could be reworked to be a place to make progress while BK'd on tanks.
 
-virtual tank: I have no ideas/plans for this, I never really play virtual tank but it could be reworked to be a place to make progress while BK'd on tanks. 
-
-high score page: 
-could be reworked to include scores from community? or other information from the archipelago 
+high score page:
+could be reworked to include scores from community? or other information from the archipelago
 
 
-# ideas from discord: 
+# ideas from discord:
 
 maybe even some optional items that affect the virtual tank, like the alien summoner.
 can be put in the AP item pool.

@@ -283,7 +283,7 @@ namespace Sexy
 		case APItem::PET_SLOT: return "Pet Slot Upgrade";
 		case APItem::STARTING_MONEY: return "Starting Money +100";
 		case APItem::WEAPON_UPGRADE: return "Progressive Weapon Upgrade";
-		case APItem::BONUS_SHELLS: return "Bonus Shells";
+		case APItem::BONUS_SHELLS: return "Bonus Level Ticket";
 		case APItem::STINKY: return "Stinky the Snail";
 		case APItem::NIKO: return "Niko the Oyster";
 		case APItem::ITCHY: return "Itchy the Swordfish";

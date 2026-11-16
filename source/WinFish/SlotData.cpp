@@ -4,20 +4,32 @@
 #include "SlotData.h"
 
 Sexy::SlotData::SlotData() :
+	mCyraxRequired(false),
+	mTimeTrialRequired(false),
+	mChallengeModeRequired(false),
 	mStartingTank(1),
 	mAliensanity(false),
 	mUpgradeAvailability(0),
 	mStartingMoneyBonus(0),
-	mStartPetSlots(0)
+	mStartPetSlots(0),
+	mDeathLink(false),
+	mDeathLinkAmnesty(0),
+	mDeathLinkEffect(0)
 {
 }
 
 Sexy::SlotData::SlotData(const std::string& theJsonOrPath) :
+	mCyraxRequired(false),
+	mTimeTrialRequired(false),
+	mChallengeModeRequired(false),
 	mStartingTank(1),
 	mAliensanity(false),
 	mUpgradeAvailability(0),
 	mStartingMoneyBonus(0),
-	mStartPetSlots(0)
+	mStartPetSlots(0),
+	mDeathLink(false),
+	mDeathLinkAmnesty(0),
+	mDeathLinkEffect(0)
 {
 	if (!theJsonOrPath.empty())
 	{
@@ -116,6 +128,41 @@ bool Sexy::SlotData::ParseJson(const std::string& theJsonStr)
 				mStartPetSlots = aJson["starting_pet_slots"].get<int>();
 			else if (aJson["starting_pet_slots"].is_string())
 				mStartPetSlots = atoi(aJson["starting_pet_slots"].get<std::string>().c_str());
+		}
+
+		// Death Link
+		mDeathLink = false;
+		if (aJson.contains("death_link"))
+		{
+			if (aJson["death_link"].is_boolean())
+				mDeathLink = aJson["death_link"].get<bool>();
+			else if (aJson["death_link"].is_number())
+				mDeathLink = (aJson["death_link"].get<int>() != 0);
+			else if (aJson["death_link"].is_string())
+			{
+				std::string aStr = aJson["death_link"].get<std::string>();
+				mDeathLink = (aStr == "true" || aStr == "1");
+			}
+		}
+
+		// Death Link Amnesty
+		mDeathLinkAmnesty = 0;
+		if (aJson.contains("death_link_amnesty"))
+		{
+			if (aJson["death_link_amnesty"].is_number())
+				mDeathLinkAmnesty = aJson["death_link_amnesty"].get<int>();
+			else if (aJson["death_link_amnesty"].is_string())
+				mDeathLinkAmnesty = atoi(aJson["death_link_amnesty"].get<std::string>().c_str());
+		}
+
+		// Death Link Effect (0 = Instant Kill, 1 = Random Trap)
+		mDeathLinkEffect = DEATH_LINK_EFFECT_INSTANT_KILL;
+		if (aJson.contains("death_link_effect"))
+		{
+			if (aJson["death_link_effect"].is_number())
+				mDeathLinkEffect = aJson["death_link_effect"].get<int>();
+			else if (aJson["death_link_effect"].is_string())
+				mDeathLinkEffect = atoi(aJson["death_link_effect"].get<std::string>().c_str());
 		}
 		return true;
 	}

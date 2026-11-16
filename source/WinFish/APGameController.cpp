@@ -5,6 +5,11 @@
 #include "Alien.h"
 #include "Fish.h"
 #include "Breeder.h"
+#include "Oscar.h"
+#include "Penta.h"
+#include "Ultra.h"
+#include "Grubber.h"
+#include "Gekko.h"
 #include "ProfileMgr.h"
 #include "SlotData.h"
 #include "MenuButtonWidget.h"
@@ -25,7 +30,10 @@ APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 	mWeaponLevel(0),
 	mStartingMoneyBonus(0),
 	mUpgradeAvailability(0),
-	mNotificationCooldown(0)
+	mNotificationCooldown(0),
+	mTrapCooldown(0),
+	mFishDeathsSinceLastDeathLink(0),
+	mSuppressDeathLink(false)
 {
 	for (int i = 0; i < 5; i++)
 		mUnlockedTanks[i] = false;
@@ -50,6 +58,13 @@ void APGameController::Update()
 		{
 			QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
 			SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
+		}
+
+		std::vector<APDeathLink> aDeathLinks;
+		mBridge->PopReceivedDeathLinks(aDeathLinks);
+		for (const APDeathLink& aDL : aDeathLinks)
+		{
+			mPendingDeathLinks.push_back(aDL);
 		}
 	}
 }
@@ -251,6 +266,13 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 			// If already in a tank, grant the money directly
 			mApp->mBoard->mMoney += 100;
 			mApp->mBoard->UpdateMoneyLabelText();
+		}
+		break;
+
+	case APItem::BONUS_SHELLS:
+		if (mApp != NULL && mApp->mCurrentProfile != NULL)
+		{
+			mApp->mCurrentProfile->mBonusLevelTickets++;
 		}
 		break;
 
@@ -519,6 +541,8 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
+	ResetDeathLinkAmnesty();
+
 	// set trap cooldown to 60-180 seconds (1-3 minutes)
 	mTrapCooldown = (rand() % 60 + 120) * 60;
 
@@ -594,6 +618,137 @@ void APGameController::UpdateBoard(Board* theBoard)
 
 		}
 	}
+
+	// Service Death Links during active gameplay (not during bonus rounds)
+	if (!mPendingDeathLinks.empty() && !theBoard->mIsBonusRound)
+	{
+		APDeathLink aDeathLink = mPendingDeathLinks.front();
+		int anEffect = mBridge != NULL ? mBridge->GetSlotData().mDeathLinkEffect : 0;
+
+		if (anEffect == DEATH_LINK_EFFECT_INSTANT_KILL)
+		{
+			// If fish are present in the tank, execute instant kill
+			if (theBoard->HasAnyFish())
+			{
+				mPendingDeathLinks.pop_front();
+
+				mSuppressDeathLink = true;
+
+				if (theBoard->mFishList != NULL)
+				{
+					std::vector<Fish*> aFishCopy = *theBoard->mFishList;
+					for (Fish* aFish : aFishCopy)
+					{
+						if (aFish != NULL)
+							aFish->Die(true);
+					}
+				}
+				if (theBoard->mBreederList != NULL)
+				{
+					std::vector<Breeder*> aBreederCopy = *theBoard->mBreederList;
+					for (Breeder* aBreeder : aBreederCopy)
+					{
+						if (aBreeder != NULL)
+							aBreeder->Die(true);
+					}
+				}
+				if (theBoard->mOscarList != NULL)
+				{
+					std::vector<Oscar*> anOscarCopy = *theBoard->mOscarList;
+					for (Oscar* anOscar : anOscarCopy)
+					{
+						if (anOscar != NULL)
+							anOscar->Die(true);
+					}
+				}
+				if (theBoard->mPentaList != NULL)
+				{
+					std::vector<Penta*> aPentaCopy = *theBoard->mPentaList;
+					for (Penta* aPenta : aPentaCopy)
+					{
+						if (aPenta != NULL)
+							aPenta->Die(true);
+					}
+				}
+				if (theBoard->mUltraList != NULL)
+				{
+					std::vector<Ultra*> anUltraCopy = *theBoard->mUltraList;
+					for (Ultra* anUltra : anUltraCopy)
+					{
+						if (anUltra != NULL)
+							anUltra->Die(true);
+					}
+				}
+				if (theBoard->mGrubberList != NULL)
+				{
+					std::vector<Grubber*> aGrubberCopy = *theBoard->mGrubberList;
+					for (Grubber* aGrubber : aGrubberCopy)
+					{
+						if (aGrubber != NULL)
+							aGrubber->Die(true);
+					}
+				}
+				if (theBoard->mGekkoList != NULL)
+				{
+					std::vector<Gekko*> aGekkoCopy = *theBoard->mGekkoList;
+					for (Gekko* aGekko : aGekkoCopy)
+					{
+						if (aGekko != NULL)
+							aGekko->Die(true);
+					}
+				}
+
+				mSuppressDeathLink = false;
+
+				std::string aMsg = aDeathLink.mCause.empty() ?
+					("DEATH LINK: " + aDeathLink.mSource + " died!") :
+					("DEATH LINK: " + aDeathLink.mCause);
+				theBoard->ShowText(aMsg, true, -1);
+			}
+		}
+		else if (anEffect == DEATH_LINK_EFFECT_RANDOM_TRAP)
+		{
+			mPendingDeathLinks.pop_front();
+
+			APItem aRandomTrap = (rand() % 2 == 0) ? APItem::TRAP_ALIEN_ATTACK : APItem::TRAP_FAMINE;
+			mPendingTraps.push_back(aRandomTrap);
+
+			std::string aMsg = "DEATH LINK from " + aDeathLink.mSource + ": Trap queued!";
+			theBoard->ShowText(aMsg, true, -1);
+		}
+	}
+}
+
+void APGameController::OnFishDied(const std::string& theCause)
+{
+	if (mBridge == NULL || !mBridge->GetSlotData().mDeathLink)
+		return;
+
+	if (mSuppressDeathLink)
+		return;
+
+	if (mApp == NULL || mApp->mBoard == NULL || mApp->mBoard->mIsBonusRound || mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+		return;
+
+	mFishDeathsSinceLastDeathLink++;
+	int anAmnesty = mBridge->GetSlotData().mDeathLinkAmnesty;
+
+	if (mFishDeathsSinceLastDeathLink > anAmnesty)
+	{
+		std::string aCauseStr = mBridge->GetSlotName() + "'s " + theCause;
+		mBridge->SendDeathLink(aCauseStr);
+		mFishDeathsSinceLastDeathLink = 0;
+
+		if (mApp->mBoard != NULL)
+		{
+			mApp->mBoard->ShowText("DEATH LINK SENT!", true, -1);
+		}
+	}
+}
+
+void APGameController::ResetDeathLinkAmnesty()
+{
+	mFishDeathsSinceLastDeathLink = 0;
 }
 
 void APGameController::QueueNotification(const std::string& theMessage)

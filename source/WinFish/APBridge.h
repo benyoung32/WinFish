@@ -31,6 +31,13 @@ namespace Sexy
 		std::string	mRecipientSlot;
 	};
 
+	struct APDeathLink
+	{
+		double		mTime;
+		std::string	mSource;
+		std::string	mCause;
+	};
+
 	class APBridge
 	{
 	public:
@@ -68,6 +75,9 @@ namespace Sexy
 		void PopReceivedItems(std::vector<APReceivedItem>& theItems);
 		void PopConfirmedChecks(std::vector<int>& theLocations);	// locations the server reports as checked
 		void PopSentItems(std::vector<APSentItem>& theSentItems);
+		void PopReceivedDeathLinks(std::vector<APDeathLink>& theDeathLinks);
+		void SendDeathLink(const std::string& theCause);
+		const std::string& GetSlotName() const { return mSlot; }
 		bool IsLocationChecked(int theLocationId) const;
 		std::string GetSeed() const;									// empty until room info arrives
 
@@ -97,6 +107,8 @@ namespace Sexy
 		std::vector<APReceivedItem> mReceivedItems;
 		std::vector<int> mConfirmedChecks;
 		std::vector<APSentItem> mSentItems;
+		std::vector<APDeathLink> mReceivedDeathLinks;
+		double mLastSentDeathLinkTime;
 		bool mGoalSent;
 		SlotData mSlotData;
 	};

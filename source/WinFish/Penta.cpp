@@ -2,6 +2,7 @@
 
 #include "Penta.h"
 #include "WinFishApp.h"
+#include "APGameController.h"
 #include "Board.h"
 #include "Shadow.h"
 #include "Missle.h"
@@ -351,7 +352,11 @@ bool Sexy::Penta::HungryBehavior()
 void Sexy::Penta::Die(bool flag)
 {
 	if (flag)
+	{
 		mApp->mBoard->PlayDieSound(mType);
+		if (mApp->mAPController != NULL)
+			mApp->mAPController->OnFishDied("carnivore died");
+	}
 	Remove(false);
 	bool isFacingRight = (mVX >= 0.0);
 	mApp->mBoard->SpawnDeadFish(mXD, mYD, mVX, mVY, mSpeedMod, mType, isFacingRight, mShadowPtr);

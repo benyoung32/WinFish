@@ -425,6 +425,7 @@ void Sexy::UserProfile::Init()
     mCyraxNum = 0;
     mFinishedGameCount = 0;
     m0xb4 = 3;
+    mBonusLevelTickets = 0;
     mCheatCodeFlags = 0;
     SetCheatFlag(1, true);
     m0x8c = 0;
@@ -523,7 +524,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    uint aVer = 0x80000005;
+    uint aVer = 0x80000006;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -640,6 +641,11 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (aVer >= 0x80000005)
     {
         theDataSync.SyncString(mAPSlotData);
+    }
+
+    if (aVer >= 0x80000006)
+    {
+        theDataSync.SyncLong(mBonusLevelTickets);
     }
 
     if (theReader)

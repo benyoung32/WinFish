@@ -1007,6 +1007,8 @@ void Sexy::Alien::CheckCollision()
 				if (ax > -aXEatDistObj && ax < aXEatDistObj && ay > -aYEatDistObj && ay < aYEatDistObj)
 				{
 					OnFoodAte(anObj);
+					if (mApp != NULL && mApp->mAPController != NULL)
+						mApp->mAPController->OnFishDied("fish was eaten by an alien");
 					anObj->Remove();
 					return;
 				}
