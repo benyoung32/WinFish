@@ -1,6 +1,7 @@
 #ifndef __APBRIDGE_H__
 #define __APBRIDGE_H__
 
+#include <bitset>
 #include <cstdint>
 #include <set>
 #include <string>
@@ -19,7 +20,7 @@ namespace Sexy
 	// One entry of a ReceivedItems packet. mIndex is the item's position in the slot's full received list.
 	struct APReceivedItem
 	{
-		int64_t		mItem;
+		APItem		mItem;
 		int64_t		mLocation;
 		int			mPlayer;
 		int			mIndex;
@@ -73,16 +74,25 @@ namespace Sexy
 		// The bridge only queues what the server sends; the game drains the queues each frame.
 		bool ConsumeJustConnected();									// true once per successful slot login
 		void PopReceivedItems(std::vector<APReceivedItem>& theItems);
-		void PopConfirmedChecks(std::vector<int>& theLocations);	// locations the server reports as checked
+		void PopConfirmedChecks(std::vector<APLocation>& theLocations);	// locations the server reports as checked
 		void PopSentItems(std::vector<APSentItem>& theSentItems);
 		void PopReceivedDeathLinks(std::vector<APDeathLink>& theDeathLinks);
 		void SendDeathLink(const std::string& theCause);
 		const std::string& GetSlotName() const { return mSlot; }
-		bool IsLocationChecked(int theLocationId) const;
+		bool IsLocationChecked(APLocation theLocation) const
+		{
+			return mCheckedLocations.test(static_cast<size_t>(theLocation));
+		}
+		bool IsLocationChecked(int64_t theLocationId) const;
+		void SetLocationChecked(APLocation theLocation)
+		{
+			mCheckedLocations.set(static_cast<size_t>(theLocation));
+		}
 		std::string GetSeed() const;									// empty until room info arrives
 
 		// Sent now if logged in; otherwise apclientpp queues checks until the next login.
-		void SendChecks(const std::set<int>& theLocations);
+		void SendChecks(const std::set<APLocation>& theLocations);
+		void SendCheck(APLocation theLocation);
 		void SendGoal();
 		// Asks the server to resend all received items (used when an item index is skipped).
 		void RequestSync();
@@ -105,12 +115,13 @@ namespace Sexy
 		std::string mLastError;
 		bool mJustConnected;
 		std::vector<APReceivedItem> mReceivedItems;
-		std::vector<int> mConfirmedChecks;
+		std::vector<APLocation> mConfirmedChecks;
 		std::vector<APSentItem> mSentItems;
 		std::vector<APDeathLink> mReceivedDeathLinks;
 		double mLastSentDeathLinkTime;
 		bool mGoalSent;
 		SlotData mSlotData;
+		std::bitset<128> mCheckedLocations;
 	};
 };
 

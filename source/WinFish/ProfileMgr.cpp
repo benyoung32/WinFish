@@ -606,13 +606,16 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
             {
                 int aLocationId = 0;
                 theDataSync.SyncLong(aLocationId);
-                mAPPendingChecks.insert(aLocationId);
+                mAPPendingChecks.insert(static_cast<APLocation>(aLocationId));
             }
         }
         else
         {
-            for (int aLocationId : mAPPendingChecks)
+            for (APLocation aLoc : mAPPendingChecks)
+            {
+                int aLocationId = static_cast<int>(aLoc);
                 theDataSync.SyncLong(aLocationId);
+            }
         }
     }
 

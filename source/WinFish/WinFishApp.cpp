@@ -2245,10 +2245,15 @@ void Sexy::WinFishApp::UpdateArchipelago()
 		mAPSeedPromptOpen = false;
 
 		mAPBridge->Connect(aServer, aSlot, aPassword);
-
-		mAPController->ResetSession();
 		if (mCurrentProfile != NULL)
-			mAPController->LoadFromProfile(mCurrentProfile);
+		{
+			mAPBridge->GetSlotData().ParseJson(mCurrentProfile->mAPSlotData);
+			if (mAPController != NULL)
+				mCurrentProfile->m0xb4 = mAPController->GetPetSlots();
+		}
+
+		if (mAPController != NULL)
+			mAPController->ResetSession();
 	
 	}
 
@@ -2294,10 +2299,10 @@ void Sexy::WinFishApp::UpdateArchipelago()
 		return;
 
 	// The server is the truth for locations: once it reports a check, it no longer needs to be kept.
-	std::vector<int> aConfirmed;
+	std::vector<APLocation> aConfirmed;
 	mAPBridge->PopConfirmedChecks(aConfirmed);
-	for (int aLocationId : aConfirmed)
-		aProf->mAPPendingChecks.erase(aLocationId);
+	for (APLocation aLocation : aConfirmed)
+		aProf->mAPPendingChecks.erase(aLocation);
 
 	// The server resends the full list on every login; the saved index skips what was already applied.
 	std::vector<APReceivedItem> anItems;
@@ -2317,21 +2322,21 @@ void Sexy::WinFishApp::UpdateArchipelago()
 	}
 }
 
-void Sexy::WinFishApp::CheckArchipelagoLocation(int theLocationId)
+void Sexy::WinFishApp::CheckArchipelagoLocation(APLocation theLocation)
 {
 	if (mCurrentProfile == NULL)
 		return;
 
-	if (mAPBridge != NULL && mAPBridge->IsLocationChecked(theLocationId))
+	if (mAPBridge != NULL && mAPBridge->IsLocationChecked(theLocation))
 		return;
 
-	if (mCurrentProfile->mAPPendingChecks.count(theLocationId) > 0)
+	if (mCurrentProfile->mAPPendingChecks.count(theLocation) > 0)
 		return;
 
 	// Kept in the outbox until the server confirms it, in case the game saves and closes before then.
-	mCurrentProfile->mAPPendingChecks.insert(theLocationId);
+	mCurrentProfile->mAPPendingChecks.insert(theLocation);
 	if (mAPBridge != NULL)
-		mAPBridge->SendChecks({ theLocationId });
+		mAPBridge->SendCheck(theLocation);
 }
 
 void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)

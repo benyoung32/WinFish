@@ -2,6 +2,8 @@
 #define __PROFILEMGR_H__
 
 #include "SexyAppFramework/Common.h"
+#include <set>
+#include "APDefinitions.h"
 
 namespace Sexy
 {
@@ -56,7 +58,7 @@ namespace Sexy
 		int mAPItemIndex;			// received items already applied
 		// Checks made in game that the server hasn't confirmed yet (e.g. a level cleared while disconnected,
 		// which can't be replayed). Resent on connect; entries leave once the server reports them checked.
-		std::set<int> mAPPendingChecks;
+		std::set<APLocation> mAPPendingChecks;
 
 		int mAPFoodQuality;
 		int mAPFoodQuantity;

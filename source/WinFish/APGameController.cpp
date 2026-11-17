@@ -12,9 +12,9 @@
 #include "Gekko.h"
 #include "ProfileMgr.h"
 #include "SlotData.h"
-#include "MenuButtonWidget.h"
 #include <SexyAppFramework/WidgetManager.h>
 #include <SexyAppFramework/Debug.h>
+#include <algorithm>
 
 using namespace Sexy;
 
@@ -24,21 +24,29 @@ extern int gFoodLimit;
 APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 	mApp(theApp),
 	mBridge(theBridge),
-	mFoodQuality(0),
-	mFoodQuantity(0),
-	mPetSlots(0),
-	mWeaponLevel(0),
-	mStartingMoneyBonus(0),
-	mUpgradeAvailability(0),
 	mNotificationCooldown(0),
 	mTrapCooldown(0),
-	mFishDeathsSinceLastDeathLink(0),
+	mFishDeathsCounter(0),
 	mSuppressDeathLink(false)
 {
-	for (int i = 0; i < 5; i++)
-		mUnlockedTanks[i] = false;
-	for (int i = 0; i < 24; i++)
-		mUnlockedPets[i] = false;
+}
+
+UserProfile* APGameController::GetProfile() const
+{
+	return mApp->mCurrentProfile;
+}
+
+int APGameController::GetPetSlots() const
+{
+	UserProfile* aProfile = GetProfile();
+	if (aProfile == NULL)
+		return 0;
+
+	int aStart = 0;
+	if (mBridge != NULL)
+		aStart = mBridge->GetSlotData().mStartPetSlots;
+	int aTotal = aStart + aProfile->mAPPetSlots;
+	return aTotal > 24 ? 24 : aTotal;
 }
 
 void APGameController::Update()
@@ -71,57 +79,37 @@ void APGameController::Update()
 
 void APGameController::OnConnected(const std::string& theSlot, const std::string& theSeed)
 {
-	if (mBridge != NULL)
-		mUpgradeAvailability = mBridge->GetSlotData().mUpgradeAvailability;
-
-	if (mApp != NULL && mApp->mCurrentProfile != NULL)
+	UserProfile* aProf = GetProfile();
+	if (aProf != NULL && mBridge != NULL)
 	{
-		UserProfile* aProf = mApp->mCurrentProfile;
-		if (mBridge != NULL)
+		const SlotData& aSlotData = mBridge->GetSlotData();
+		aProf->mAPSlotData = aSlotData.mRawJson;
+		aProf->mAPUpgradeAvailability = aSlotData.mUpgradeAvailability;
+
+		bool aHasAnyTank = false;
+		for (int i = 0; i < 4; i++)
 		{
-			const SlotData& aSlotData = mBridge->GetSlotData();
-			aProf->mAPSlotData = aSlotData.mRawJson;
-
-			bool aHasAnyTank = false;
-			for (int i = 0; i < 4; i++)
+			if (aProf->mAPUnlockedTanks[i])
 			{
-				if (aProf->mAPUnlockedTanks[i])
-				{
-					aHasAnyTank = true;
-					break;
-				}
-			}
-
-			if (!aHasAnyTank)
-			{
-				int aStartTank = aSlotData.GetStartingTank();
-				if (aStartTank < 1 || aStartTank > 4)
-					aStartTank = 1;
-
-				aProf->mAPUnlockedTanks[aStartTank - 1] = true;
-				aProf->mTank = aStartTank;
-				aProf->mAPTankLevels[aStartTank - 1] = 1;
-				mUnlockedTanks[aStartTank] = true;
-			}
-			else if (aProf->mTank < 1 || aProf->mTank > 4 || !aProf->mAPUnlockedTanks[aProf->mTank - 1])
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					if (aProf->mAPUnlockedTanks[i])
-					{
-						aProf->mTank = i + 1;
-						break;
-					}
-				}
+				aHasAnyTank = true;
+				break;
 			}
 		}
 
+		if (!aHasAnyTank)
+		{
+			int aStartTank = aSlotData.GetStartingTank();
+
+			aProf->mAPUnlockedTanks[aStartTank - 1] = true;
+			aProf->mTank = aStartTank;
+			aProf->mAPTankLevels[aStartTank - 1] = 1;
+		}
+
 		aProf->m0xb4 = GetPetSlots();
-		aProf->mAPUpgradeAvailability = mUpgradeAvailability;
 		mApp->SaveCurrentUserData();
 	}
 
-	if (mApp != NULL && mApp->mBoard != NULL)
+	if (mApp->mBoard != NULL)
 	{
 		ApplyUpgradeAvailabilities(mApp->mBoard);
 	}
@@ -129,151 +117,68 @@ void APGameController::OnConnected(const std::string& theSlot, const std::string
 	QueueNotification("Connected to Archipelago!");
 }
 
-void APGameController::OnDisconnected()
-{
-	OutputDebugStringA("APGameController: Disconnected\n");
-}
-
 void APGameController::ResetSession()
 {
-	mFoodQuality = 0;
-	mFoodQuantity = 0;
-	mPetSlots = 0;
-	mWeaponLevel = 0;
-	mStartingMoneyBonus = 0;
-	mUpgradeAvailability = 0;
-	for (int i = 0; i < 5; i++)
-		mUnlockedTanks[i] = false;
-	for (int i = 0; i < 24; i++)
-		mUnlockedPets[i] = false;
-
 	mPendingTraps.clear();
 	mNotificationQueue.clear();
-	mReceivedHistory.clear();
 	mNotificationCooldown = 0;
+	mTrapCooldown = 0;
+	mFishDeathsCounter = 0;
+	mSuppressDeathLink = false;
 	ClearLastCheck();
-}
-
-bool APGameController::IsTankUnlocked(const LevelData& theLevel) const
-{
-	int aTank = theLevel.mTank;
-	if (aTank >= 1 && aTank <= 4)
-		return mUnlockedTanks[aTank];
-	if (aTank == 5)
-		return mUnlockedTanks[1] && mUnlockedTanks[2] && mUnlockedTanks[3] && mUnlockedTanks[4];
-	return false;
-}
-
-
-int APGameController::GetPetSlots() const
-{
-	int aStart = 0;
-	if (mBridge != NULL)
-		aStart = mBridge->GetSlotData().mStartPetSlots;
-	int aTotal = aStart + mPetSlots;
-	return aTotal > 24 ? 24 : aTotal;
 }
 
 void APGameController::OnItemReceived(const APReceivedItem& theItem)
 {
-	mReceivedHistory.push_back(theItem);
-	APItem anAPItem = static_cast<APItem>(theItem.mItem);
+	UserProfile* aProfile = GetProfile();
+	if (aProfile == NULL)
+		return;
 
-	switch (anAPItem)
-	{
-	case APItem::TANK_1_UNLOCK:
-	case APItem::TANK_2_UNLOCK:
-	case APItem::TANK_3_UNLOCK:
-	case APItem::TANK_4_UNLOCK:
+	Board* aBoard = mApp->mBoard;
+	APItem anAPItem = theItem.mItem;
+
+	if (anAPItem >= APItem::TANK_1_UNLOCK && anAPItem <= APItem::TANK_4_UNLOCK)
 	{
 		int aTank = static_cast<int>(anAPItem);
 		if (aTank >= 1 && aTank <= 4)
-			mUnlockedTanks[aTank] = true;
-		break;
+			aProfile->mAPUnlockedTanks[aTank - 1] = true;
 	}
 
+	switch (anAPItem)
+	{
 	case APItem::FOOD_QUALITY:
-		mFoodQuality++;
-		if (mFoodQuality > 2)
-			mFoodQuality = 2;
-		if (mApp != NULL && mApp->mBoard != NULL)
-		{
-			mApp->mBoard->mMaxFoodQuality = mFoodQuality;
-			int aUpgradeAvail = mUpgradeAvailability;
-			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
-			{
-				if (gFoodType < mFoodQuality)
-					gFoodType = mFoodQuality;
-			}
-			else
-			{
-				mApp->mBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, true);
-			}
-		}
+		aProfile->mAPFoodQuality = (std::min)(aProfile->mAPFoodQuality + 1, 2);
+		ApplyUpgradeAvailabilities(aBoard);
 		break;
 
 	case APItem::FOOD_QUANTITY:
-		mFoodQuantity++;
-		if (mFoodQuantity > 8)
-			mFoodQuantity = 8;
-		if (mApp != NULL && mApp->mBoard != NULL)
-		{
-			mApp->mBoard->mMaxFoodLimit = 1 + mFoodQuantity;
-			int aUpgradeAvail = mUpgradeAvailability;
-			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT)
-			{
-				if (gFoodLimit < (1 + mFoodQuantity))
-					gFoodLimit = 1 + mFoodQuantity;
-			}
-			else
-			{
-				mApp->mBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, true);
-			}
-		}
+		aProfile->mAPFoodQuantity = (std::min)(aProfile->mAPFoodQuantity + 1, 8);
+		ApplyUpgradeAvailabilities(aBoard);
 		break;
 
 	case APItem::PET_SLOT:
-		mPetSlots++;
-		if (mApp != NULL && mApp->mCurrentProfile != NULL)
-			mApp->mCurrentProfile->m0xb4 = GetPetSlots();
+		aProfile->mAPPetSlots++;
+		aProfile->m0xb4 = GetPetSlots();
 		break;
 
 	// TODO: allow this check to be affected by settings (should weapon upgrades give 2 lvls each or just 1)
 	case APItem::WEAPON_UPGRADE:
-		mWeaponLevel++;
-		if (mApp != NULL && mApp->mBoard != NULL)
-		{
-			int aLaser = 2 + mWeaponLevel;
-			if (aLaser > 12)
-				aLaser = 12;
-			mApp->mBoard->mMaxWeaponUpgrade = aLaser;
-			int aUpgradeAvail = mUpgradeAvailability;
-			if (aUpgradeAvail == UPGRADE_AVAILABILITY_INSTANT || mApp->mBoard->mTank == 5)
-			{
-				mApp->mBoard->m0x3e4 = aLaser;
-			}
-			else
-			{
-				mApp->mBoard->MenuButtonSetupNoVT(SLOT_WEAPON, true);
-			}
-		}
+		aProfile->mAPWeaponLevel++;
+		ApplyUpgradeAvailabilities(aBoard);
 		break;
 
 	case APItem::STARTING_MONEY:
-		mStartingMoneyBonus += 100;
-		if (mApp != NULL && mApp->mBoard != NULL)
+		aProfile->mAPStartingMoneyBonus += 100;
+		if (aBoard != NULL)
 		{
 			// If already in a tank, grant the money directly
-			mApp->mBoard->mMoney += 100;
-			mApp->mBoard->UpdateMoneyLabelText();
+			aBoard->mMoney += 100;
+			aBoard->UpdateMoneyLabelText();
 		}
 		break;
 
 	case APItem::BONUS_SHELLS:
-		if (mApp != NULL && mApp->mCurrentProfile != NULL)
-		{
-			mApp->mCurrentProfile->mBonusLevelTickets++;
-		}
+		aProfile->mBonusLevelTickets++;
 		break;
 
 	case APItem::TRAP_ALIEN_ATTACK:
@@ -283,15 +188,12 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	default:
 		// Check for pet items
-		if (theItem.mItem >= static_cast<int64_t>(APItem::STINKY) &&
-			theItem.mItem <= static_cast<int64_t>(APItem::WALTER))
+		if (anAPItem >= APItem::STINKY && anAPItem <= APItem::WALTER)
 		{
-			int aPetIdx = static_cast<int>(theItem.mItem - static_cast<int64_t>(APItem::STINKY));
+			int aPetIdx = static_cast<int>(anAPItem) - static_cast<int>(APItem::STINKY);
 			if (aPetIdx >= 0 && aPetIdx < 24)
 			{
-				mUnlockedPets[aPetIdx] = true;
-				if (mApp != NULL && mApp->mCurrentProfile != NULL)
-					mApp->mCurrentProfile->UnlockPet(aPetIdx, true);
+				aProfile->UnlockPet(aPetIdx, true);
 			}
 		}
 		break;
@@ -301,67 +203,40 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 	QueueNotification(std::string("Received: ") + anItemName + "!");
 	SetLastCheck(anItemName, "Received for yourself!");
 
-	// Persist updated controller state to the profile
-	if (mApp != NULL && mApp->mCurrentProfile != NULL)
-	{
-		SaveToProfile(mApp->mCurrentProfile);
-		mApp->SaveCurrentUserData();
-	}
+	mApp->SaveCurrentUserData();
 }
 
-void APGameController::ReportLocation(int64_t theLocationId)
+void APGameController::ReportLocation(APLocation theLocation)
 {
-	mApp->CheckArchipelagoLocation(static_cast<int>(theLocationId));
+	mApp->CheckArchipelagoLocation(theLocation);
+	CheckVictoryCondition();
 }
 
 void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 {
-	if (thePiece < 1 || thePiece > 3)
-	{
-		return;
-	}
-
 	APLocation aLoc = gEggPieceLocations[theLevel.mTank - 1][theLevel.mLevel - 1][thePiece - 1];
-	ReportLocation(static_cast<int64_t>(aLoc));
-	if (thePiece == 3)
-	{
-		SetLastCheck("Archipelago Item!", "Location check sent to multiworld!");
-	}
+	ReportLocation(aLoc);
+	SetLastCheck("Archipelago Item!", "Location check sent to multiworld!");
 }
 
 void APGameController::ReportTankComplete(const LevelData& theLevel)
 {
-	int aTank = theLevel.mTank;
-	if (aTank < 1 || aTank > 4)
-		return;
-
-	ReportLocation(static_cast<int64_t>(gTankCompleteLocations[aTank - 1]));
+	ReportLocation(gTankCompleteLocations[theLevel.mTank - 1]);
 }
 
 void APGameController::ReportTimeTrialComplete(const LevelData& theLevel)
 {
-	int aTank = theLevel.mTank;
-	if (aTank < 1 || aTank > 4)
-		return;
-
-	ReportLocation(static_cast<int64_t>(gTimeTrialLocations[aTank - 1]));
-	CheckVictoryCondition();
+	ReportLocation(gTimeTrialLocations[theLevel.mTank - 1]);
 }
 
 void APGameController::ReportChallengeComplete(const LevelData& theLevel)
 {
-	int aTank = theLevel.mTank;
-	if (aTank < 1 || aTank > 4)
-		return;
-
-	ReportLocation(static_cast<int64_t>(gChallengeLocations[aTank - 1]));
-	CheckVictoryCondition();
+	ReportLocation(gChallengeLocations[theLevel.mTank - 1]);
 }
 
 void APGameController::ReportCyrax()
 {
-	ReportLocation(static_cast<int64_t>(APLocation::CYRAX));
-	CheckVictoryCondition();
+	ReportLocation(APLocation::CYRAX);
 }
 
 void APGameController::ReportBonusPet(int theBonusPetIndex)
@@ -369,7 +244,7 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 	if (theBonusPetIndex < 0 || theBonusPetIndex > 3)
 		return;
 
-	ReportLocation(static_cast<int64_t>(gBonusPetLocations[theBonusPetIndex]));
+	ReportLocation(gBonusPetLocations[theBonusPetIndex]);
 }
 
 void APGameController::ReportAlienDefeated(int theAlienType)
@@ -380,7 +255,6 @@ void APGameController::ReportAlienDefeated(int theAlienType)
 	APLocation aLoc = APLocation::NONE;
 	switch (theAlienType)
 	{
-	case ALIEN_WEAK_SYLV:
 	case ALIEN_STRONG_SYLV:
 		aLoc = APLocation::DEFEAT_SYLVESTER;
 		break;
@@ -406,7 +280,7 @@ void APGameController::ReportAlienDefeated(int theAlienType)
 		return;
 	}
 
-	mApp->CheckArchipelagoLocation(static_cast<int>(aLoc));
+	ReportLocation(aLoc);
 }
 
 bool APGameController::CheckVictoryCondition()
@@ -414,32 +288,40 @@ bool APGameController::CheckVictoryCondition()
 	if (mBridge == NULL || mBridge->IsGoalSent())
 		return false;
 
-	bool aVictory = false;
+	bool victory =  mBridge->IsLocationChecked(APLocation::TANK_1_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TANK_2_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TANK_3_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TANK_4_COMPLETE);
+	
 	if (mBridge->GetSlotData().mCyraxRequired)
 	{
-		aVictory = 	mBridge->IsLocationChecked(AP_LOCATION_CYRAX);
+		victory = 	victory && 
+					mBridge->IsLocationChecked(APLocation::CYRAX);
 	}
 
 	if (mBridge->GetSlotData().mChallengeModeRequired) 
 	{ 
-		aVictory =  mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_1_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_2_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_3_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_CHALLENGE_4_COMPLETE);
+		victory =   victory &&
+					mBridge->IsLocationChecked(APLocation::CHALLENGE_1_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::CHALLENGE_2_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::CHALLENGE_3_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::CHALLENGE_4_COMPLETE);
 	}
 	
 	if (mBridge->GetSlotData().mTimeTrialRequired)
 	{
-		aVictory =  mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_1_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_2_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_3_COMPLETE) &&
-					mBridge->IsLocationChecked(AP_LOCATION_TIME_TRIAL_4_COMPLETE);
+		victory = 	victory &&   
+					mBridge->IsLocationChecked(APLocation::TIME_TRIAL_1_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TIME_TRIAL_2_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TIME_TRIAL_3_COMPLETE) &&
+					mBridge->IsLocationChecked(APLocation::TIME_TRIAL_4_COMPLETE);
 	}
 	
-	if (aVictory)
+	if (victory)
 	{
 		mBridge->SendGoal();
-		QueueNotification("Archipelago: Goal Achieved!");
+		if (!mBridge->IsGoalSent())
+			QueueNotification("Archipelago: Goal Achieved!");
 		return true;
 	}
 
@@ -448,110 +330,79 @@ bool APGameController::CheckVictoryCondition()
 
 void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 {
-	if (theBoard == NULL)
+	UserProfile* aProfile = GetProfile();
+	if (theBoard == NULL || aProfile == NULL)
 		return;
 
+	int aFoodQuantity = aProfile->mAPFoodQuantity;
+	int aFoodQuality = aProfile->mAPFoodQuality;
+	int aWeaponLevel = aProfile->mAPWeaponLevel;
+
 	// Set max upgrade limits based on items received from Archipelago
-	theBoard->mMaxFoodLimit = 1 + mFoodQuantity;
-	theBoard->mMaxFoodQuality = mFoodQuality;
-	theBoard->mMaxWeaponUpgrade = (2 + mWeaponLevel > 12) ? 12 : (2 + mWeaponLevel);
+	theBoard->mMaxFoodLimit = 1 + aFoodQuantity;
+	theBoard->mMaxFoodQuality = aFoodQuality;
+	theBoard->mMaxWeaponUpgrade = (std::min)(12, 2 + aWeaponLevel);
 
-	// int aUpgradeAvailability = UPGRADE_AVAILABILITY_SHOP_BUY;
-	int aUpgradeAvailability = mBridge->GetSlotData().mUpgradeAvailability;
+	int aUpgradeAvailability = (aProfile->mAPUpgradeAvailability != 0)
+		? aProfile->mAPUpgradeAvailability
+		: (mBridge != NULL ? mBridge->GetSlotData().mUpgradeAvailability : UPGRADE_AVAILABILITY_INSTANT);
 
-	switch (aUpgradeAvailability)
+	static const int kUpgradeSlots[] = { SLOT_WEAPON, SLOT_FOODLIMIT, SLOT_FOODLVL };
+
+	if (aUpgradeAvailability == UPGRADE_AVAILABILITY_INSTANT)
 	{
-	case UPGRADE_AVAILABILITY_INSTANT:
-		// Apply weapon upgrade level (base is 2, laser level = 2 + mWeaponLevel, max 12)
-		if (mWeaponLevel > 0)
-		{
-			int aLaser = 2 + mWeaponLevel;
-			if (aLaser > 12)
-				aLaser = 12;
-			theBoard->m0x3e4 = aLaser;
-		}
-		
-		// Apply food quality & quantity upgrades if received
-		if (mFoodQuality > 0 && gFoodType < mFoodQuality)
-			gFoodType = mFoodQuality;
+		// Apply weapon upgrade level (base is 2, laser level = 2 + aWeaponLevel, max 12)
+		if (aWeaponLevel > 0)
+			theBoard->m0x3e4 = (std::min)(12, 2 + aWeaponLevel);
 
-		if (mFoodQuantity > 0 && gFoodLimit < (1 + mFoodQuantity))
-			gFoodLimit = 1 + mFoodQuantity;
+		// Apply food quality & quantity upgrades if received
+		if (aFoodQuality > 0 && gFoodType < aFoodQuality)
+			gFoodType = aFoodQuality;
+
+		if (aFoodQuantity > 0 && gFoodLimit < (1 + aFoodQuantity))
+			gFoodLimit = 1 + aFoodQuantity;
 
 		// Disable food and weapon slots from the shop
-		for (int i = 0; i < SLOT_END; i++)
+		for (int aSlot : kUpgradeSlots)
 		{
-			if (i == SLOT_WEAPON || i == SLOT_FOODLIMIT || i == SLOT_FOODLVL)
-			{
-				theBoard->mSlotNumber[i] = -1;
-				theBoard->mSlotPrices[i] = 0;
-				theBoard->m0x374[i] = -1;
-				theBoard->mSlotUnlocked[i] = false;
-			}
+			theBoard->mSlotNumber[aSlot] = -1;
+			theBoard->mSlotPrices[aSlot] = 0;
+			theBoard->m0x374[aSlot] = -1;
+			theBoard->mSlotUnlocked[aSlot] = false;
 		}
-		break;
-		
-	case UPGRADE_AVAILABILITY_FREE_IN_SHOP:
+	}
+	else
+	{
 		// Boss tank (Tank 5) has no shop, grant weapon directly
-		if (theBoard->mTank == 5 && mWeaponLevel > 0)
-		{
-			int aLaser = 2 + mWeaponLevel;
-			if (aLaser > 12)
-				aLaser = 12;
-			theBoard->m0x3e4 = aLaser;
-		}
+		if (theBoard->mTank == 5 && aWeaponLevel > 0)
+			theBoard->m0x3e4 = (std::min)(12, 2 + aWeaponLevel);
 
-		if (theBoard->mSlotNumber[SLOT_WEAPON] > -1)
-			theBoard->mSlotPrices[SLOT_WEAPON] = 0;
-		if (theBoard->mSlotNumber[SLOT_FOODLIMIT] > -1)
-			theBoard->mSlotPrices[SLOT_FOODLIMIT] = 0;
-		if (theBoard->mSlotNumber[SLOT_FOODLVL] > -1)
-			theBoard->mSlotPrices[SLOT_FOODLVL] = 0;
-
-		if (theBoard->mSlotUnlocked[SLOT_WEAPON])
-			theBoard->MenuButtonSetupNoVT(SLOT_WEAPON, false);
-		if (theBoard->mSlotUnlocked[SLOT_FOODLIMIT])
-			theBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, false);
-		if (theBoard->mSlotUnlocked[SLOT_FOODLVL])
-			theBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, false);
-		break;
-		
-	case UPGRADE_AVAILABILITY_SHOP_BUY:
-		// Boss tank (Tank 5) has no shop, grant weapon directly
-		if (theBoard->mTank == 5 && mWeaponLevel > 0)
+		for (int aSlot : kUpgradeSlots)
 		{
-			int aLaser = 2 + mWeaponLevel;
-			if (aLaser > 12)
-				aLaser = 12;
-			theBoard->m0x3e4 = aLaser;
+			if (aUpgradeAvailability == UPGRADE_AVAILABILITY_FREE_IN_SHOP && theBoard->mSlotNumber[aSlot] > -1)
+				theBoard->mSlotPrices[aSlot] = 0;
+
+			if (theBoard->mSlotUnlocked[aSlot])
+				theBoard->MenuButtonSetupNoVT(aSlot, false);
 		}
-		// Normal prices from LevelConfig are kept
-		if (theBoard->mSlotUnlocked[SLOT_WEAPON])
-			theBoard->MenuButtonSetupNoVT(SLOT_WEAPON, false);
-		if (theBoard->mSlotUnlocked[SLOT_FOODLIMIT])
-			theBoard->MenuButtonSetupNoVT(SLOT_FOODLIMIT, false);
-		if (theBoard->mSlotUnlocked[SLOT_FOODLVL])
-			theBoard->MenuButtonSetupNoVT(SLOT_FOODLVL, false);
-		break;
 	}
 
-	if (theBoard->mWidgetManager != nullptr)
-		theBoard->mWidgetManager->MarkAllDirty();
+	theBoard->mWidgetManager->MarkAllDirty();
 }
 
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
-	ResetDeathLinkAmnesty();
+	UserProfile* aProfile = GetProfile();
+	if (theBoard == NULL || aProfile == NULL || mApp->IsBonusLevel())
+		return;
+
+	mFishDeathsCounter = 0;
 
 	// set trap cooldown to 60-180 seconds (1-3 minutes)
 	mTrapCooldown = (rand() % 60 + 120) * 60;
 
-	if (theBoard == NULL || (theBoard->mApp != NULL && theBoard->mApp->IsBonusLevel()))
-		return;
-	
-
 	// Apply starting money bonus
-	int aTotalStartingMoney = mStartingMoneyBonus;
+	int aTotalStartingMoney = aProfile->mAPStartingMoneyBonus;
 	if (mBridge != NULL)
 		aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
 
@@ -562,6 +413,18 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 	}
 	
 	ApplyUpgradeAvailabilities(theBoard);
+}
+
+template<typename Func>
+static void ForEachFishList(Board* theBoard, Func&& func)
+{
+	func(theBoard->mFishList);
+	func(theBoard->mBreederList);
+	func(theBoard->mOscarList);
+	func(theBoard->mPentaList);
+	func(theBoard->mUltraList);
+	func(theBoard->mGrubberList);
+	func(theBoard->mGekkoList);
 }
 
 void APGameController::UpdateBoard(Board* theBoard)
@@ -597,33 +460,25 @@ void APGameController::UpdateBoard(Board* theBoard)
 			// TODO: check that newHunger is the correct value. fish die at -500
 			int newHunger = 50;
 			theBoard->ShowText("FAMINE TRAP ACTIVATED!", true, -1);
-			if (theBoard->mFishList != NULL)
+			ForEachFishList(theBoard, [newHunger](auto* aList)
 			{
-				for (size_t i = 0; i < theBoard->mFishList->size(); i++)
+				if (aList != NULL)
 				{
-					Fish* aFish = (*theBoard->mFishList)[i];
-					if (aFish != NULL)
-						aFish->mHunger = newHunger;
+					for (auto* aFish : *aList)
+					{
+						if (aFish != NULL)
+							aFish->mHunger = newHunger;
+					}
 				}
-			}
-			if (theBoard->mBreederList != NULL)
-			{
-				for (size_t i = 0; i < theBoard->mBreederList->size(); i++)
-				{
-					Breeder* aBreeder = (*theBoard->mBreederList)[i];
-					if (aBreeder != NULL)
-						aBreeder->mHunger = newHunger;
-				}
-			}
-
+			});
 		}
 	}
 
-	// Service Death Links during active gameplay (not during bonus rounds)
+	// Service Death Links during active gameplay
 	if (!mPendingDeathLinks.empty() && !theBoard->mIsBonusRound)
 	{
 		APDeathLink aDeathLink = mPendingDeathLinks.front();
-		int anEffect = mBridge != NULL ? mBridge->GetSlotData().mDeathLinkEffect : 0;
+		int anEffect = mBridge->GetSlotData().mDeathLinkEffect;
 
 		if (anEffect == DEATH_LINK_EFFECT_INSTANT_KILL)
 		{
@@ -633,77 +488,24 @@ void APGameController::UpdateBoard(Board* theBoard)
 				mPendingDeathLinks.pop_front();
 
 				mSuppressDeathLink = true;
-
-				if (theBoard->mFishList != NULL)
+				ForEachFishList(theBoard, [](auto* aList)
 				{
-					std::vector<Fish*> aFishCopy = *theBoard->mFishList;
-					for (Fish* aFish : aFishCopy)
+					if (aList != NULL)
 					{
-						if (aFish != NULL)
-							aFish->Die(true);
+						auto aCopy = *aList;
+						for (auto* aFish : aCopy)
+						{
+							if (aFish != NULL)
+								aFish->Die(true);
+						}
 					}
-				}
-				if (theBoard->mBreederList != NULL)
-				{
-					std::vector<Breeder*> aBreederCopy = *theBoard->mBreederList;
-					for (Breeder* aBreeder : aBreederCopy)
-					{
-						if (aBreeder != NULL)
-							aBreeder->Die(true);
-					}
-				}
-				if (theBoard->mOscarList != NULL)
-				{
-					std::vector<Oscar*> anOscarCopy = *theBoard->mOscarList;
-					for (Oscar* anOscar : anOscarCopy)
-					{
-						if (anOscar != NULL)
-							anOscar->Die(true);
-					}
-				}
-				if (theBoard->mPentaList != NULL)
-				{
-					std::vector<Penta*> aPentaCopy = *theBoard->mPentaList;
-					for (Penta* aPenta : aPentaCopy)
-					{
-						if (aPenta != NULL)
-							aPenta->Die(true);
-					}
-				}
-				if (theBoard->mUltraList != NULL)
-				{
-					std::vector<Ultra*> anUltraCopy = *theBoard->mUltraList;
-					for (Ultra* anUltra : anUltraCopy)
-					{
-						if (anUltra != NULL)
-							anUltra->Die(true);
-					}
-				}
-				if (theBoard->mGrubberList != NULL)
-				{
-					std::vector<Grubber*> aGrubberCopy = *theBoard->mGrubberList;
-					for (Grubber* aGrubber : aGrubberCopy)
-					{
-						if (aGrubber != NULL)
-							aGrubber->Die(true);
-					}
-				}
-				if (theBoard->mGekkoList != NULL)
-				{
-					std::vector<Gekko*> aGekkoCopy = *theBoard->mGekkoList;
-					for (Gekko* aGekko : aGekkoCopy)
-					{
-						if (aGekko != NULL)
-							aGekko->Die(true);
-					}
-				}
-
+				});
 				mSuppressDeathLink = false;
 
 				std::string aMsg = aDeathLink.mCause.empty() ?
 					("DEATH LINK: " + aDeathLink.mSource + " died!") :
 					("DEATH LINK: " + aDeathLink.mCause);
-				theBoard->ShowText(aMsg, true, -1);
+				QueueNotification(aMsg);
 			}
 		}
 		else if (anEffect == DEATH_LINK_EFFECT_RANDOM_TRAP)
@@ -713,8 +515,7 @@ void APGameController::UpdateBoard(Board* theBoard)
 			APItem aRandomTrap = (rand() % 2 == 0) ? APItem::TRAP_ALIEN_ATTACK : APItem::TRAP_FAMINE;
 			mPendingTraps.push_back(aRandomTrap);
 
-			std::string aMsg = "DEATH LINK from " + aDeathLink.mSource + ": Trap queued!";
-			theBoard->ShowText(aMsg, true, -1);
+			QueueNotification("DEATH LINK from " + aDeathLink.mSource + ": Trap queued!");
 		}
 	}
 }
@@ -727,28 +528,20 @@ void APGameController::OnFishDied(const std::string& theCause)
 	if (mSuppressDeathLink)
 		return;
 
-	if (mApp == NULL || mApp->mBoard == NULL || mApp->mBoard->mIsBonusRound || mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+	if (mApp->mBoard == NULL || mApp->mBoard->mIsBonusRound || mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
 		return;
 
-	mFishDeathsSinceLastDeathLink++;
+	mFishDeathsCounter++;
 	int anAmnesty = mBridge->GetSlotData().mDeathLinkAmnesty;
 
-	if (mFishDeathsSinceLastDeathLink > anAmnesty)
+	if (mFishDeathsCounter > anAmnesty)
 	{
 		std::string aCauseStr = mBridge->GetSlotName() + "'s " + theCause;
 		mBridge->SendDeathLink(aCauseStr);
-		mFishDeathsSinceLastDeathLink = 0;
+		mFishDeathsCounter = 0;
 
-		if (mApp->mBoard != NULL)
-		{
-			mApp->mBoard->ShowText("DEATH LINK SENT!", true, -1);
-		}
+		QueueNotification("DEATH LINK SENT!");
 	}
-}
-
-void APGameController::ResetDeathLinkAmnesty()
-{
-	mFishDeathsSinceLastDeathLink = 0;
 }
 
 void APGameController::QueueNotification(const std::string& theMessage)
@@ -757,54 +550,4 @@ void APGameController::QueueNotification(const std::string& theMessage)
 		return;
 
 	mNotificationQueue.push_back(theMessage);
-}
-
-void APGameController::LoadFromProfile(UserProfile* theProfile)
-{
-	if (theProfile == NULL)
-		return;
-
-	if (mBridge != NULL && !theProfile->mAPSlotData.empty())
-	{
-		mBridge->GetSlotData().ParseJson(theProfile->mAPSlotData);
-	}
-
-	mFoodQuality = theProfile->mAPFoodQuality;
-	mFoodQuantity = theProfile->mAPFoodQuantity;
-	mPetSlots = theProfile->mAPPetSlots;
-	theProfile->m0xb4 = GetPetSlots();
-	mWeaponLevel = theProfile->mAPWeaponLevel;
-	mStartingMoneyBonus = theProfile->mAPStartingMoneyBonus;
-	mUpgradeAvailability = theProfile->mAPUpgradeAvailability;
-
-	for (int i = 0; i < 4; i++)
-		mUnlockedTanks[i + 1] = theProfile->mAPUnlockedTanks[i];
-
-	for (int i = 0; i < 24; i++)
-		mUnlockedPets[i] = theProfile->IsPetUnlocked(i);
-}
-
-void APGameController::SaveToProfile(UserProfile* theProfile)
-{
-	if (theProfile == NULL)
-		return;
-
-	theProfile->mAPFoodQuality = mFoodQuality;
-	theProfile->mAPFoodQuantity = mFoodQuantity;
-	theProfile->mAPPetSlots = mPetSlots;
-	theProfile->m0xb4 = GetPetSlots();
-	theProfile->mAPWeaponLevel = mWeaponLevel;
-	theProfile->mAPStartingMoneyBonus = mStartingMoneyBonus;
-	theProfile->mAPUpgradeAvailability = mUpgradeAvailability;
-
-	for (int i = 0; i < 4; i++)
-		theProfile->mAPUnlockedTanks[i] = mUnlockedTanks[i + 1];
-
-	theProfile->mNumOfUnlockedPets = 0;
-	for (int i = 0; i < 24; i++)
-	{
-		theProfile->mUnlockedPets[i] = mUnlockedPets[i];
-		if (mUnlockedPets[i])
-			theProfile->mNumOfUnlockedPets++;
-	}
 }

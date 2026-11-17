@@ -75,61 +75,8 @@ void Sexy::TankScreen::UpdateButtonStates()
 {
 	for (int i = 0; i < 4; i++)
 	{
-		bool anAPActive = (mApp->mAPController != NULL && mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->HasAPConnection());
-		if (anAPActive)
 		{
-			if (mApp->mAPController->IsTankUnlocked(LevelData(i + 1)))
-			{
-				mTankButtons[i]->SetDisabled(false);
-				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
-				mTankButtons[i]->mFrameNoDraw = false;
-				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
-			}
-			else
-			{
-				mTankButtons[i]->SetDisabled(true);
-				mTankButtons[i]->mComponentImage = nullptr;
-				mTankButtons[i]->mFrameNoDraw = true;
-				mTankButtons[i]->SetColor(0, Color::White);
-			}
-		}
-		else if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
-		{
-			if (mApp->mCurrentProfile != NULL && (mApp->mCurrentProfile->mTank >= i + 2 || mApp->mCurrentProfile->mFinishedGame))
-			{
-				mTankButtons[i]->SetDisabled(false);
-				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
-				mTankButtons[i]->mFrameNoDraw = false;
-				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
-			}
-			else
-			{
-				mTankButtons[i]->SetDisabled(true);
-				mTankButtons[i]->mComponentImage = nullptr;
-				mTankButtons[i]->mFrameNoDraw = true;
-				mTankButtons[i]->SetColor(0, Color::White);
-			}
-		}
-		else if (mApp->mGameMode == GAMEMODE_CHALLENGE)
-		{
-			if (i > 0 && (mApp->mCurrentProfile == NULL || !mApp->mCurrentProfile->m0x78[i-1]))
-			{
-				mTankButtons[i]->SetDisabled(true);
-				mTankButtons[i]->mComponentImage = nullptr;
-				mTankButtons[i]->mFrameNoDraw = true;
-				mTankButtons[i]->SetColor(0, Color::White);
-			}
-			else
-			{
-				mTankButtons[i]->SetDisabled(false);
-				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
-				mTankButtons[i]->mFrameNoDraw = false;
-				mTankButtons[i]->SetColor(0, Color(255, 240, 0));
-			}
-		}
-		else // GAMEMODE_ADVENTURE (non-AP fallback)
-		{
-			if (mApp->mCurrentProfile != NULL && (mApp->mCurrentProfile->mTank >= i + 1 || mApp->mCurrentProfile->mFinishedGame))
+			if (mApp->mCurrentProfile->mAPUnlockedTanks[i])
 			{
 				mTankButtons[i]->SetDisabled(false);
 				mTankButtons[i]->mComponentImage = IMAGE_MAINBUTTON;
@@ -314,10 +261,7 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 				mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
 			}
 			mApp->mCurrentProfile->mTank = aSelectedTank;
-			int aLevel = mApp->mCurrentProfile->mAPTankLevels[aSelectedTank - 1];
-			if (aLevel < 1 || aLevel > 5)
-				aLevel = 1;
-			mApp->mCurrentProfile->mLevel = aLevel;
+			mApp->mCurrentProfile->mLevel = mApp->mCurrentProfile->mAPTankLevels[aSelectedTank - 1];
 			mApp->SaveCurrentUserData();
 		}
 
@@ -358,20 +302,7 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		mApp->SaveCurrentUserData();
 
 		mApp->RemoveTankScreen();
-		int aSelectedTank = mApp->mCurrentProfile->mTank;
-		if (aSelectedTank < 1 || aSelectedTank > 4)
-		{
-			aSelectedTank = 1;
-			for (int i = 4; i >= 1; i--)
-			{
-				if (mApp->mAPController != NULL && mApp->mAPController->IsTankUnlocked(LevelData(i)))
-				{
-					aSelectedTank = i;
-					break;
-				}
-			}
-		}
-		mApp->mTankGameModeChoose = aSelectedTank;
+		mApp->mTankGameModeChoose = mApp->mCurrentProfile->mTank;
 		mApp->mIsTicketBonusRound = true;
 
 		mApp->SwitchToBoard(false, true);
@@ -391,10 +322,10 @@ void Sexy::TankScreen::KeyDown(KeyCode theKey)
 
 bool Sexy::TankScreen::AreAllTanksCompleted() const
 {
-	return mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_1_COMPLETE)) &&
-	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_2_COMPLETE)) &&
-	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_3_COMPLETE)) &&
-	       mApp->mAPBridge->IsLocationChecked(static_cast<int>(AP_LOCATION_TANK_4_COMPLETE));
+	return mApp->mAPBridge->IsLocationChecked(APLocation::TANK_1_COMPLETE) &&
+	       mApp->mAPBridge->IsLocationChecked(APLocation::TANK_2_COMPLETE) &&
+	       mApp->mAPBridge->IsLocationChecked(APLocation::TANK_3_COMPLETE) &&
+	       mApp->mAPBridge->IsLocationChecked(APLocation::TANK_4_COMPLETE);
 }
 
 void Sexy::TankScreen::DrawBolts(Graphics* g, int xOffset, int yOffset, bool drawRight, bool drawBottom)

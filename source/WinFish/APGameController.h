@@ -98,18 +98,12 @@ namespace Sexy
 
 		// Connection & Session Lifecycle
 		void						OnConnected(const std::string& theSlot, const std::string& theSeed);
-		void						OnDisconnected();
 		void						ResetSession();
 
 		// Item Ingestion & Queries
 		void						OnItemReceived(const APReceivedItem& theItem);
-		int							GetFoodQuality() const { return mFoodQuality; }
-		int							GetFoodQuantity() const { return mFoodQuantity; }
+		UserProfile*				GetProfile() const;
 		int							GetPetSlots() const;
-		int							GetReceivedPetSlots() const { return mPetSlots; }
-		int							GetWeaponLevel() const { return mWeaponLevel; }
-		int							GetStartingMoneyBonus() const { return mStartingMoneyBonus; }
-		bool						IsTankUnlocked(const LevelData& theLevel) const;
 
 		const std::string&			GetLastCheckTitle() const { return mLastCheckTitle; }
 		const std::string&			GetLastCheckDetail() const { return mLastCheckDetail; }
@@ -125,7 +119,7 @@ namespace Sexy
 		}
 
 		// Location Check Dispatch
-		void						ReportLocation(int64_t theLocationId);
+		void						ReportLocation(APLocation theLocation);
 		void						ReportEggPiece(const LevelData& theLevel, int thePiece);
 		void						ReportTankComplete(const LevelData& theLevel);
 		void						ReportTimeTrialComplete(const LevelData& theLevel);
@@ -147,30 +141,15 @@ namespace Sexy
 
 		// Death Link
 		void						OnFishDied(const std::string& theCause = "fish died");
-		void						ResetDeathLinkAmnesty();
-
-		// Persistence / Profile Synchronization (Option C)
-		void						LoadFromProfile(UserProfile* theProfile);
-		void						SaveToProfile(UserProfile* theProfile);
 
 	public:
 		WinFishApp*					mApp;
 		APBridge*					mBridge;
 
-		// Cumulative Unlocks
-		int							mFoodQuality;
-		int							mFoodQuantity;
-		int							mPetSlots;
-		int							mWeaponLevel;
-		int							mStartingMoneyBonus;
-		int							mUpgradeAvailability;
-		bool						mUnlockedTanks[5];
-		bool						mUnlockedPets[24];
-
 		// Traps & Queues
 		std::deque<APItem>			mPendingTraps;
 		std::deque<APDeathLink>		mPendingDeathLinks;
-		int							mFishDeathsSinceLastDeathLink;
+		int							mFishDeathsCounter;
 		bool						mSuppressDeathLink;
 		std::deque<std::string>		mNotificationQueue;
 		int							mNotificationCooldown; // ticks between ShowText popups

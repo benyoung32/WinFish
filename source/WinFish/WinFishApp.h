@@ -27,6 +27,8 @@ namespace Sexy
 	class APBridge;
 	class APGameController;
 	struct APReceivedItem;
+	enum class APLocation : int64_t;
+	enum class APItem : int64_t;
 	class HighScoreMgr;
 	class ProfileMgr;
 	class UserProfile;
@@ -334,7 +336,7 @@ namespace Sexy
 		void						UpdatePlayData();
 		void						UpdateArchipelago();
 		// Game code calls this when an Archipelago location is completed.
-		void						CheckArchipelagoLocation(int theLocationId);
+		void						CheckArchipelagoLocation(APLocation theLocation);
 		void						ApplyArchipelagoItem(const APReceivedItem& theItem);
 		void						ApplyNewSeedChoice(bool theStartOver);
 		bool						CheckTrialEnded();
