@@ -1,7 +1,9 @@
 #ifndef __SLOTDATA_H__
 #define __SLOTDATA_H__
 
+#include <map>
 #include <string>
+#include <vector>
 #include "APDefinitions.h"
 
 namespace Sexy
@@ -19,6 +21,8 @@ namespace Sexy
 		bool			mDeathLink;                // Archipelago Death Link enabled
 		int				mDeathLinkAmnesty;         // Number of fish that can die before sending Death Link
 		int				mDeathLinkEffect;          // Punishment effect when Death Link is received (0=kill fish, 1=random trap)
+		bool			mAlienRandomized;          // Whether alien encounters are randomized per tank
+		std::map<int, std::vector<int>> mAlienRandomization; // Mapping from tank (1-4) to list of aliens
 		std::string		mRawJson;                  // raw JSON content from slot_data.json
 
 		SlotData();

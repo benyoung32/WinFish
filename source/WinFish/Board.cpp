@@ -246,6 +246,9 @@ Board::Board(WinFishApp* theApp)
 	for (int i = 0; i < 64; i++)
 		mSoundPlayedTimerArray[i] = -1000;
 	mHasVirtualTankFish = false;
+	mAlienExpect = ALIEN_NONE;
+	mAlienExpect2 = ALIEN_NONE;
+	mAlienExpect1 = ALIEN_NONE;
 }
 
 Board::~Board()
@@ -1050,7 +1053,7 @@ void Board::Update()
 			else if (mAlienTimer == 275)
 			{
 				if(!mMessageShown[46] && mLevel == 4 && mTank == 2 && (mAlienExpect == 9 || mAlienExpect == 10 
-					|| mAlienExpect == 11 || mAlienExpect == 12))
+					|| mAlienExpect == 11 || mAlienExpect == 12 || mAlienExpect == ALIEN_DOUBLE_SPAWN))
 					mMessageWidget->mMessage = "FOURTEEN ALIEN SIGNATURES DETECTED";
 				else
 				{
@@ -1064,7 +1067,7 @@ void Board::Update()
 						mMessageWidget->mMessage = "ALIEN SIGNATURE TYPE-P DETECTED";
 					else if (mAlienExpect == ALIEN_BILATERUS)
 						mMessageWidget->mMessage = "ALIEN SIGNATURE TYPE-II DETECTED";
-					else if (mAlienExpect == 9 || mAlienExpect == 10 || mAlienExpect == 11 || mAlienExpect == 12)
+					else if (mAlienExpect == 9 || mAlienExpect == 10 || mAlienExpect == 11 || mAlienExpect == 12 || mAlienExpect == ALIEN_DOUBLE_SPAWN)
 						mMessageWidget->mMessage = "MULTIPLE ALIEN SIGNATURES DETECTED";
 					else if (mAlienExpect == ALIEN_CYRAX)
 						mMessageWidget->mMessage = StrFormat("%s OF DOOM APPROACHING", GetCyraxEndGameString(mApp->mCurrentProfile->mCyraxNum + 1).c_str());
@@ -1104,7 +1107,7 @@ void Board::Update()
 						aDifIncreaseProb = 6;
 
 					int aVal = m0x45c / aDifIncreaseProb;
-					if (mAlienExpect == 12)
+					if (mAlienExpect == 12 || mAlienExpect == ALIEN_DOUBLE_SPAWN)
 						aVal--;
 
 					for (int i = 0; i < aVal; i++)
@@ -1123,48 +1126,55 @@ void Board::Update()
 						SetAlienExpectVT();
 					else
 					{
-						if (mTank == 1 && mLevel == 5)
-							mAlienExpect = ((mApp->mSeed->Next() % 2 != 0) ? ALIEN_BALROG : 9);
-						else if (mTank == 2 && mLevel == 5)
+						if (mApp->mAPController->IsAlienRandomized())
 						{
-							if(mAlienExpect == 9)
-								mAlienExpect = ((mApp->mSeed->Next() % 2 != 0) ? ALIEN_GUS : ALIEN_DESTRUCTOR);
-							if (mApp->mSeed->Next() % 10 == 0)
-								mAlienExpect = (mAlienExpect != ALIEN_DESTRUCTOR) + ALIEN_GUS;
-							else if (mApp->mSeed->Next() % 20 == 0)
-								mAlienExpect = 9;
+							mApp->mAPController->SetAlienExpect(this);
 						}
-						else if (mTank == 3)
+						else
 						{
-							if (mLevel == 2)
+							if (mTank == 1 && mLevel == 5)
+								mAlienExpect = ((mApp->mSeed->Next() % 2 != 0) ? ALIEN_BALROG : 9);
+							else if (mTank == 2 && mLevel == 5)
 							{
-								if(mApp->mSeed->Next() % 10 == 0)
+								if(mAlienExpect == 9)
+									mAlienExpect = ((mApp->mSeed->Next() % 2 != 0) ? ALIEN_GUS : ALIEN_DESTRUCTOR);
+								if (mApp->mSeed->Next() % 10 == 0)
 									mAlienExpect = (mAlienExpect != ALIEN_DESTRUCTOR) + ALIEN_GUS;
+								else if (mApp->mSeed->Next() % 20 == 0)
+									mAlienExpect = 9;
 							}
-							else if(mLevel == 5)
+							else if (mTank == 3)
 							{
-								mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_PSYCHOSQUID : ALIEN_ULYSEES);
+								if (mLevel == 2)
+								{
+									if(mApp->mSeed->Next() % 10 == 0)
+										mAlienExpect = (mAlienExpect != ALIEN_DESTRUCTOR) + ALIEN_GUS;
+								}
+								else if(mLevel == 5)
+								{
+									mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_PSYCHOSQUID : ALIEN_ULYSEES);
+								}
 							}
-						}
-						else if (mTank == 4)
-						{
-							if (mLevel == 3)
+							else if (mTank == 4)
 							{
-								mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_GUS : 10);
-							}
-							else if (mLevel == 4)
-							{
-								mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_BILATERUS : 11);
-							}
-							else if (mLevel == 5)
-							{
-								int anAlienChance = mApp->mSeed->Next() % 5;
-								if (anAlienChance < 2)
-									mAlienExpect = 10;
-								else
-									mAlienExpect = (anAlienChance > 3 ? ALIEN_BILATERUS : 11);
-								if (mApp->mGameMode == GAMEMODE_CHALLENGE && m0x45c > 4 && mAlienExpect == ALIEN_BILATERUS)
-									mAlienExpect = 12;
+								if (mLevel == 3)
+								{
+									mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_GUS : 10);
+								}
+								else if (mLevel == 4)
+								{
+									mAlienExpect = (mApp->mSeed->Next() % 2 != 0 ? ALIEN_BILATERUS : 11);
+								}
+								else if (mLevel == 5)
+								{
+									int anAlienChance = mApp->mSeed->Next() % 5;
+									if (anAlienChance < 2)
+										mAlienExpect = 10;
+									else
+										mAlienExpect = (anAlienChance > 3 ? ALIEN_BILATERUS : 11);
+									if (mApp->mGameMode == GAMEMODE_CHALLENGE && m0x45c > 4 && mAlienExpect == ALIEN_BILATERUS)
+										mAlienExpect = 12;
+								}
 							}
 						}
 					}
@@ -1179,7 +1189,7 @@ void Board::Update()
 			else if (mAlienTimer < 275)
 			{
 				if (!mMessageShown[46] && mLevel == 4 && mTank == 4 && (mAlienExpect == 9 || mAlienExpect == 10 ||
-					mAlienExpect == 11 || mAlienExpect == 12) && mAlienTimer == 100)
+					mAlienExpect == 11 || mAlienExpect == 12 || mAlienExpect == ALIEN_DOUBLE_SPAWN) && mAlienTimer == 100)
 				{
 					mMessageWidget->mMessage = "JUST KIDDING. ONLY TWO!";
 					mMessageShown[46] = true;
@@ -1367,9 +1377,9 @@ void Board::Draw(Graphics* g)
 	g->SetDrawMode(Graphics::DRAWMODE_ADDITIVE);
 	mCrosshair1Y = 280;
 	g->DrawImageCel(IMAGE_CROSSHAIR, mCrosshair1X + 40, mCrosshair1Y + 40, (mGameUpdateCnt / 4) % 5);
-	if (mAlienExpect == 9 || mAlienExpect == 10 || mAlienExpect == 11 || mAlienExpect == 12)
+	if (mAlienExpect == 9 || mAlienExpect == 10 || mAlienExpect == 11 || mAlienExpect == 12 || mAlienExpect == ALIEN_DOUBLE_SPAWN)
 	{
-		if (mAlienExpect == 11)mCrosshair2Y = 280;
+		if (mAlienExpect == 11 || (mAlienExpect == ALIEN_DOUBLE_SPAWN && mAlienExpect2 == ALIEN_ULYSEES)) mCrosshair2Y = 280;
 		g->DrawImageCel(IMAGE_CROSSHAIR, mCrosshair2X + 40, mCrosshair2Y + 40, (mGameUpdateCnt / 4 + 2) % 5);
 	}
 	g->SetDrawMode(Graphics::DRAWMODE_NORMAL);
@@ -2278,7 +2288,7 @@ void Sexy::Board::StartGame()
 		aRandVal--;
 	}
 	UserProfile* aCurProf = mApp->mCurrentProfile;
-	int aMaxSlots = mApp->GetMaxPetSlots();
+	int aMaxSlots = mApp->mAPController->GetPetSlots();
 	if (mTank != 5)
 	{
 		if (aMaxSlots <= 0)
@@ -2540,6 +2550,8 @@ bool Sexy::Board::SyncGameData(DataSync& theSync)
 	theSync.SyncBool(mBonusRoundStarted);
 	theSync.SyncLong(m0x2a8);
 	theSync.SyncLong(mAlienExpect);
+	theSync.SyncLong(mAlienExpect2);
+	theSync.SyncLong(mAlienExpect1);
 	theSync.SyncLong(mAlienTimer);
 	theSync.SyncLong(m0x2c4);
 	theSync.SyncLong(mDropFoodDelay);
@@ -2840,6 +2852,8 @@ void Sexy::Board::InitLevel()
 	m0x43c = 1;
 	m0x3e4 = 2;
 	mAlienExpect = ALIEN_STRONG_SYLV;
+	mAlienExpect2 = ALIEN_NONE;
+	mAlienExpect1 = ALIEN_STRONG_SYLV;
 	gFoodType = 0;
 	gFoodLimit = 1;
 	gMerylActive = false;
@@ -2885,12 +2899,7 @@ void Sexy::Board::InitLevel()
 	memset(mMessageShown, 0, 54);
 	DeterminePricesAndSlots();
 
-	mMaxFoodLimit = 9;
-	mMaxFoodQuality = 2;
-	mMaxWeaponUpgrade = 12;
-
-	if (mApp->mAPController != NULL)
-		mApp->mAPController->ApplyLevelStart(this);
+	mApp->mAPController->ApplyLevelStart(this);
 
 	mTotalActiveSlotsCount = 0;
 	m0x2e0 = 0;
@@ -2918,6 +2927,8 @@ void Sexy::Board::InitBonusLevel()
 	}
 	m0x2a8 = mGameUpdateCnt;
 	mAlienExpect = ALIEN_NONE;
+	mAlienExpect2 = ALIEN_NONE;
+	mAlienExpect1 = ALIEN_NONE;
 	mPause = false;
 	mIsBonusRound = true;
 	mBonusRoundStarted = false;
@@ -5381,7 +5392,14 @@ void Sexy::Board::SpawnAlien(int theType, bool unk)
 
 void Sexy::Board::SpawnAlien(int theType, int theX, int theY, bool unk)
 {
-	if (theType == 9)
+	if (theType == ALIEN_DOUBLE_SPAWN)
+	{
+		int anAlien1 = (mAlienExpect1 != ALIEN_NONE) ? mAlienExpect1 : ALIEN_STRONG_SYLV;
+		int anAlien2 = (mAlienExpect2 != ALIEN_NONE) ? mAlienExpect2 : ALIEN_BALROG;
+		SpawnAlien(anAlien1, theX, theY, unk);
+		SpawnAlien(anAlien2, mCrosshair2X, mCrosshair2Y, unk);
+	}
+	else if (theType == 9)
 	{
 		SpawnAlien(ALIEN_WEAK_SYLV, theX, theY, unk);
 		SpawnAlien(ALIEN_BALROG, mCrosshair2X, mCrosshair2Y, unk);

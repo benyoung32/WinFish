@@ -27,7 +27,8 @@ APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 	mNotificationCooldown(0),
 	mTrapCooldown(0),
 	mFishDeathsCounter(0),
-	mSuppressDeathLink(false)
+	mSuppressDeathLink(false),
+	mLastAlien(ALIEN_NONE)
 {
 }
 
@@ -392,6 +393,8 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
+	// This function is called at the end of the board's own Init function. Changes made here
+	// should apply to the level after all defaults have been loaded 
 	UserProfile* aProfile = GetProfile();
 	if (theBoard == NULL || aProfile == NULL || mApp->IsBonusLevel())
 		return;
@@ -403,8 +406,7 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 
 	// Apply starting money bonus
 	int aTotalStartingMoney = aProfile->mAPStartingMoneyBonus;
-	if (mBridge != NULL)
-		aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
+	aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
 
 	if (aTotalStartingMoney > 0)
 	{
@@ -413,6 +415,79 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 	}
 	
 	ApplyUpgradeAvailabilities(theBoard);
+	SetAlienExpect(theBoard);
+}
+
+bool APGameController::IsAlienRandomized() const
+{
+	return mBridge != NULL && mBridge->GetSlotData().mAlienRandomized;
+}
+
+void APGameController::SetAlienExpect(Board* theBoard)
+{
+	if (theBoard == NULL || mBridge == NULL)
+		return;
+
+	if (mApp != NULL && mApp->mGameMode == GAMEMODE_VIRTUAL_TANK)
+		return;
+
+	const SlotData& aSlotData = mBridge->GetSlotData();
+	if (!aSlotData.mAlienRandomized)
+		return;
+	// get alien list for this tank
+	auto anIter = aSlotData.mAlienRandomization.find(theBoard->mTank);
+	// guard if alien list is empty
+	if (anIter == aSlotData.mAlienRandomization.end() || anIter->second.empty())
+		return;
+
+	const std::vector<int>& aAliens = anIter->second;
+
+	// Pick first alien
+	// roll through aliens until a different one from the last is picked
+	// to help it feel 'more random'
+	int aChoice = aAliens[rand() % aAliens.size()];
+	while (mLastAlien != ALIEN_NONE && mLastAlien == aChoice)
+		aChoice = aAliens[rand() % aAliens.size()];
+	int anAlien1 = aChoice;
+
+	// Calculate chance for double spawn increasing with level in each tank
+	// Level 1: 0%, Level 2: 20%, Level 3: 40%, Level 4: 60%, Level 5: 80%
+	int aDoubleChance = (theBoard->mLevel - 1) * 20;
+	aDoubleChance = (std::min)(aDoubleChance, 80);
+
+	bool aIsDoubleSpawn = (aDoubleChance > 0) && ((rand() % 100) < aDoubleChance);
+
+	if (aIsDoubleSpawn)
+	{
+		// Pick second alien
+		int anAlien2 = ALIEN_NONE;
+		if (aAliens.size() >= 2)
+		{
+			int anIdx = rand() % aAliens.size();
+			if (aAliens[anIdx] == anAlien1)
+				anAlien2 = aAliens[(anIdx + 1) % aAliens.size()];
+			else
+				anAlien2 = aAliens[anIdx];
+		}
+		else
+		{
+			anAlien2 = aAliens[0];
+		}
+
+		theBoard->mAlienExpect = ALIEN_DOUBLE_SPAWN;
+		theBoard->mAlienExpect1 = anAlien1;
+		theBoard->mAlienExpect2 = anAlien2;
+	}
+	else
+	{
+		theBoard->mAlienExpect = anAlien1;
+		theBoard->mAlienExpect1 = anAlien1;
+		theBoard->mAlienExpect2 = ALIEN_NONE;
+	}
+
+	if (theBoard->mAlienExpect != ALIEN_NONE && theBoard->mAlienTimer <= 0)
+		theBoard->mAlienTimer = 2500;
+	mLastAlien = theBoard->mAlienExpect;
 }
 
 template<typename Func>

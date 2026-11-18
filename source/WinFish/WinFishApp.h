@@ -301,7 +301,6 @@ namespace Sexy
 		void						InitializeSpecialNamedFish(GameObject* theObject);
 		bool						CanAlienChaseAnyFish();
 		bool						DoScrCopy(SexyString& theScrSvrPath);
-		int							GetMaxPetSlots() const;
 
 		void						SwitchToBoard(bool theFlag1, bool theFlag2);
 		void						SwitchToGameSelector();

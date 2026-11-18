@@ -132,7 +132,9 @@ namespace Sexy
 		bool						CheckVictoryCondition();
 
 		// Board / Gameplay Session Hooks
+		bool						IsAlienRandomized() const;
 		void						ApplyUpgradeAvailabilities(Board* theBoard);
+		void						SetAlienExpect(Board* theBoard);
 		void						ApplyLevelStart(Board* theBoard);
 		void						UpdateBoard(Board* theBoard);
 
@@ -153,6 +155,7 @@ namespace Sexy
 		bool						mSuppressDeathLink;
 		std::deque<std::string>		mNotificationQueue;
 		int							mNotificationCooldown; // ticks between ShowText popups
+		int							mLastAlien;
 		int 						mTrapCooldown;
 
 		// History of received items

@@ -157,6 +157,8 @@ namespace Sexy
 		int									m0x2b4;
 		bool								mHasVirtualTankFish;
 		int									mAlienExpect;
+		int									mAlienExpect2;
+		int									mAlienExpect1;
 		int									mAlienTimer;
 		int									m0x2c4;
 		int									mDropFoodDelay;

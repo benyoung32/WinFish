@@ -95,7 +95,6 @@ namespace Sexy
 		int							GetAdventureScore(int theTank, int theLevel);
 		int							GetTimeTrialScore(int theTank);
 		int							GetChallengeScore(int theTank);
-		int							GetMaxPetSlots() const;
 
 		bool						HasAPConnection() const { return !mAPServer.empty() && mAPServer != "archipelago.gg:" && !mAPSlot.empty(); }
 

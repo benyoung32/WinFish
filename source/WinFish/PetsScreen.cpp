@@ -10,6 +10,7 @@
 #include "Board.h"
 #include "ProfileMgr.h"
 #include "Res.h"
+#include "APGameController.h"
 
 using namespace Sexy;
 
@@ -125,7 +126,7 @@ Sexy::PetsScreen::PetsScreen(WinFishApp* theApp)
 	}
 	else
 	{
-		int aMaxSlots = mApp->GetMaxPetSlots();
+		int aMaxSlots = mApp->mAPController->GetPetSlots();
 		if (mApp->mCurrentProfile != NULL)
 			m0x130 = aMaxSlots < mApp->mCurrentProfile->mNumOfUnlockedPets ? aMaxSlots : mApp->mCurrentProfile->mNumOfUnlockedPets;
 		else
@@ -192,7 +193,7 @@ void Sexy::PetsScreen::Update()
 
 	if (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK && mApp->mCurrentProfile != NULL)
 	{
-		int aMaxSlots = mApp->GetMaxPetSlots();
+		int aMaxSlots = mApp->mAPController->GetPetSlots();
 		m0x130 = aMaxSlots < mApp->mCurrentProfile->mNumOfUnlockedPets ? aMaxSlots : mApp->mCurrentProfile->mNumOfUnlockedPets;
 	}
 

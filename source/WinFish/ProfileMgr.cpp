@@ -737,14 +737,3 @@ SexyString Sexy::UserProfile::GetSaveGameFilePath(int theGameMode, int theUserId
 
     return SexyString(GetAppDataFolder() + aPathBuffer);
 }
-
-int Sexy::UserProfile::GetMaxPetSlots() const
-{
-    if (HasAPConnection())
-    {
-        WinFishApp* anApp = dynamic_cast<WinFishApp*>(gSexyApp);
-        if (anApp != NULL && anApp->mAPController != NULL)
-            return anApp->mAPController->GetPetSlots();
-    }
-    return m0xb4;
-}

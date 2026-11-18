@@ -1,7 +1,52 @@
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 #include <nlohmann/json.hpp>
 #include "SlotData.h"
+#include "Alien.h"
+
+static int ParseTankNumber(const std::string& theStr)
+{
+	int aTank = 0;
+	size_t aPos = theStr.find_first_of("0123456789");
+	if (aPos != std::string::npos)
+		aTank = atoi(theStr.c_str() + aPos);
+	return aTank;
+}
+
+static int AlienStringToType(const std::string& theAlienStr)
+{
+	std::string aLower = theAlienStr;
+	std::transform(aLower.begin(), aLower.end(), aLower.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+
+	if (aLower.empty() || aLower == "none" || aLower == "alien_none")
+		return Sexy::ALIEN_NONE;
+	if (aLower.find("weak") != std::string::npos)
+		return Sexy::ALIEN_WEAK_SYLV;
+	if (aLower.find("mini") != std::string::npos)
+		return Sexy::ALIEN_MINI_SYLV;
+	if (aLower.find("sylv") != std::string::npos)
+		return Sexy::ALIEN_STRONG_SYLV;
+	if (aLower.find("balrog") != std::string::npos)
+		return Sexy::ALIEN_BALROG;
+	if (aLower.find("gus") != std::string::npos)
+		return Sexy::ALIEN_GUS;
+	if (aLower.find("destructor") != std::string::npos)
+		return Sexy::ALIEN_DESTRUCTOR;
+	if (aLower.find("uly") != std::string::npos)
+		return Sexy::ALIEN_ULYSEES;
+	if (aLower.find("psycho") != std::string::npos || aLower.find("squid") != std::string::npos)
+		return Sexy::ALIEN_PSYCHOSQUID;
+	if (aLower.find("bilat") != std::string::npos)
+		return Sexy::ALIEN_BILATERUS;
+	if (aLower.find("double") != std::string::npos)
+		return Sexy::ALIEN_DOUBLE_SPAWN;
+	if (aLower.find("cyrax") != std::string::npos)
+		return Sexy::ALIEN_CYRAX;
+
+	return atoi(theAlienStr.c_str());
+}
 
 Sexy::SlotData::SlotData() :
 	mCyraxRequired(false),
@@ -14,7 +59,8 @@ Sexy::SlotData::SlotData() :
 	mStartPetSlots(0),
 	mDeathLink(false),
 	mDeathLinkAmnesty(0),
-	mDeathLinkEffect(0)
+	mDeathLinkEffect(0),
+	mAlienRandomized(false)
 {
 }
 
@@ -29,7 +75,8 @@ Sexy::SlotData::SlotData(const std::string& theJsonOrPath) :
 	mStartPetSlots(0),
 	mDeathLink(false),
 	mDeathLinkAmnesty(0),
-	mDeathLinkEffect(0)
+	mDeathLinkEffect(0),
+	mAlienRandomized(false)
 {
 	if (!theJsonOrPath.empty())
 	{
@@ -163,6 +210,53 @@ bool Sexy::SlotData::ParseJson(const std::string& theJsonStr)
 				mDeathLinkEffect = aJson["death_link_effect"].get<int>();
 			else if (aJson["death_link_effect"].is_string())
 				mDeathLinkEffect = atoi(aJson["death_link_effect"].get<std::string>().c_str());
+		}
+
+		// Alien Randomized
+		mAlienRandomized = false;
+		if (aJson.contains("alien_randomized"))
+		{
+			if (aJson["alien_randomized"].is_boolean())
+				mAlienRandomized = aJson["alien_randomized"].get<bool>();
+			else if (aJson["alien_randomized"].is_number())
+				mAlienRandomized = (aJson["alien_randomized"].get<int>() != 0);
+			else if (aJson["alien_randomized"].is_string())
+			{
+				std::string aStr = aJson["alien_randomized"].get<std::string>();
+				mAlienRandomized = (aStr == "true" || aStr == "1");
+			}
+		}
+
+		// Alien Randomization: dict mapping from "tank" to a list of aliens
+		mAlienRandomization.clear();
+		if (aJson.contains("alien_randomization") && aJson["alien_randomization"].is_object())
+		{
+			for (auto& anItem : aJson["alien_randomization"].items())
+			{
+				int aTank = ParseTankNumber(anItem.key());
+				if (aTank <= 0)
+					continue;
+
+				std::vector<int> aAliensList;
+				if (anItem.value().is_array())
+				{
+					for (auto& aAlienVal : anItem.value())
+					{
+						if (aAlienVal.is_number())
+						{
+							aAliensList.push_back(aAlienVal.get<int>());
+						}
+						else if (aAlienVal.is_string())
+						{
+							aAliensList.push_back(AlienStringToType(aAlienVal.get<std::string>()));
+						}
+					}
+				}
+				mAlienRandomization[aTank] = aAliensList;
+			}
+
+			if (!aJson.contains("alien_randomized") && !mAlienRandomization.empty())
+				mAlienRandomized = true;
 		}
 		return true;
 	}
