@@ -267,15 +267,11 @@ void Sexy::GameSelector::DrawOverlay(Graphics* g)
 	g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
 	g->SetColor(Color(0xe1, 0xfa, 0xfa));
 	SexyString anAdvString;
-	if (aProf->mTank == 5 && aProf->mLevel == 1)
-		anAdvString = GetCyraxEndGameString(aProf->mCyraxNum +1);
-	else
-	{
-		if (aProf->mLevel == 6)
-			anAdvString = StrFormat("Bonus Level %d", aProf->mTank);
-		else if(aProf->mLevel != 1 || aProf->mTank != 1)
-			anAdvString = StrFormat("Tank %d-%d", aProf->mTank, aProf->mLevel);
-	}
+	
+	if (aProf->mLevel == 6)
+		anAdvString = StrFormat("Bonus Level %d", aProf->mTank);
+	else if(aProf->mLevel != 1 || aProf->mTank != 1)
+		anAdvString = StrFormat("Tank %d-%d", aProf->mTank, aProf->mLevel);
 
 	if (anAdvString.size() > 0)
 	{

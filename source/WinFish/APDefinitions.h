@@ -23,7 +23,8 @@ namespace Sexy
 		PET_SLOT = 102LL, // Pet Slot Upgrade
 		STARTING_MONEY = 103LL, // Starting Money +100
 		WEAPON_UPGRADE = 104LL, // Progressive Weapon Upgrade
-		BONUS_SHELLS = 105LL, // Bonus Shells
+		BONUS_LEVEL_TICKET = 105LL, // Bonus Level Ticket
+		BONUS_STARTING_GUPPY = 106LL, // Bonus Starting Guppy
 		STINKY = 201LL, // Stinky the Snail
 		NIKO = 202LL, // Niko the Oyster
 		ITCHY = 203LL, // Itchy the Swordfish
@@ -158,7 +159,8 @@ namespace Sexy
 		case APItem::PET_SLOT: return "Pet Slot Upgrade";
 		case APItem::STARTING_MONEY: return "Starting Money +100";
 		case APItem::WEAPON_UPGRADE: return "Progressive Weapon Upgrade";
-		case APItem::BONUS_SHELLS: return "Bonus Level Ticket";
+		case APItem::BONUS_LEVEL_TICKET: return "Bonus Level Ticket";
+		case APItem::BONUS_STARTING_GUPPY: return "Bonus Starting Guppy";
 		case APItem::STINKY: return "Stinky the Snail";
 		case APItem::NIKO: return "Niko the Oyster";
 		case APItem::ITCHY: return "Itchy the Swordfish";

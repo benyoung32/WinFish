@@ -1342,6 +1342,16 @@ void Board::Draw(Graphics* g)
 		g->DrawString("Relax", 15, 470);
 	}
 
+	if (mApp->mAPController != NULL)
+	{
+		std::string aQueueStr = mApp->mAPController->GetQueuedStatusString();
+		if (!aQueueStr.empty())
+		{
+			int aStrWidth = g->GetFont()->StringWidth(aQueueStr);
+			g->DrawString(aQueueStr, (mWidth - aStrWidth) / 2, 470);
+		}
+	}
+
 	if (mApp->mGameMode == GAMEMODE_TIME_TRIAL)
 	{
 		int aTime = m0x3bc - m0x3b0;
@@ -2827,16 +2837,23 @@ void Sexy::Board::InitLevel()
 
 		if (mApp->mCurrentProfile != NULL)
 		{
-			mApp->mCurrentProfile->mTank = mTank;
-			mLevel = mApp->mCurrentProfile->mLevel;
+			if (!mApp->mIsTicketBonusRound)
+			{
+				mApp->mCurrentProfile->mTank = mTank;
+				mLevel = mApp->mCurrentProfile->mLevel;
+			}
+			else
+			{
+				mLevel = 6;
+			}
 		}
 		else
-			mLevel = 1;
+			mLevel = mApp->mIsTicketBonusRound ? 6 : 1;
 	}
 	else
 	{
 		mTank = mApp->mTankGameModeChoose;
-		mLevel = 5;
+		mLevel = mApp->mIsTicketBonusRound ? 6 : 5;
 	}
 
 	if (mApp->mGameMode == GAMEMODE_SANDBOX)

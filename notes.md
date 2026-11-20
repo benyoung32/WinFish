@@ -12,7 +12,11 @@ borderless fullscreen
             "death_link_amnesty": int(self.options.death_link_amnesty.value),
             "death_link_effect": int(self.options.death_link_effect.value)~~ (DONE)
 
-TODO: create some sort of UI element that displays if trap queue has contents. could be in faint text at the bottom
+~~TODO: create some sort of UI element that displays if trap queue has contents. could be in faint text at the bottom~~ (DONE)
+
+TODO: the bonus level ticket system does not properly initiate the bonus level, and instead starts a tank at the fifth level.
+
+TODO: the continue text under adventure on the main menu is consistently not correct. It could be removed to reflect the more open ended nature of the implementation
 
 TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines.
 

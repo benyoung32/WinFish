@@ -133,6 +133,7 @@ namespace Sexy
 
 		// Board / Gameplay Session Hooks
 		bool						IsAlienRandomized() const;
+		void 						ApplyStartingBonuses(Board* theBoard);
 		void						ApplyUpgradeAvailabilities(Board* theBoard);
 		void						SetAlienExpect(Board* theBoard);
 		void						ApplyLevelStart(Board* theBoard);
@@ -143,6 +144,11 @@ namespace Sexy
 
 		// Death Link
 		void						OnFishDied(const std::string& theCause = "fish died");
+
+		// Queued Traps & Death Links Status
+		int							GetPendingTrapsCount() const { return (int)mPendingTraps.size(); }
+		int							GetPendingDeathLinksCount() const { return (int)mPendingDeathLinks.size(); }
+		std::string					GetQueuedStatusString() const;
 
 	public:
 		WinFishApp*					mApp;

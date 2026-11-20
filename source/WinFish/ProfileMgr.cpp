@@ -473,6 +473,7 @@ void Sexy::UserProfile::Init()
     mAPPetSlots = 0;
     mAPWeaponLevel = 0;
     mAPStartingMoneyBonus = 0;
+    mAPStartingGuppies = 0;    
     mAPUpgradeAvailability = 0;
     for (int i = 0; i < 4; i++)
     {

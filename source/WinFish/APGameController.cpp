@@ -178,8 +178,11 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 		}
 		break;
 
-	case APItem::BONUS_SHELLS:
+	case APItem::BONUS_LEVEL_TICKET:
 		aProfile->mBonusLevelTickets++;
+		break;
+	case APItem::BONUS_STARTING_GUPPY:
+		aProfile->mAPStartingGuppies++;
 		break;
 
 	case APItem::TRAP_ALIEN_ATTACK:
@@ -391,6 +394,28 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 	theBoard->mWidgetManager->MarkAllDirty();
 }
 
+void APGameController::ApplyStartingBonuses(Board* theBoard)
+{
+	UserProfile* aProfile = GetProfile();
+	
+	// give starting money 
+	int aTotalStartingMoney = aProfile->mAPStartingMoneyBonus;
+	aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
+
+	if (aTotalStartingMoney > 0)
+	{
+		theBoard->mMoney += aTotalStartingMoney;
+		theBoard->UpdateMoneyLabelText();
+	}
+	
+	// Spawn bonus guppies
+	for (int i = 0; i < aProfile->mAPStartingGuppies; i++) {
+		auto aNewFish = theBoard->
+			SpawnGuppy(mApp->mSeed->Next() % 520 + 20, mApp->mSeed->Next() % 265 + 105);
+		aNewFish->mFoodAte = 2;
+	}
+}
+
 void APGameController::ApplyLevelStart(Board* theBoard)
 {
 	// This function is called at the end of the board's own Init function. Changes made here
@@ -404,16 +429,7 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 	// set trap cooldown to 60-180 seconds (1-3 minutes)
 	mTrapCooldown = (rand() % 60 + 120) * 60;
 
-	// Apply starting money bonus
-	int aTotalStartingMoney = aProfile->mAPStartingMoneyBonus;
-	aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
-
-	if (aTotalStartingMoney > 0)
-	{
-		theBoard->mMoney += aTotalStartingMoney;
-		theBoard->UpdateMoneyLabelText();
-	}
-	
+	ApplyStartingBonuses(theBoard);
 	ApplyUpgradeAvailabilities(theBoard);
 	SetAlienExpect(theBoard);
 }
@@ -625,4 +641,20 @@ void APGameController::QueueNotification(const std::string& theMessage)
 		return;
 
 	mNotificationQueue.push_back(theMessage);
+}
+
+std::string APGameController::GetQueuedStatusString() const
+{
+	int aTrapCount = (int)mPendingTraps.size();
+	int aDeathLinkCount = (int)mPendingDeathLinks.size();
+
+	if (aTrapCount == 0 && aDeathLinkCount == 0)
+		return "";
+
+	if (aTrapCount > 0 && aDeathLinkCount > 0)
+		return StrFormat("Traps: %d  |  Death Links: %d", aTrapCount, aDeathLinkCount);
+	else if (aTrapCount > 0)
+		return StrFormat("%s Queued: %d", (aTrapCount == 1 ? "Trap" : "Traps"), aTrapCount);
+	else
+		return StrFormat("%s Queued: %d", (aDeathLinkCount == 1 ? "Death Link" : "Death Links"), aDeathLinkCount);
 }

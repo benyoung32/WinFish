@@ -1922,6 +1922,7 @@ void Sexy::WinFishApp::DoQuitDialog()
 
 void Sexy::WinFishApp::SwitchToGameSelector()
 {
+	mIsTicketBonusRound = false;
 	RemoveBoard();
 	if (mGameSelector)
 	{
@@ -1957,7 +1958,6 @@ void Sexy::WinFishApp::SwitchToHelpScreen(bool instructions)
 void Sexy::WinFishApp::RemoveBoard()
 {
 	CleanDialogs();
-	mIsTicketBonusRound = false;
 	if (mBoard)
 	{
 		mBoard->SaveCurrentGame();
@@ -1972,6 +1972,7 @@ void Sexy::WinFishApp::RemoveBoard()
 
 void Sexy::WinFishApp::RestartLevel()
 {
+	mIsTicketBonusRound = false;
 	KillDialog(DIALOG_CONTINUE_GAME);
 	KillDialog(DIALOG_RESTART_GAME);
 	RemoveBoard();
@@ -2472,6 +2473,7 @@ void Sexy::WinFishApp::SwitchToSimSetupScreen()
 void Sexy::WinFishApp::SwitchToTankScreen()
 {
 	CleanDialogs();
+	mIsTicketBonusRound = false;
 	RemoveTankScreen();
 
 	mTankScreen = new TankScreen(this);
@@ -2729,6 +2731,7 @@ void Sexy::WinFishApp::RemoveInterludeScreen()
 
 void Sexy::WinFishApp::LeaveGameBoard()
 {
+	mIsTicketBonusRound = false;
 	SaveCurrentUserData();
 	ApplyOptionsSettings();
 	RemoveBoard();

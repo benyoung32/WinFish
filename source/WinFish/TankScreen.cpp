@@ -245,11 +245,13 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 {
 	if (theId == 99)
 	{
+		mApp->mIsTicketBonusRound = false;
 		mApp->RemoveTankScreen();
 		mApp->SwitchToGameSelector();
 	}
 	else if (theId < 4)
 	{
+		mApp->mIsTicketBonusRound = false;
 		mApp->RemoveTankScreen();
 		int aSelectedTank = theId + 1;
 		mApp->mTankGameModeChoose = aSelectedTank;
@@ -302,10 +304,18 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		mApp->SaveCurrentUserData();
 
 		mApp->RemoveTankScreen();
-		mApp->mTankGameModeChoose = mApp->mCurrentProfile->mTank;
+		// choose the highest unlocked tank to use for the bonus round 
+		int aSelectedTank = 1;
+		for (int i = 3; i >= 0; i--) {
+			if (mApp->mCurrentProfile->mAPUnlockedTanks[i]) {
+				aSelectedTank = i + 1;
+				break;
+			}
+		}
+		mApp->mTankGameModeChoose = aSelectedTank;
 		mApp->mIsTicketBonusRound = true;
 
-		mApp->SwitchToBoard(false, true);
+		mApp->SwitchToBoard(false, false);
 	}
 }
 

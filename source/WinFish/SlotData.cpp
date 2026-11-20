@@ -155,11 +155,6 @@ bool Sexy::SlotData::ParseJson(const std::string& theJsonStr)
 			}
 		}
 
-		// Starting Money Bonus
-		mStartingMoneyBonus = 0;
-		if (aJson.contains("starting_money") && aJson["starting_money"].is_number())
-			mStartingMoneyBonus = aJson["starting_money"].get<int>();
-
 		// Starting Pet Slots (default 0)
 		mStartPetSlots = 0;
 		if (aJson.contains("start_pet_slots"))

@@ -65,6 +65,7 @@ namespace Sexy
 		int mAPPetSlots;
 		int mAPWeaponLevel;
 		int mAPStartingMoneyBonus;
+		int mAPStartingGuppies;
 		bool mAPUnlockedTanks[4];
 		int mAPTankLevels[4];
 		int mAPUpgradeAvailability;
