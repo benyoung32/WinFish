@@ -470,6 +470,9 @@ void Sexy::WinFishApp::Init()
 			if (mCurrentProfile == NULL)
 				mCurrentProfile = EnsureActiveProfile();
 
+			if (mCurrentProfile != NULL && mCurrentProfile->mTank >= 1 && mCurrentProfile->mTank <= 5)
+				mTankGameModeChoose = mCurrentProfile->mTank;
+
 			if (!anIsScreenSaver || mCurrentProfile != NULL)
 			{
 				mMaxExecutions = GetInteger("MaxExecutions", 0);
@@ -1975,6 +1978,18 @@ void Sexy::WinFishApp::RestartLevel()
 	mIsTicketBonusRound = false;
 	KillDialog(DIALOG_CONTINUE_GAME);
 	KillDialog(DIALOG_RESTART_GAME);
+	if (mBoard != NULL)
+	{
+		mTankGameModeChoose = mBoard->mTank;
+		if (mGameMode == GAMEMODE_ADVENTURE && mCurrentProfile != NULL)
+		{
+			mCurrentProfile->mTank = mBoard->mTank;
+			mCurrentProfile->mLevel = mBoard->mLevel;
+			if (mBoard->mTank >= 1 && mBoard->mTank <= 4)
+				mCurrentProfile->mAPTankLevels[mBoard->mTank - 1] = mBoard->mLevel;
+			SaveCurrentUserData();
+		}
+	}
 	RemoveBoard();
 	SexyString aSavePath = mCurrentProfile->GetSaveGameFilePath(mGameMode, mCurrentProfile->mId);
 	EraseFile(aSavePath);
@@ -3002,6 +3017,8 @@ void Sexy::WinFishApp::UserDialogOkPressed(bool applyChanges)
 	}
 
 	EnsureActiveProfile();
+	if (mCurrentProfile != NULL && mCurrentProfile->mTank >= 1 && mCurrentProfile->mTank <= 5)
+		mTankGameModeChoose = mCurrentProfile->mTank;
 
 	KillDialog(DIALOG_USER_DIALOG);
 
@@ -3015,6 +3032,8 @@ int Sexy::WinFishApp::GetCurrentTank()
 {
 	if (mBoard)
 		return mBoard->mTank;
+	if (mTankGameModeChoose >= 1 && mTankGameModeChoose <= 5)
+		return mTankGameModeChoose;
 	if (mCurrentProfile)
 		return mCurrentProfile->mTank;
 	return 1;

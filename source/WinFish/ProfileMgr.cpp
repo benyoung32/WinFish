@@ -525,7 +525,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    uint aVer = 0x80000006;
+    uint aVer = 0x80000007;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -650,6 +650,11 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (aVer >= 0x80000006)
     {
         theDataSync.SyncLong(mBonusLevelTickets);
+    }
+
+    if (aVer >= 0x80000007)
+    {
+        theDataSync.SyncLong(mAPStartingGuppies);
     }
 
     if (theReader)

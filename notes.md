@@ -6,21 +6,24 @@ add auto clicking setting. the gun can only fire every 0.25 settings so this cou
 
 borderless fullscreen
 
+~~TODO: the bonus level ticket system does not properly initiate the bonus level, and instead starts a tank at the fifth level.~~ (DONE)
 
-~~TODO: integrate death link. there are three new fields to add to slot data:
-            "death_link": bool(self.options.death_link.value),
-            "death_link_amnesty": int(self.options.death_link_amnesty.value),
-            "death_link_effect": int(self.options.death_link_effect.value)~~ (DONE)
-
-~~TODO: create some sort of UI element that displays if trap queue has contents. could be in faint text at the bottom~~ (DONE)
-
-TODO: the bonus level ticket system does not properly initiate the bonus level, and instead starts a tank at the fifth level.
-
-TODO: the continue text under adventure on the main menu is consistently not correct. It could be removed to reflect the more open ended nature of the implementation
+~~TODO: the continue text under adventure on the main menu is consistently not correct. It could be removed to reflect the more open ended nature of the implementation~~ (DONE)
 
 TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines.
 
 TODO: edit or display archibald such that the sprite grows as more egg pieces are purchased 
+
+TODO: counters go down while paused. add check in update function to not decrement if pause menu is open.
+
+~~TODO: alien trap does not activate gun.~~ (DONE)
+
+TODO: tracker implementation
+
+~~TODO: restarting the game, then restarting an in progress level results in starting the new level in tank 1, regardless of the original tank~~ (DONE)
+
+TODO: queued traps are lost to a game restart
+
 ## INVESTIGATE:
 
 ~~TODO: instead of bonus shells on their own being a bonus item, there could be a bonus minigame ticket option that allows playing a round of the bonus minigame for shells.~~ (DONE) 
@@ -32,10 +35,8 @@ TODO: deleting a profile should not open the AP edit dialogue
 time trial - no required threshold, could choose threshold for check or have several thresholds. 
 challenge mode
 
-alien-randomizer: each attack wave contains random enemies
 alien-difficulty: how many aliens each wave has
 bomb-trap: spawn 5-10 of shrapnels bombs
-death link? the death link could be triggered when 'n' number of fish die. a received death link should kill all fish in the tank (and not trigger additional death links). fish killed by pets like gash and amp should not count towards the death link.
 
 create a AP status screen that lists the total received items (pets 10/20, etc. etc.)
     bonus money

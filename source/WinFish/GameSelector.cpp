@@ -266,18 +266,6 @@ void Sexy::GameSelector::DrawOverlay(Graphics* g)
 
 	g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
 	g->SetColor(Color(0xe1, 0xfa, 0xfa));
-	SexyString anAdvString;
-	
-	if (aProf->mLevel == 6)
-		anAdvString = StrFormat("Bonus Level %d", aProf->mTank);
-	else if(aProf->mLevel != 1 || aProf->mTank != 1)
-		anAdvString = StrFormat("Tank %d-%d", aProf->mTank, aProf->mLevel);
-
-	if (anAdvString.size() > 0)
-	{
-		int aStrWdth = g->GetFont()->StringWidth(anAdvString);
-		g->DrawString(anAdvString, (0 - aStrWdth / 2) + 465, 107);
-	}
 
 	if (aProf->mShells > 0)
 	{
@@ -478,16 +466,10 @@ void Sexy::GameSelector::MouseDown(int x, int y, int theClickCount)
 void Sexy::GameSelector::DrawMerylSpeak(Graphics* g, int theHoverId, int theAlphaValue, bool theDrawSpeechBubble)
 {
 	UserProfile* aProf = mApp->mCurrentProfile;
-	int aTank = 1;
-	int aLevel = 1;
-	bool aFinishedGame = false;
 	SexyString anUserName = "";
 	if (aProf)
 	{
 		anUserName = aProf->GetDisplayName();
-		aTank = aProf->mTank;
-		aLevel = aProf->mLevel;
-		aFinishedGame = aProf->mFinishedGame;
 	}
 	if (theDrawSpeechBubble)
 	{
@@ -504,10 +486,7 @@ void Sexy::GameSelector::DrawMerylSpeak(Graphics* g, int theHoverId, int theAlph
 		switch (theHoverId)
 		{
 		case 1:
-			if (aTank == 1 && aLevel == 1 && !aFinishedGame)
-				aStrToDraw = "New to Insaniquarium?\nClick here to start your aquatic adventure!";
-			else
-				aStrToDraw = "Feed fish and fight aliens!\nClick here to continue\nyour adventure...";
+			aStrToDraw = "Feed fish and fight aliens!\nClick here to play\nyour adventure!";
 			break;
 		case 2:
 			aStrToDraw = "How much money can you earn before time runs out?";
@@ -597,20 +576,6 @@ void Sexy::GameSelector::UpdateHover(int theHover)
 
 void Sexy::GameSelector::UpdateAdventureButton()
 {
-	UserProfile* aProf = mApp->mCurrentProfile;
-	if (aProf)
-	{
-		if (aProf->mFinishedGame)
-		{
-			mAdventureButton->mLabel = "Bonus Adventure";
-			return;
-		}
-		if(aProf->mTank == 1 && aProf->mLevel == 1)
-		{
-			mAdventureButton->mLabel = "Start Adventure";
-			return;
-		}
-	}
 	mAdventureButton->mLabel = "Adventure";
 }
 

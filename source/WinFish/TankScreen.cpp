@@ -260,7 +260,8 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		{
 			if (mApp->mCurrentProfile->mTank >= 1 && mApp->mCurrentProfile->mTank <= 4)
 			{
-				mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
+				if (mApp->mCurrentProfile->mLevel >= 1 && mApp->mCurrentProfile->mLevel <= 5)
+					mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
 			}
 			mApp->mCurrentProfile->mTank = aSelectedTank;
 			mApp->mCurrentProfile->mLevel = mApp->mCurrentProfile->mAPTankLevels[aSelectedTank - 1];
@@ -286,7 +287,8 @@ void Sexy::TankScreen::ButtonDepress(int theId)
 		{
 			if (mApp->mCurrentProfile->mTank >= 1 && mApp->mCurrentProfile->mTank <= 4)
 			{
-				mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
+				if (mApp->mCurrentProfile->mLevel >= 1 && mApp->mCurrentProfile->mLevel <= 5)
+					mApp->mCurrentProfile->mAPTankLevels[mApp->mCurrentProfile->mTank - 1] = mApp->mCurrentProfile->mLevel;
 			}
 			mApp->mCurrentProfile->mTank = 5;
 			mApp->mCurrentProfile->mLevel = 1;

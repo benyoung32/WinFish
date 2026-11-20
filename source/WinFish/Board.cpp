@@ -1562,19 +1562,81 @@ void Sexy::Board::KeyChar(SexyChar theChar)
 
 void Board::KeyDown(KeyCode theKey)
 {
+	// DEBUG CHEATS
 	if (theKey == KEYCODE_F9)
 	{
 		for (int i = 0; i < SLOT_END; i++)
 			MakeAndUnlockMenuButton(i, true);
 
-		mMoney += 100000;
+		mMoney += 1000000;
 		if (mMoney > 9999999)
 			mMoney = 9999999;
-		if (mApp->mGameMode == GAMEMODE_VIRTUAL_TANK && mApp->mCurrentProfile != NULL)
-			mApp->mCurrentProfile->AddShells(100000);
 		UpdateMoneyLabelText();
 
 		PlaySample(SOUND_BUY_ID, 3, 1.0);
+		
+		return;
+	}
+
+	if (theKey == KEYCODE_F8) 
+	{
+		// immediately trigger alien attack
+		if (mAlienExpect == ALIEN_NONE && mApp != NULL && mApp->mAPController != NULL)
+			mApp->mAPController->SetAlienExpect(this);
+		mAlienTimer = 290;
+	}
+
+	if (theKey == KEYCODE_F7)
+	{
+		// kill present aliens
+		bool anAlienKilled = false;
+		while (!mSmallAlienList->empty())
+		{
+			size_t prevSize = mSmallAlienList->size();
+			Alien* anAlien = mSmallAlienList->back();
+			anAlien->Remove(true);
+			if (mSmallAlienList->size() == prevSize)
+				mSmallAlienList->pop_back();
+			anAlienKilled = true;
+		}
+		while (!mAlienList->empty())
+		{
+			size_t prevSize = mAlienList->size();
+			Alien* anAlien = mAlienList->back();
+			anAlien->Remove(true);
+			if (mAlienList->size() == prevSize)
+				mAlienList->pop_back();
+			anAlienKilled = true;
+		}
+		while (!mBilaterusList->empty())
+		{
+			size_t prevSize = mBilaterusList->size();
+			Bilaterus* aBil = mBilaterusList->back();
+			aBil->Remove(true);
+			if (mBilaterusList->size() == prevSize)
+				mBilaterusList->pop_back();
+			anAlienKilled = true;
+		}
+		while (!mMissleList1->empty())
+		{
+			size_t prevSize = mMissleList1->size();
+			Missle* aMissle = mMissleList1->back();
+			aMissle->Remove();
+			if (mMissleList1->size() == prevSize)
+				mMissleList1->pop_back();
+		}
+
+		if (mAlienTimer <= 275)
+		{
+			mAlienTimer = 3000;
+			if (mMessageWidget != NULL)
+				mMessageWidget->mMessageTimer = 0;
+			m0x2c4 = 0;
+		}
+
+		Unk12();
+		if (anAlienKilled)
+			PlaySample(SOUND_EXPLODE_ID, 3, 1.0);
 		return;
 	}
 
@@ -2761,6 +2823,18 @@ bool Sexy::Board::LoadGame(SexyString theSavePath)
 		aSync.mVersion = aVer;
 		if (aVer > 52 && SyncGameData(aSync))
 		{
+			if (mApp != NULL)
+			{
+				mApp->mTankGameModeChoose = mTank;
+				if (mApp->mGameMode == GAMEMODE_ADVENTURE && mApp->mCurrentProfile != NULL)
+				{
+					mApp->mCurrentProfile->mTank = mTank;
+					mApp->mCurrentProfile->mLevel = mLevel;
+					if (mTank >= 1 && mTank <= 4)
+						mApp->mCurrentProfile->mAPTankLevels[mTank - 1] = mLevel;
+				}
+			}
+
 			int aVal = aDR.ReadLong();
 			aSync.SyncPointers();
 
@@ -2840,6 +2914,17 @@ void Sexy::Board::InitLevel()
 			if (!mApp->mIsTicketBonusRound)
 			{
 				mApp->mCurrentProfile->mTank = mTank;
+				if (mTank >= 1 && mTank <= 4)
+				{
+					if (mApp->mCurrentProfile->mLevel >= 1 && mApp->mCurrentProfile->mLevel <= 5)
+						mApp->mCurrentProfile->mAPTankLevels[mTank - 1] = mApp->mCurrentProfile->mLevel;
+					else if (mApp->mCurrentProfile->mLevel != 6)
+						mApp->mCurrentProfile->mLevel = mApp->mCurrentProfile->mAPTankLevels[mTank - 1];
+				}
+				else if (mTank == 5)
+				{
+					mApp->mCurrentProfile->mLevel = 1;
+				}
 				mLevel = mApp->mCurrentProfile->mLevel;
 			}
 			else

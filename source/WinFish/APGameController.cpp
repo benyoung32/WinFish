@@ -12,6 +12,7 @@
 #include "Gekko.h"
 #include "ProfileMgr.h"
 #include "SlotData.h"
+#include "Res.h"
 #include <SexyAppFramework/WidgetManager.h>
 #include <SexyAppFramework/Debug.h>
 #include <algorithm>
@@ -52,30 +53,29 @@ int APGameController::GetPetSlots() const
 
 void APGameController::Update()
 {
-	// Process non-board specific timer updates if needed
-	if (mNotificationCooldown > 0)
-		mNotificationCooldown--;
+	if (mApp->mBoard != NULL) {
+		// timer updates if not paused
+		if (mNotificationCooldown > 0 && !mApp->mBoard->mPause)
+			mNotificationCooldown--;
 
-	if (mTrapCooldown > 0)
-		mTrapCooldown--;
-
-	if (mBridge != NULL)
-	{
-		std::vector<APSentItem> aSentItems;
-		mBridge->PopSentItems(aSentItems);
-		for (const APSentItem& aSent : aSentItems)
-		{
-			QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
-			SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
-		}
-
-		std::vector<APDeathLink> aDeathLinks;
-		mBridge->PopReceivedDeathLinks(aDeathLinks);
-		for (const APDeathLink& aDL : aDeathLinks)
-		{
-			mPendingDeathLinks.push_back(aDL);
-		}
+		if (mTrapCooldown > 0 && !mApp->mBoard->mPause)
+			mTrapCooldown--;
 	}
+
+	// process sent items
+	std::vector<APSentItem> aSentItems;
+	mBridge->PopSentItems(aSentItems);
+	for (const APSentItem& aSent : aSentItems)
+	{
+		QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
+		SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
+	}
+
+	// process received deathlinks
+	std::vector<APDeathLink> aDeathLinks;
+	mBridge->PopReceivedDeathLinks(aDeathLinks);
+	for (const APDeathLink& aDL : aDeathLinks)
+		mPendingDeathLinks.push_back(aDL);
 }
 
 void APGameController::OnConnected(const std::string& theSlot, const std::string& theSeed)
@@ -256,35 +256,32 @@ void APGameController::ReportAlienDefeated(int theAlienType)
 	if (mBridge == NULL || !mBridge->GetSlotData().mAliensanity)
 		return;
 
-	APLocation aLoc = APLocation::NONE;
 	switch (theAlienType)
 	{
 	case ALIEN_STRONG_SYLV:
-		aLoc = APLocation::DEFEAT_SYLVESTER;
+		ReportLocation(APLocation::DEFEAT_SYLVESTER);
 		break;
 	case ALIEN_BALROG:
-		aLoc = APLocation::DEFEAT_BALROG;
+		ReportLocation(APLocation::DEFEAT_BALROG);
 		break;
 	case ALIEN_GUS:
-		aLoc = APLocation::DEFEAT_GUS;
+		ReportLocation(APLocation::DEFEAT_GUS);
 		break;
 	case ALIEN_DESTRUCTOR:
-		aLoc = APLocation::DEFEAT_DESTRUCTOR;
+		ReportLocation(APLocation::DEFEAT_DESTRUCTOR);
 		break;
 	case ALIEN_PSYCHOSQUID:
-		aLoc = APLocation::DEFEAT_PSYCHOSQUID;
+		ReportLocation(APLocation::DEFEAT_PSYCHOSQUID);
 		break;
 	case ALIEN_ULYSEES:
-		aLoc = APLocation::DEFEAT_ULYSSES;
+		ReportLocation(APLocation::DEFEAT_ULYSSES);
 		break;
 	case ALIEN_BILATERUS:
-		aLoc = APLocation::DEFEAT_BILATERUS;
+		ReportLocation(APLocation::DEFEAT_BILATERUS);
 		break;
 	default:
 		return;
 	}
-
-	ReportLocation(aLoc);
 }
 
 bool APGameController::CheckVictoryCondition()
@@ -357,7 +354,7 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 	{
 		// Apply weapon upgrade level (base is 2, laser level = 2 + aWeaponLevel, max 12)
 		if (aWeaponLevel > 0)
-			theBoard->m0x3e4 = (std::min)(12, 2 + aWeaponLevel);
+			theBoard->m0x3e4 = theBoard->mMaxWeaponUpgrade;
 
 		// Apply food quality & quantity upgrades if received
 		if (aFoodQuality > 0 && gFoodType < aFoodQuality)
@@ -379,7 +376,7 @@ void APGameController::ApplyUpgradeAvailabilities(Board* theBoard)
 	{
 		// Boss tank (Tank 5) has no shop, grant weapon directly
 		if (theBoard->mTank == 5 && aWeaponLevel > 0)
-			theBoard->m0x3e4 = (std::min)(12, 2 + aWeaponLevel);
+			theBoard->m0x3e4 = theBoard->mMaxWeaponUpgrade;
 
 		for (int aSlot : kUpgradeSlots)
 		{
@@ -399,14 +396,8 @@ void APGameController::ApplyStartingBonuses(Board* theBoard)
 	UserProfile* aProfile = GetProfile();
 	
 	// give starting money 
-	int aTotalStartingMoney = aProfile->mAPStartingMoneyBonus;
-	aTotalStartingMoney += mBridge->GetSlotData().mStartingMoneyBonus;
-
-	if (aTotalStartingMoney > 0)
-	{
-		theBoard->mMoney += aTotalStartingMoney;
-		theBoard->UpdateMoneyLabelText();
-	}
+	theBoard->mMoney += aProfile->mAPStartingMoneyBonus;
+	theBoard->UpdateMoneyLabelText();
 	
 	// Spawn bonus guppies
 	for (int i = 0; i < aProfile->mAPStartingGuppies; i++) {
@@ -449,7 +440,18 @@ void APGameController::SetAlienExpect(Board* theBoard)
 
 	const SlotData& aSlotData = mBridge->GetSlotData();
 	if (!aSlotData.mAlienRandomized)
+	{
+
+		LevelConfig aCfg;
+		LevelSettingsManager::GetDefaultConfig(LevelData(theBoard->mTank, theBoard->mLevel), mApp != NULL && mApp->mRelaxMode, aCfg);
+		theBoard->mAlienExpect = aCfg.mAlienExpect;
+		theBoard->mAlienExpect1 = aCfg.mAlienExpect;
+		theBoard->mAlienExpect2 = ALIEN_NONE;
+		if (theBoard->mAlienExpect != ALIEN_NONE && theBoard->mAlienTimer <= 0)
+			theBoard->mAlienTimer = (aCfg.mAlienTimer > 0) ? aCfg.mAlienTimer : 2500;
+		mLastAlien = theBoard->mAlienExpect;
 		return;
+	}
 	// get alien list for this tank
 	auto anIter = aSlotData.mAlienRandomization.find(theBoard->mTank);
 	// guard if alien list is empty
@@ -537,16 +539,31 @@ void APGameController::UpdateBoard(Board* theBoard)
 	// Service traps during active gameplay (not during bonus rounds)
 	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound && mTrapCooldown == 0)
 	{
+		mTrapCooldown = 300;
+
 		APItem trap = mPendingTraps.front();
+		// Wait until active alien wave is defeated before triggering another wave
+		if (trap == APItem::TRAP_ALIEN_ATTACK && (!theBoard->mAlienList->empty() || !theBoard->mBilaterusList->empty() || theBoard->mAlienTimer <= 300))
+		{
+			return;
+		}
+
 		mPendingTraps.pop_front();
 
-		if (trap == APItem::TRAP_ALIEN_ATTACK)
-		{
-			// Force alien timer to zero or trigger alien arrival
-			theBoard->mAlienTimer = 1;
+		switch(trap){
+		case APItem::TRAP_ALIEN_ATTACK:
+			SetAlienExpect(theBoard);
+			if (theBoard->mAlienExpect == ALIEN_NONE)
+			{
+				theBoard->mAlienExpect = ALIEN_WEAK_SYLV;
+				theBoard->mAlienExpect1 = ALIEN_WEAK_SYLV;
+			}
+
+			theBoard->mAlienTimer = 500;
+
 			theBoard->ShowText("ALIEN ATTACK TRAP ACTIVATED!", true, -1);
-		}
-		else if (trap == APItem::TRAP_FAMINE)
+			break;
+		case APItem::TRAP_FAMINE:
 		{
 			// TODO: check that newHunger is the correct value. fish die at -500
 			int newHunger = 50;
@@ -562,6 +579,8 @@ void APGameController::UpdateBoard(Board* theBoard)
 					}
 				}
 			});
+			break;
+		}
 		}
 	}
 
