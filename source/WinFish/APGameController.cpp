@@ -22,6 +22,8 @@ using namespace Sexy;
 extern int gFoodType;
 extern int gFoodLimit;
 
+const int DEATH_LINK = 666;
+
 APGameController::APGameController(WinFishApp* theApp, APBridge* theBridge) :
 	mApp(theApp),
 	mBridge(theBridge),
@@ -79,12 +81,12 @@ void APGameController::Update()
 		SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
 		CheckVictoryCondition();
 	}
-
 	// process received deathlinks
 	std::vector<APDeathLink> aDeathLinks;
 	mBridge->PopReceivedDeathLinks(aDeathLinks);
-	for (const APDeathLink& aDL : aDeathLinks)
-		mPendingDeathLinks.push_back(aDL);
+	if (mApp->mBoard != NULL)
+		for (const APDeathLink& aDL : aDeathLinks)
+			mPendingDeathLinks.push_back(aDL);
 }
 
 void APGameController::OnConnected(const std::string& theSlot, const std::string& theSeed)
@@ -598,22 +600,10 @@ void APGameController::UpdateBoard(Board* theBoard)
 			});
 			break;
 		}
-		}
-	}
-
-	// Service Death Links during active gameplay
-	if (!mPendingDeathLinks.empty() && !theBoard->mIsBonusRound)
-	{
-		APDeathLink aDeathLink = mPendingDeathLinks.front();
-		int anEffect = mBridge->GetSlotData().mDeathLinkEffect;
-
-		if (anEffect == DEATH_LINK_EFFECT_INSTANT_KILL)
-		{
+		case APItem::TRAP_DEATH:
 			// If fish are present in the tank, execute instant kill
 			if (theBoard->HasAnyFish())
 			{
-				mPendingDeathLinks.pop_front();
-
 				mSuppressDeathLink = true;
 				ForEachFishList(theBoard, [](auto* aList)
 				{
@@ -628,29 +618,32 @@ void APGameController::UpdateBoard(Board* theBoard)
 					}
 				});
 				mSuppressDeathLink = false;
-
-				std::string aMsg = aDeathLink.mCause.empty() ?
-					("DEATH LINK: " + aDeathLink.mSource + " died!") :
-					("DEATH LINK: " + aDeathLink.mCause);
-				QueueNotification(aMsg);
 			}
-		}
-		else if (anEffect == DEATH_LINK_EFFECT_RANDOM_TRAP)
-		{
-			mPendingDeathLinks.pop_front();
-
-			APItem aRandomTrap = (rand() % 2 == 0) ? APItem::TRAP_ALIEN_ATTACK : APItem::TRAP_FAMINE;
-			UserProfile* aProf = GetProfile();
-			if (aProf != NULL)
-			{
-				aProf->mAPQueuedTraps.push_back(aRandomTrap);
-				mApp->SaveCurrentUserData();
-			}
-
-			QueueNotification("DEATH LINK from " + aDeathLink.mSource + ": Trap queued!");
 		}
 	}
+
+	// Service Death Links during active gameplay
+	if (!mPendingDeathLinks.empty() && !theBoard->mIsBonusRound) 
+	{
+		APDeathLink aDeathLink = mPendingDeathLinks.front();
+
+		UserProfile* aProf = GetProfile();
+		APItem aTrap;
+		if (mBridge->GetSlotData().mDeathLinkEffect == DEATH_LINK_EFFECT_RANDOM_TRAP)
+			aTrap = (rand() % 2 == 0) ? APItem::TRAP_ALIEN_ATTACK : APItem::TRAP_FAMINE;
+		else
+			aTrap = APItem::TRAP_DEATH;
+		
+		mPendingDeathLinks.pop_front();
+		aProf->mAPQueuedTraps.push_front(aTrap);
+		mTrapCooldown = 100;
+		std::string aMsg = aDeathLink.mCause.empty() ?
+			("DEATH LINK: " + aDeathLink.mSource + " died!") :
+			("DEATH LINK: " + aDeathLink.mCause);
+		QueueNotification(aMsg);
+	}
 }
+
 
 void APGameController::OnFishDied(const std::string& theCause)
 {

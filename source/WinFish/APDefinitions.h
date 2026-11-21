@@ -51,6 +51,7 @@ namespace Sexy
 		WALTER = 224LL, // Walter the Penguin
 		TRAP_ALIEN_ATTACK = 301LL, // Alien Attack Trap
 		TRAP_FAMINE = 302LL, // Famine Trap
+		TRAP_DEATH = 303LL // Death link punishment
 	};
 
 	// Archipelago Locations
