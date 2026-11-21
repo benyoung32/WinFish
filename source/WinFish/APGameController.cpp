@@ -256,7 +256,13 @@ void APGameController::ReportBonusPet(int theBonusPetIndex)
 	if (theBonusPetIndex < 0 || theBonusPetIndex > 3)
 		return;
 
-	ReportLocation(gBonusPetLocations[theBonusPetIndex]);
+	APLocation aLoc = gBonusPetLocations[theBonusPetIndex];
+	if (mBridge != NULL && mBridge->IsLocationChecked(aLoc))
+		SetLastCheck("Archipelago Item!", "This check has already been found!");
+	else
+		SetLastCheck("Archipelago Item!", "Location check sent to multiworld!");
+
+	ReportLocation(aLoc);
 }
 
 void APGameController::ReportAlienDefeated(int theAlienType)

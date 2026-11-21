@@ -254,6 +254,19 @@ void Sexy::HatchScreen::ButtonDepress(int theId)
 	if (theId == 99)
 	{
 		mApp->RemoveHatchScreen();
+		if (mPetId >= PET_BRINKLEY && mPetId <= PET_WALTER)
+		{
+			if (mApp->mGameMode == GAMEMODE_CHALLENGE)
+				mApp->SwitchToStoryScreen(mApp->GetCurrentTank());
+			else if (mApp->mCurrentProfile != NULL && mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 2)
+				mApp->SwitchToInterludeScreen();
+			else if (mApp->mGameMode == GAMEMODE_ADVENTURE)
+				mApp->SwitchToTankScreen();
+			else
+				mApp->LeaveGameBoard();
+			return;
+		}
+
 		if (mApp->mGameMode == GAMEMODE_TIME_TRIAL || mApp->mGameMode == GAMEMODE_CHALLENGE)
 			mApp->LeaveGameBoard();
 		else if (mApp->mCurrentProfile->mTank != 5 || mApp->mCurrentProfile->mLevel != 2)
@@ -264,7 +277,9 @@ void Sexy::HatchScreen::ButtonDepress(int theId)
 	else if (theId == 100)
 	{
 		mApp->RemoveHatchScreen();
-		if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 2)
+		if (mPetId >= PET_BRINKLEY && mPetId <= PET_WALTER)
+			mApp->SwitchToGameSelector();
+		else if (mApp->mCurrentProfile->mTank == 5 && mApp->mCurrentProfile->mLevel == 2)
 			mApp->SwitchToBoard(false, false);
 		else
 			mApp->SwitchToGameSelector();

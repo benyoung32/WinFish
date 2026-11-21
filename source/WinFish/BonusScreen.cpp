@@ -645,17 +645,30 @@ void Sexy::BonusScreen::Init()
 
 void Sexy::BonusScreen::ConfirmPurchase()
 {
-	mApp->StopMusic();
-	mApp->PlayMusic(2, 54);
-
-	if (mShellImage != nullptr)
-		delete mShellImage;
-	mShellImage = nullptr;
-
 	UserProfile* aCurUser = mApp->mCurrentProfile;
-	if (!aCurUser->HasAPConnection())
+	if (aCurUser->mBonusItemId >= 0 && aCurUser->mBonusItemId < 4)
 	{
-		switch (aCurUser->mBonusItemId)
+		int aBonusPetIndex = aCurUser->mBonusItemId;
+		aCurUser->AddShells(-m0xd0);
+		aCurUser->mBonusItemId++;
+		mApp->SaveCurrentUserData();
+
+		if (aCurUser->HasAPConnection())
+		{
+			if (mApp->mAPController != nullptr)
+				mApp->mAPController->ReportBonusPet(aBonusPetIndex);
+			mApp->SwitchToHatchScreen(PET_BRINKLEY + aBonusPetIndex);
+			return;
+		}
+
+		mApp->StopMusic();
+		mApp->PlayMusic(2, 54);
+
+		if (mShellImage != nullptr)
+			delete mShellImage;
+		mShellImage = nullptr;
+
+		switch (aBonusPetIndex)
 		{
 		case 0:
 			aCurUser->UnlockPet(PET_BRINKLEY, true);
@@ -670,17 +683,13 @@ void Sexy::BonusScreen::ConfirmPurchase()
 			aCurUser->UnlockPet(PET_WALTER, true);
 			break;
 		}
-	}
-	if (aCurUser->mBonusItemId >= 0 && aCurUser->mBonusItemId < 4)
-	{
-		if (mApp->mAPController != nullptr)
-			mApp->mAPController->ReportBonusPet(aCurUser->mBonusItemId);
+
 		mShellImage = new MemoryImage(mApp);
 		mShellImage->Create(IMAGE_EGGSHARDS->mWidth, IMAGE_EGGSHARDS->mHeight);
 		mShellImage->SetImageMode(true, true);
 		mShellImage->mNumCols = 8;
 		Graphics gImg(mShellImage);
-		Image* anImg = GetImageById(aCurUser->mBonusItemId + IMAGE_EGGBRINKLEY_ID);
+		Image* anImg = GetImageById(aBonusPetIndex + IMAGE_EGGBRINKLEY_ID);
 
 		int anXPos = 2;
 		while (anXPos < 802)
@@ -699,7 +708,17 @@ void Sexy::BonusScreen::ConfirmPurchase()
 			aBitsMade++;
 		}
 		m0xd4 = 1;
+		m0xe0 = true;
+		mUnkButton1->SetVisible(false);
+		return;
 	}
+
+	mApp->StopMusic();
+	mApp->PlayMusic(2, 54);
+
+	if (mShellImage != nullptr)
+		delete mShellImage;
+	mShellImage = nullptr;
 
 	if (aCurUser->mBonusItemId >= 4)
 	{

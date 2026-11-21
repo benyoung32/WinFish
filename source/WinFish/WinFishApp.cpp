@@ -2472,6 +2472,7 @@ void Sexy::WinFishApp::SwitchToHatchScreen(int thePetId)
 	m0x884 = true;
 	if (mBoard)
 		mBoard->mShouldSave = false;
+	RemoveBonusScreen();
 	RemoveHatchScreen();
 	mHatchScreen = new HatchScreen(this, thePetId);
 	mHatchScreen->Resize(0, 0, mWidth, mHeight);

@@ -4,7 +4,7 @@ TODO: tracker implementation
 
 ~~TODO: queued traps are lost to a game restart~~ (DONE)
 
-TODO: bonus pet menu is broken
+~~TODO: bonus pet menu is broken~~ (DONE)
 
 ## INVESTIGATE:
 
