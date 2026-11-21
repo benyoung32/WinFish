@@ -182,15 +182,14 @@ void Sexy::ArchipelagoInfo::DrawItemRow(Graphics* g, const Rect& theRect, int th
 		if (aQualityCel < 0) aQualityCel = 0;
 		g->DrawImageCel(IMAGE_FOOD,
 			aIconRect.mX + (aIconRect.mWidth - IMAGE_FOOD->GetCelWidth()) / 2,
-			aIconRect.mY + (aIconRect.mHeight - IMAGE_FOOD->GetHeight()) / 2,
+			aIconRect.mY,
 			(mUpdateCnt / 4) % 10, aQualityCel);
 		break;
 	}
 	case 1: // Food quantity
 	{
 		int aPelletCel = (mUpdateCnt / 3) % 10;
-		g->DrawImageCel(IMAGE_FOOD, aIconRect.mX + 8, aIconRect.mY + 12, aPelletCel, 0);
-		g->DrawImageCel(IMAGE_FOOD, aIconRect.mX + 24, aIconRect.mY + 12, (aPelletCel + 3) % 10, 0);
+		g->DrawImageCel(IMAGE_FOOD, aIconRect.mX + 8, aIconRect.mY + 2, aPelletCel, 0);
 		break;
 	}
 	case 2: // Weapon upgrade
@@ -198,17 +197,17 @@ void Sexy::ArchipelagoInfo::DrawItemRow(Graphics* g, const Rect& theRect, int th
 		g->DrawImageCel(IMAGE_LASERUPGRADES,
 			aIconRect.mX + (aIconRect.mWidth - IMAGE_LASERUPGRADES->GetCelWidth()) / 2,
 			aIconRect.mY + (aIconRect.mHeight - IMAGE_LASERUPGRADES->GetHeight()) / 2,
-			(mUpdateCnt / 36) % 3);
+			(mUpdateCnt / 36) % 10);
 		break;
 	}
 	case 3: // Pets
 	{
-		g->DrawImageCel(IMAGE_SCL_ITCHY,
-			aIconRect.mX + (aIconRect.mWidth - IMAGE_SCL_ITCHY->GetCelWidth()) / 2,
-			aIconRect.mY + (aIconRect.mHeight - IMAGE_SCL_ITCHY->GetHeight()) / 2,
+		g->DrawImageCel(IMAGE_SCL_PRESTO,
+			aIconRect.mX + (aIconRect.mWidth - IMAGE_SCL_PRESTO->GetCelWidth()) / 2,
+			aIconRect.mY + (aIconRect.mHeight - IMAGE_SCL_PRESTO->GetHeight()) / 2,
 			(mUpdateCnt / 4) % 10);
 		break;
-	}
+
 	case 4: // Pet slots
 	{
 		g->DrawImage(IMAGE_HELPPETCHOOSE,
@@ -218,7 +217,7 @@ void Sexy::ArchipelagoInfo::DrawItemRow(Graphics* g, const Rect& theRect, int th
 	}
 	default:
 		break;
-	}
+}}
 
 	// Title
 	g->SetFont(FONT_CONTINUUMBOLD14);
@@ -271,9 +270,9 @@ void Sexy::ArchipelagoInfo::DrawReceivedItemsPage(Graphics* g)
 
 	// Pet slots (received/total)
 	int aStartPetSlots = (mApp->mAPBridge != NULL) ? mApp->mAPBridge->GetSlotData().mStartPetSlots : 0;
-	int aTotalPetSlotUpgrades = 24 - aStartPetSlots;
+	int aTotalPetSlotUpgrades = 3 - aStartPetSlots;
 	if (aTotalPetSlotUpgrades <= 0)
-		aTotalPetSlotUpgrades = 24;
+		aTotalPetSlotUpgrades = 3;
 	int aPetSlotsReceived = aProf ? aProf->mAPPetSlots : 0;
 	SexyString aPetSlotsStr = StrFormat("%d / %d", aPetSlotsReceived, aTotalPetSlotUpgrades);
 
@@ -281,8 +280,8 @@ void Sexy::ArchipelagoInfo::DrawReceivedItemsPage(Graphics* g)
 	DrawItemRow(g, Rect(28, 106, 584, 52), 0, "Food Quality", aFoodQualityStr, "Nutrient quality upgrades for food pellets");
 	DrawItemRow(g, Rect(28, 168, 584, 52), 1, "Food Quantity", aFoodQuantityStr, "Maximum food pellets dropped on screen at once");
 	DrawItemRow(g, Rect(28, 230, 584, 52), 2, "Weapon Upgrade", aWeaponStr, "Progressive weapon laser firepower against aliens");
-	DrawItemRow(g, Rect(28, 292, 584, 52), 3, "Pets", aPetsStr, "Helper companion pets unlocked across all tanks");
-	DrawItemRow(g, Rect(28, 354, 584, 52), 4, "Pet Slots", aPetSlotsStr, "Companion pet slots unlocked for aquarium tanks");
+	DrawItemRow(g, Rect(28, 292, 584, 52), 3, "Pets", aPetsStr, "");
+	DrawItemRow(g, Rect(28, 354, 584, 52), 4, "Pet Slots", aPetSlotsStr, "");
 }
 
 void Sexy::ArchipelagoInfo::DrawTankRow(Graphics* g, const Rect& theRect, int theRowIndex,
@@ -317,7 +316,7 @@ void Sexy::ArchipelagoInfo::DrawTankRow(Graphics* g, const Rect& theRect, int th
 		g->DrawImageCel(IMAGE_TROPHYBUTTONS,
 			aIconRect.mX + (aIconRect.mWidth - IMAGE_TROPHYBUTTONS->GetCelWidth()) / 2,
 			aIconRect.mY + (aIconRect.mHeight - IMAGE_TROPHYBUTTONS->GetHeight()) / 2,
-			4);
+			1);
 		break;
 	}
 	case 2: // Time Trial
@@ -325,7 +324,7 @@ void Sexy::ArchipelagoInfo::DrawTankRow(Graphics* g, const Rect& theRect, int th
 		g->DrawImageCel(IMAGE_TROPHYBUTTONS,
 			aIconRect.mX + (aIconRect.mWidth - IMAGE_TROPHYBUTTONS->GetCelWidth()) / 2,
 			aIconRect.mY + (aIconRect.mHeight - IMAGE_TROPHYBUTTONS->GetHeight()) / 2,
-			2);
+			3);
 		break;
 	}
 	default:
@@ -372,13 +371,7 @@ void Sexy::ArchipelagoInfo::DrawTankRow(Graphics* g, const Rect& theRect, int th
 		g->SetFont(FONT_CONTINUUMBOLD14);
 		g->SetColor(Color::White);
 		int aValWidth = FONT_CONTINUUMBOLD14->StringWidth(theValueStr);
-		DrawStringWithOutline(g, theValueStr, theRect.mX + theRect.mWidth - 25 - aValWidth, theRect.mY + 36, FONT_CONTINUUMBOLD14OUTLINE, 0);
-
-		g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
-		g->SetColor(Color(0xaa, 0xee, 0xff));
-		SexyString aSubLabel = "Remaining";
-		int aSubWidth = FONT_JUNGLEFEVER10OUTLINE->StringWidth(aSubLabel);
-		g->DrawString(aSubLabel, theRect.mX + theRect.mWidth - 25 - aSubWidth, theRect.mY + 54);
+		DrawStringWithOutline(g, theValueStr, theRect.mX + theRect.mWidth - 25 - aValWidth, theRect.mY + 46, FONT_CONTINUUMBOLD14OUTLINE, 0);
 	}
 }
 
@@ -393,23 +386,13 @@ void Sexy::ArchipelagoInfo::DrawTankPage(Graphics* g, int theTank)
 	// 1. Egg piece checks: (remaining)/(total)
 	int aTotalEggPieces = 15;
 	int aCheckedEggPieces = 0;
-	for (int l = 0; l < 5; ++l)
-	{
-		for (int p = 0; p < 3; ++p)
-		{
-			APLocation aLoc = gEggPieceLocations[t][l][p];
-			bool isChecked = false;
-			if (mApp->mAPBridge != NULL && mApp->mAPBridge->IsLocationChecked(aLoc))
-				isChecked = true;
-			else if (aProf != NULL && aProf->mAPPendingChecks.count(aLoc) > 0)
-				isChecked = true;
 
-			if (isChecked)
+	for (int l = 0; l < 5; ++l)
+		for (int p = 0; p < 3; ++p)
+			if (mApp->mAPBridge != NULL && mApp->mAPBridge->IsLocationChecked(gEggPieceLocations[t][l][p]))
 				aCheckedEggPieces++;
-		}
-	}
-	int aRemainingEggPieces = aTotalEggPieces - aCheckedEggPieces;
-	SexyString aEggStr = StrFormat("%d / %d", aRemainingEggPieces, aTotalEggPieces);
+		
+	SexyString aEggStr = StrFormat("%d / %d", aCheckedEggPieces, aTotalEggPieces);
 	SexyString aEggDesc = StrFormat("%d of %d checks found across levels %d-1 through %d-5",
 		aCheckedEggPieces, aTotalEggPieces, theTank, theTank);
 
@@ -421,7 +404,7 @@ void Sexy::ArchipelagoInfo::DrawTankPage(Graphics* g, int theTank)
 	else if (aProf != NULL && aProf->mAPPendingChecks.count(aChalLoc) > 0)
 		aChallengeDone = true;
 
-	SexyString aChalDesc = "Survive 8 intense alien attack waves in Challenge Mode";
+	SexyString aChalDesc = "Survived Challenge Mode";
 
 	// 3. Time Trial completion (checkmark or X)
 	bool aTimeTrialDone = false;
@@ -431,7 +414,7 @@ void Sexy::ArchipelagoInfo::DrawTankPage(Graphics* g, int theTank)
 	else if (aProf != NULL && aProf->mAPPendingChecks.count(aTTLoc) > 0)
 		aTimeTrialDone = true;
 
-	SexyString aTTDesc = StrFormat("Reach %d shells before the time limit expires", TIME_TRIAL_GOALS[t]);
+	SexyString aTTDesc = StrFormat("Earned %d coins in Time Trial", TIME_TRIAL_GOALS[t]);
 
 	// Draw 3 rows
 	DrawTankRow(g, Rect(28, 118, 584, 78), 0, "Egg Piece Checks", aEggStr, false, false, aEggDesc);
@@ -441,6 +424,7 @@ void Sexy::ArchipelagoInfo::DrawTankPage(Graphics* g, int theTank)
 
 void Sexy::ArchipelagoInfo::KeyDown(KeyCode theKey)
 {
+	// TODO the keys are not received by the menu
 	Widget::KeyDown(theKey);
 
 	if (theKey == KEYCODE_ESCAPE)

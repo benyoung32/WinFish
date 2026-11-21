@@ -149,7 +149,6 @@ void APBridge::Connect(const std::string& theServer, const std::string& theSlot,
 			APLocation aLoc = static_cast<APLocation>(aLocationId);
 			mConfirmedChecks.push_back(aLoc);
 			SetLocationChecked(aLoc);
-		
 		}
 	});
 
