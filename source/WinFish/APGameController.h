@@ -146,7 +146,7 @@ namespace Sexy
 		void						OnFishDied(const std::string& theCause = "fish died");
 
 		// Queued Traps & Death Links Status
-		int							GetPendingTrapsCount() const { return (int)mPendingTraps.size(); }
+		int							GetPendingTrapsCount() const;
 		int							GetPendingDeathLinksCount() const { return (int)mPendingDeathLinks.size(); }
 		std::string					GetQueuedStatusString() const;
 
@@ -155,7 +155,6 @@ namespace Sexy
 		APBridge*					mBridge;
 
 		// Traps & Queues
-		std::deque<APItem>			mPendingTraps;
 		std::deque<APDeathLink>		mPendingDeathLinks;
 		int							mFishDeathsCounter;
 		bool						mSuppressDeathLink;

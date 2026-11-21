@@ -17,7 +17,7 @@ Sexy::OptionsDialog::OptionsDialog(WinFishApp* theApp, bool theFlag)
 	mApp2 = theApp;
 	SetColor(3, Color(0xff, 0xff, 100));
 	mFlag = theFlag;
-	mHelpButton = MakeDialogButton(1, this, "Help", NULL);
+	mHelpButton = MakeDialogButton(1, this, "AP Progress", NULL);
 	mScaleButton = MakeDialogButton(10, this, "", NULL);
 	UpdateScaleButtonText();
 	SexyString aWebLinkStr = mApp->GetString("weblinktext", "");
@@ -38,6 +38,7 @@ Sexy::OptionsDialog::OptionsDialog(WinFishApp* theApp, bool theFlag)
 	mFullscreenCB = MakeCheckbox(7, this, !mApp->mIsWindowed);
 	mCustomCursorsCB = MakeCheckbox(8, this, mApp->mCustomCursorsEnabled);
 	m3DCB = MakeCheckbox(9, this, mApp->Is3DAccelerated());
+	mAutoFireCB = MakeCheckbox(11, this, mApp->mAutoFire);
 
 	if (theFlag)
 		mBackButton->SetVisible(false);
@@ -58,6 +59,8 @@ Sexy::OptionsDialog::~OptionsDialog()
 		delete mCustomCursorsCB;
 	if (m3DCB)
 		delete m3DCB;
+	if (mAutoFireCB)
+		delete mAutoFireCB;
 	if (mHelpButton)
 		delete mHelpButton;
 	if (mScaleButton)
@@ -75,6 +78,7 @@ void Sexy::OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 	theWidgetManager->AddWidget(mSFXSlider);
 	theWidgetManager->AddWidget(mCustomCursorsCB);
 	theWidgetManager->AddWidget(m3DCB);
+	theWidgetManager->AddWidget(mAutoFireCB);
 	theWidgetManager->AddWidget(mFullscreenCB);
 	theWidgetManager->AddWidget(mWebLinkButton);
 	theWidgetManager->AddWidget(mBackButton);
@@ -89,6 +93,7 @@ void Sexy::OptionsDialog::RemovedFromManager(WidgetManager* theWidgetManager)
 	theWidgetManager->RemoveWidget(mSFXSlider);
 	theWidgetManager->RemoveWidget(mCustomCursorsCB);
 	theWidgetManager->RemoveWidget(m3DCB);
+	theWidgetManager->RemoveWidget(mAutoFireCB);
 	theWidgetManager->RemoveWidget(mFullscreenCB);
 	theWidgetManager->RemoveWidget(mWebLinkButton);
 	theWidgetManager->RemoveWidget(mBackButton);
@@ -105,6 +110,7 @@ void Sexy::OptionsDialog::Draw(Graphics* g)
 	g->DrawString("Fullscreen", mFullscreenCB->mX - mX + 43, mFullscreenCB->mY - mY + 24);
 	g->DrawString("Custom Cursors", mCustomCursorsCB->mX - mX + 43, mCustomCursorsCB->mY - mY + 24);
 	g->DrawString("Hardware Acceleration", m3DCB->mX - mX + 43, m3DCB->mY - mY + 24);
+	g->DrawString("Auto Fire", mAutoFireCB->mX - mX + 43, mAutoFireCB->mY - mY + 24);
 	g->SetColorizeImages(false);
 }
 
@@ -161,14 +167,15 @@ void Sexy::OptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight
 
 	mFullscreenCB->Resize(mX + 33, mY + 128, 45, 46);
 	mCustomCursorsCB->Resize(mX + 161, mY + 128, 45, 46);
-	m3DCB->Resize(mX + 33, mY + 172, 45, 46);
+	m3DCB->Resize(mX + 33, mY + 170, 45, 46);
+	mAutoFireCB->Resize(mX + 33, mY + 212, 45, 46);
 }
 
 int Sexy::OptionsDialog::GetPreferredHeight(int theWidth)
 {
-	int aPrefHght = 362;
+	int aPrefHght = 406;
 	if (!mBackButton->mVisible)
-		aPrefHght = 328;
+		aPrefHght = 372;
 	if (mWebLinkButton->mVisible)
 		aPrefHght += 34;
 	return aPrefHght;
@@ -232,7 +239,7 @@ void Sexy::OptionsDialog::ButtonDepress(int theId)
 		mApp->DoRegisterDialog();
 		return;
 	case 1:
-		mApp->SwitchToHelpScreen(false);
+		mApp->SwitchToArchipelagoInfo();
 		return;
 	case 2:
 		mApp->OpenURL(mApp->GetString("weblink", "http://www.popcap.com"));

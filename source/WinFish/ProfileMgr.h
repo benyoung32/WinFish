@@ -3,6 +3,7 @@
 
 #include "SexyAppFramework/Common.h"
 #include <set>
+#include <deque>
 #include "APDefinitions.h"
 
 namespace Sexy
@@ -69,6 +70,7 @@ namespace Sexy
 		bool mAPUnlockedTanks[4];
 		int mAPTankLevels[4];
 		int mAPUpgradeAvailability;
+		std::deque<APItem> mAPQueuedTraps;
 
 	public:
 		UserProfile();

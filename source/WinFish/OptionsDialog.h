@@ -21,6 +21,7 @@ namespace Sexy
 		Checkbox* mFullscreenCB;
 		Checkbox* mCustomCursorsCB;
 		Checkbox* m3DCB;
+		Checkbox* mAutoFireCB;
 		DialogButton* mRegisterButton;
 		DialogButton* mHelpButton;
 		DialogButton* mScaleButton;

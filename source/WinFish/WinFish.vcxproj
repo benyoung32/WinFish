@@ -250,6 +250,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)" /Y</Command>
     <ClCompile Include="WinFishApp.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="HelpScreen.cpp" />
+    <ClCompile Include="ArchipelagoInfo.cpp" />
     <ClCompile Include="Res.cpp" />
     <ClCompile Include="StoreScreen.cpp" />
     <ClCompile Include="TitleScreen.cpp" />
@@ -332,6 +333,7 @@ copy "$(SolutionDir)source\apclientpp\cacert.pem" "$(TargetDir)" /Y</Command>
     <ClInclude Include="WinFishApp.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="HelpScreen.h" />
+    <ClInclude Include="ArchipelagoInfo.h" />
     <ClInclude Include="Res.h" />
     <ClInclude Include="StoreScreen.h" />
     <ClInclude Include="TitleScreen.h" />

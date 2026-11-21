@@ -22,6 +22,7 @@ namespace Sexy
 	class TankScreen;
 	class HighScoreScreen;
 	class HelpScreen;
+	class ArchipelagoInfo;
 
 	class WorkerThread;
 	class APBridge;
@@ -224,7 +225,9 @@ namespace Sexy
 		TankScreen*						mTankScreen;
 		HighScoreScreen*				mHighScoreScreen;
 		HelpScreen*						mHelpScreen;
+		ArchipelagoInfo*				mArchipelagoInfo;
 		bool							mIsTicketBonusRound;
+		bool							mAutoFire;
 		bool							mScreenSaverEnabled;
 		bool							mScreenSaverSound;
 		bool							mScreenSaverRotateBackdrops;
@@ -315,10 +318,12 @@ namespace Sexy
 		void						SwitchToStoreScreen();
 		void						SwitchToSimFishScreen();
 		void						SwitchToBonusScreen();
+		void						SwitchToArchipelagoInfo();
 
 		void						RemoveBoard();
 		void						RemoveGameSelector();
 		void						RemoveHelpScreen();
+		void						RemoveArchipelagoInfo();
 		void						RemoveHighScoreScreen();
 		void						RemovePetsScreen();
 		void						RemoveHatchScreen();

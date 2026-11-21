@@ -67,7 +67,7 @@ Sexy::GameSelector::GameSelector(WinFishApp* theApp)
 	mHallOfFameButton = MakeDialogButton2(6, this, "Hall of Fame", IMAGE_MAINBUTTON);
 	mHallOfFameButton->Resize(401, 380, 127, mHallOfFameButton->mHeight);
 
-	mHelpButton = MakeDialogButton2(7, this, "Help", IMAGE_CENTERBUTTON);
+	mHelpButton = MakeDialogButton2(7, this, "AP Progress", IMAGE_CENTERBUTTON);
 	mHelpButton->Resize(419, 412, 93, mHelpButton->mHeight);
 
 	mGameSelectorOverlay = new GameSelectorOverlay();
@@ -422,7 +422,7 @@ void Sexy::GameSelector::ButtonDepress(int theId)
 	}
 	else if (theId == 7)
 	{
-		mApp->SwitchToHelpScreen(false);
+		mApp->SwitchToArchipelagoInfo();
 	}
 	else if (theId == 8)
 	{

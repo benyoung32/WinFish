@@ -51,6 +51,14 @@ int APGameController::GetPetSlots() const
 	return aTotal > 24 ? 24 : aTotal;
 }
 
+int APGameController::GetPendingTrapsCount() const
+{
+	UserProfile* aProfile = GetProfile();
+	if (aProfile == NULL)
+		return 0;
+	return (int)aProfile->mAPQueuedTraps.size();
+}
+
 void APGameController::Update()
 {
 	if (mApp->mBoard != NULL) {
@@ -69,6 +77,7 @@ void APGameController::Update()
 	{
 		QueueNotification("Sent " + aSent.mItemName + " to " + aSent.mRecipientSlot + "!");
 		SetLastCheck(aSent.mItemName, "Sent to " + aSent.mRecipientSlot + "!");
+		CheckVictoryCondition();
 	}
 
 	// process received deathlinks
@@ -120,7 +129,6 @@ void APGameController::OnConnected(const std::string& theSlot, const std::string
 
 void APGameController::ResetSession()
 {
-	mPendingTraps.clear();
 	mNotificationQueue.clear();
 	mNotificationCooldown = 0;
 	mTrapCooldown = 0;
@@ -187,7 +195,7 @@ void APGameController::OnItemReceived(const APReceivedItem& theItem)
 
 	case APItem::TRAP_ALIEN_ATTACK:
 	case APItem::TRAP_FAMINE:
-		mPendingTraps.push_back(anAPItem);
+		aProfile->mAPQueuedTraps.push_back(anAPItem);
 		break;
 
 	default:
@@ -220,7 +228,7 @@ void APGameController::ReportEggPiece(const LevelData& theLevel, int thePiece)
 {
 	APLocation aLoc = gEggPieceLocations[theLevel.mTank - 1][theLevel.mLevel - 1][thePiece - 1];
 	ReportLocation(aLoc);
-	SetLastCheck("Archipelago Item!", "Location check sent to multiworld!");
+	SetLastCheck("Archipelago Item!", "This check has already been found!");
 }
 
 void APGameController::ReportTankComplete(const LevelData& theLevel)
@@ -399,6 +407,8 @@ void APGameController::ApplyStartingBonuses(Board* theBoard)
 	theBoard->mMoney += aProfile->mAPStartingMoneyBonus;
 	theBoard->UpdateMoneyLabelText();
 	
+	// skip for cyrax level
+	if (theBoard->mTank == 5) return;
 	// Spawn bonus guppies
 	for (int i = 0; i < aProfile->mAPStartingGuppies; i++) {
 		auto aNewFish = theBoard->
@@ -418,7 +428,7 @@ void APGameController::ApplyLevelStart(Board* theBoard)
 	mFishDeathsCounter = 0;
 
 	// set trap cooldown to 60-180 seconds (1-3 minutes)
-	mTrapCooldown = (rand() % 60 + 120) * 60;
+	mTrapCooldown = (rand() % 60 + 120) * 30;
 
 	ApplyStartingBonuses(theBoard);
 	ApplyUpgradeAvailabilities(theBoard);
@@ -535,20 +545,21 @@ void APGameController::UpdateBoard(Board* theBoard)
 		theBoard->ShowNotification(aMsg, false, -1);
 		mNotificationCooldown += 30;
 	}
-	// TODO: check that its during adventure, time trial, or challenge mode
 	// Service traps during active gameplay (not during bonus rounds)
-	if (!mPendingTraps.empty() && !theBoard->mIsBonusRound && mTrapCooldown == 0)
+	UserProfile* aProf = GetProfile();
+	if (aProf != NULL && !aProf->mAPQueuedTraps.empty() && !theBoard->mIsBonusRound && mTrapCooldown == 0)
 	{
 		mTrapCooldown = 300;
 
-		APItem trap = mPendingTraps.front();
+		APItem trap = aProf->mAPQueuedTraps.front();
 		// Wait until active alien wave is defeated before triggering another wave
 		if (trap == APItem::TRAP_ALIEN_ATTACK && (!theBoard->mAlienList->empty() || !theBoard->mBilaterusList->empty() || theBoard->mAlienTimer <= 300))
 		{
 			return;
 		}
 
-		mPendingTraps.pop_front();
+		aProf->mAPQueuedTraps.pop_front();
+		mApp->SaveCurrentUserData();
 
 		switch(trap){
 		case APItem::TRAP_ALIEN_ATTACK:
@@ -623,7 +634,12 @@ void APGameController::UpdateBoard(Board* theBoard)
 			mPendingDeathLinks.pop_front();
 
 			APItem aRandomTrap = (rand() % 2 == 0) ? APItem::TRAP_ALIEN_ATTACK : APItem::TRAP_FAMINE;
-			mPendingTraps.push_back(aRandomTrap);
+			UserProfile* aProf = GetProfile();
+			if (aProf != NULL)
+			{
+				aProf->mAPQueuedTraps.push_back(aRandomTrap);
+				mApp->SaveCurrentUserData();
+			}
 
 			QueueNotification("DEATH LINK from " + aDeathLink.mSource + ": Trap queued!");
 		}
@@ -664,7 +680,7 @@ void APGameController::QueueNotification(const std::string& theMessage)
 
 std::string APGameController::GetQueuedStatusString() const
 {
-	int aTrapCount = (int)mPendingTraps.size();
+	int aTrapCount = GetPendingTrapsCount();
 	int aDeathLinkCount = (int)mPendingDeathLinks.size();
 
 	if (aTrapCount == 0 && aDeathLinkCount == 0)

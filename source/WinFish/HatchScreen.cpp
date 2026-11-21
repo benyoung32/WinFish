@@ -194,15 +194,22 @@ void Sexy::HatchScreen::Draw(Graphics* g)
 
 		g->SetColor(Color(255, 200, 0));
 		g->SetFont(FONT_JUNGLEFEVER15OUTLINE);
-		if (g->GetFont()->StringWidth(aItemTitle) > 400)
+		if (aItemTitle.length() > 25 || g->GetFont()->StringWidth(aItemTitle) > 280)
 			g->SetFont(FONT_JUNGLEFEVER12OUTLINE);
-		WriteCenteredLine(g, 260, aItemTitle);
+
+		if (g->GetFont()->StringWidth(aItemTitle) > 280)
+			WriteWordWrapped(g, Rect(180, 240, 280, 0), aItemTitle, -1, 0);
+		else
+			WriteCenteredLine(g, 260, aItemTitle);
 
 		if (m0x94 > 170)
 		{
 			g->SetColor(Color::White);
 			g->SetFont(FONT_JUNGLEFEVER10OUTLINE);
-			WriteCenteredLine(g, 305, aItemDesc1);
+			if (g->GetFont()->StringWidth(aItemDesc1) > 280)
+				WriteWordWrapped(g, Rect(180, 295, 280, 0), aItemDesc1, -1, 0);
+			else
+				WriteCenteredLine(g, 305, aItemDesc1);
 			if (!aItemDesc2.empty())
 				WriteCenteredLine(g, 325, aItemDesc2);
 

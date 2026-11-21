@@ -54,6 +54,9 @@
     <ClCompile Include="HelpScreen.cpp">
       <Filter>Source Files\Screen Source</Filter>
     </ClCompile>
+    <ClCompile Include="ArchipelagoInfo.cpp">
+      <Filter>Source Files\Screen Source</Filter>
+    </ClCompile>
     <ClCompile Include="StoreScreen.cpp">
       <Filter>Source Files\Screen Source</Filter>
     </ClCompile>
@@ -291,6 +294,9 @@
       <Filter>Header Files\Screen Include</Filter>
     </ClInclude>
     <ClInclude Include="HelpScreen.h">
+      <Filter>Header Files\Screen Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ArchipelagoInfo.h">
       <Filter>Header Files\Screen Include</Filter>
     </ClInclude>
     <ClInclude Include="WinFishApp.h">

@@ -23,6 +23,7 @@
 #include "Board.h"
 #include "TitleScreen.h"
 #include "HelpScreen.h"
+#include "ArchipelagoInfo.h"
 #include "StoreScreen.h"
 #include "HatchScreen.h"
 #include "GameSelector.h"
@@ -235,6 +236,7 @@ WinFishApp::WinFishApp()
 	mTankScreen = NULL;
 	mHighScoreScreen = NULL;
 	mHelpScreen = NULL;
+	mArchipelagoInfo = NULL;
 	mIsTicketBonusRound = false;
 
 	mProdName = "Insaniquarium";
@@ -291,6 +293,7 @@ WinFishApp::WinFishApp()
 	mScreenSaverUnk01 = false;
 
 	mTankGameModeChoose = 1;
+	mAutoFire = false;
 
 	m0x878 = false;
 
@@ -335,6 +338,8 @@ Sexy::WinFishApp::~WinFishApp()
 	delete mHighScoreScreen;
 
 	delete mHelpScreen;
+
+	delete mArchipelagoInfo;
 
 	delete mInterludeScreen;
 
@@ -1243,6 +1248,8 @@ void Sexy::WinFishApp::ReadFromRegistry()
 {
 	SexyApp::ReadFromRegistry();
 
+	RegistryReadBoolean("AutoFire", &mAutoFire);
+
 	bool aScrSound = true;
 	GetBoolean("ScrSound", &aScrSound);
 	mScreenSaverSound = aScrSound;
@@ -1313,6 +1320,7 @@ void Sexy::WinFishApp::WriteToRegistry()
 	if (!IsScreenSaver())
 	{
 		SexyApp::WriteToRegistry();
+		RegistryWriteBoolean("AutoFire", mAutoFire);
 		RegistryWriteInteger("ldinfo", mDaysSinceFirstRun);
 		RegistryWriteInteger("ldaccum", mLDAccum);
 	}
@@ -1958,6 +1966,15 @@ void Sexy::WinFishApp::SwitchToHelpScreen(bool instructions)
 	mWidgetManager->AddWidget(mHelpScreen);
 }
 
+void Sexy::WinFishApp::SwitchToArchipelagoInfo()
+{
+	RemoveGameSelector();
+	RemoveArchipelagoInfo();
+	mArchipelagoInfo = new ArchipelagoInfo(this);
+	mArchipelagoInfo->Resize(0, 0, mWidth, mHeight);
+	mWidgetManager->AddWidget(mArchipelagoInfo);
+}
+
 void Sexy::WinFishApp::RemoveBoard()
 {
 	CleanDialogs();
@@ -2027,6 +2044,8 @@ void Sexy::WinFishApp::ApplyOptionsSettings()
 		return;
 	SwitchScreenMode(!aDia->mFullscreenCB->IsChecked(), aDia->m3DCB->IsChecked());
 	EnableCustomCursors(aDia->mCustomCursorsCB->IsChecked());
+	mAutoFire = aDia->mAutoFireCB->IsChecked();
+	RegistryWriteBoolean("AutoFire", mAutoFire);
 	KillDialog(DIALOG_OPTIONS);
 	ClearUpdateBacklog(true);
 	if (mBoard)
@@ -2365,6 +2384,7 @@ void Sexy::WinFishApp::ApplyNewSeedChoice(bool theStartOver)
 	mCurrentProfile->mAPSeed = mAPBridge->GetSeed();
 	mCurrentProfile->mAPItemIndex = 0;
 	mCurrentProfile->mAPPendingChecks.clear();
+	mCurrentProfile->mAPQueuedTraps.clear();
 	for (int i = 0; i < 4; i++)
 	{
 		mCurrentProfile->mAPUnlockedTanks[i] = false;
@@ -2760,6 +2780,16 @@ void Sexy::WinFishApp::RemoveHelpScreen()
 		mWidgetManager->RemoveWidget(mHelpScreen);
 		SafeDeleteWidget(mHelpScreen);
 		mHelpScreen = 0;
+	}
+}
+
+void Sexy::WinFishApp::RemoveArchipelagoInfo()
+{
+	if (mArchipelagoInfo)
+	{
+		mWidgetManager->RemoveWidget(mArchipelagoInfo);
+		SafeDeleteWidget(mArchipelagoInfo);
+		mArchipelagoInfo = 0;
 	}
 }
 

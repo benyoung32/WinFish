@@ -906,8 +906,17 @@ void Board::Update()
 		int aVal = Unk01();
 		if (!isLeftBtnDown)
 			m0x4ed = false;
-		else if(m0x3e4 > 11 && mGameUpdateCnt%(11 - m0x3e4 / 2) == 0 && m0x3c4 + 100 < aVal && mWidgetManager->mLastMouseY > 40)
+		else if((m0x3e4 > 11 || (mApp != NULL && mApp->mAutoFire)) && mGameUpdateCnt%(11 - m0x3e4 / 2) == 0 && m0x3c4 + 100 < aVal && mWidgetManager->mLastMouseY > 40)
 		{ // 311
+			if (mCyraxPtr)
+			{
+				for (int i = 0; i < mSmallAlienList->size(); ++i)
+				{
+					if (mSmallAlienList->at(i)->Shot(aLastMX, aLastMY)) break;
+				}
+				mCyraxPtr->Shot(aLastMX, aLastMY);
+			}
+
 			for (int i = 0; i < mBilaterusList->size(); i++)
 			{
 				Bilaterus* aBil = mBilaterusList->at(i);
@@ -1688,6 +1697,8 @@ void Board::MouseDown(int x, int y, int theClickCount)
 		mCyraxPtr->Shot(x, y);
 		playZapSound = true;
 		SpawnLaserShot(x - 40, y - 40);
+		m0x4ed = true;
+		m0x3c4 = Unk01();
 	}
 
 	bool aliensExist = !mAlienList->empty();

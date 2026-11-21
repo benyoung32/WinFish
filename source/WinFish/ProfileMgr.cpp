@@ -480,6 +480,7 @@ void Sexy::UserProfile::Init()
         mAPUnlockedTanks[i] = false;
         mAPTankLevels[i] = 1;
     }
+    mAPQueuedTraps.clear();
 }
 
 void Sexy::UserProfile::SetCheatFlag(char thePos, bool theFlag)
@@ -525,7 +526,7 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (theReader)
         Init();
 
-    uint aVer = 0x80000007;
+    uint aVer = 0x80000008;
     theDataSync.SyncLong(aVer);
 
     bool unkFlag = false;
@@ -655,6 +656,30 @@ void Sexy::UserProfile::SyncData(DataSync& theDataSync)
     if (aVer >= 0x80000007)
     {
         theDataSync.SyncLong(mAPStartingGuppies);
+    }
+
+    if (aVer >= 0x80000008)
+    {
+        int aTrapCount = (int)mAPQueuedTraps.size();
+        theDataSync.SyncLong(aTrapCount);
+        if (theReader)
+        {
+            mAPQueuedTraps.clear();
+            for (int i = 0; i < aTrapCount; i++)
+            {
+                int aTrapId = 0;
+                theDataSync.SyncLong(aTrapId);
+                mAPQueuedTraps.push_back(static_cast<APItem>(aTrapId));
+            }
+        }
+        else
+        {
+            for (APItem aTrap : mAPQueuedTraps)
+            {
+                int aTrapId = static_cast<int>(aTrap);
+                theDataSync.SyncLong(aTrapId);
+            }
+        }
     }
 
     if (theReader)

@@ -1,36 +1,17 @@
 ## TODO:
 
-OPTIONAL:
-
-add auto clicking setting. the gun can only fire every 0.25 settings so this could be the speed. this can be enabled just by enabling the rapid fire from wpn level 10 alreayd in the game 
-
-borderless fullscreen
-
-~~TODO: the bonus level ticket system does not properly initiate the bonus level, and instead starts a tank at the fifth level.~~ (DONE)
-
-~~TODO: the continue text under adventure on the main menu is consistently not correct. It could be removed to reflect the more open ended nature of the implementation~~ (DONE)
-
-TODO: long text in the hatch screen title can go outside the gui lines. could either make text smaller when >25chars or split onto two lines.
-
-TODO: edit or display archibald such that the sprite grows as more egg pieces are purchased 
-
-TODO: counters go down while paused. add check in update function to not decrement if pause menu is open.
-
-~~TODO: alien trap does not activate gun.~~ (DONE)
-
 TODO: tracker implementation
 
-~~TODO: restarting the game, then restarting an in progress level results in starting the new level in tank 1, regardless of the original tank~~ (DONE)
+~~TODO: queued traps are lost to a game restart~~ (DONE)
 
-TODO: queued traps are lost to a game restart
+TODO: bonus pet menu is broken
 
 ## INVESTIGATE:
 
-~~TODO: instead of bonus shells on their own being a bonus item, there could be a bonus minigame ticket option that allows playing a round of the bonus minigame for shells.~~ (DONE) 
+TODO: accesibility options; auto collect coins when moused over
 
-TODO: accesibility options; auto collect coins when moused over. laser rapid fire always enabled 
-TODO: deleting a profile should not open the AP edit dialogue 
-~~TODO: replace the egg icon with the archipelago asset~~ (DONE)
+OPTIONAL:
+borderless fullscreen
 
 time trial - no required threshold, could choose threshold for check or have several thresholds. 
 challenge mode
@@ -38,9 +19,19 @@ challenge mode
 alien-difficulty: how many aliens each wave has
 bomb-trap: spawn 5-10 of shrapnels bombs
 
-create a AP status screen that lists the total received items (pets 10/20, etc. etc.)
-    bonus money
-    tanks unlocked
+~~create a AP status screen that lists the total received items (pets 10/20, etc. etc.)~~ (DONE)
+    ~~start with the help screen in game. Keep the background and top banner. Replace the top banner text wtih "Archipelago Progress". Include the following rows of information~~
+    ~~Start a new CPP file for this called ArchipelagoInfo.cpp~~
+    ~~Create a top level page with received item info:~~
+    ~~Food quality (received/total)~~
+    ~~Food quantity (received/total)~~
+    ~~Weapon upgrade(received/total)~~
+    ~~Pets (received/total)~~
+    ~~Pet slots(received/total)~~
+
+    ~~Create a page for each of tank 1-4 with the following information: Egg piece checks: (remaining)/(total)~~
+    ~~Challenge mode completion (checkmark or X)~~
+    ~~Time Trial completion (checkmark or X)~~ 
 
 Are there other upgrades that could be added out of sequence to the game? Fish in levels they dont belong in?
 
