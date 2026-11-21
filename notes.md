@@ -2,10 +2,6 @@
 
 TODO: tracker implementation
 
-~~TODO: queued traps are lost to a game restart~~ (DONE)
-
-~~TODO: bonus pet menu is broken~~ (DONE)
-
 ## INVESTIGATE:
 
 TODO: accesibility options; auto collect coins when moused over
